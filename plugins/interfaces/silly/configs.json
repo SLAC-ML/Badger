@@ -1,0 +1,7 @@
+{
+    "version": "0.1",
+    "params": {
+        "channel_prefix": "c",
+        "channel_count": 4
+    }
+}
