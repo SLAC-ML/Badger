@@ -1,5 +1,8 @@
 {
     "version": "0.1",
+    "dependencies": [
+        "scipy>0.18"
+    ],
     "params": {
         "dimension": {
             "default": 2,
@@ -9,10 +12,7 @@
             0,
             0
         ],
-        "dev_steps": [
-            0,
-            0
-        ],
+        "isim": null,
         "xtol": 1e-5,
         "max_iter": 100
     }
