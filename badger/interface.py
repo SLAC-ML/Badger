@@ -8,9 +8,26 @@ class Interface(ABC):
         pass
 
     @abstractmethod
-    def get_values(self, channels: list[str]) -> list:
+    def __init__(self, params):
+        self.params = params
+
+    @abstractmethod
+    def get_value(self, channel: str):
         pass
 
     @abstractmethod
-    def set_values(self, channels: list[str], values: list):
+    def set_value(self, channel: str, value):
         pass
+
+    def get_values(self, channels: list[str]) -> list:
+        values = []
+        for c in channels:
+            values.append(self.get_value(c))
+
+        return values
+
+    def set_values(self, channels: list[str], values: list):
+        assert len(channels) == len(values), 'Channels and values number mismatch!'
+
+        for idx, c in enumerate(channels):
+            self.set_value(c, values[idx])
