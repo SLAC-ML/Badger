@@ -5,7 +5,7 @@ def optimize(evaluate, params):
     D, max_iter = itemgetter('dimension', 'max_iter')(params)
 
     x_opt = None
-    y_opt = -np.Inf
+    y_opt = np.Inf
     for i in range(max_iter):
         x = np.random.rand(D).reshape(1, -1)
         y = evaluate(x)
