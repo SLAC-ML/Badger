@@ -9,20 +9,29 @@ class Environment(ABC):
     def name(self) -> str:
         pass
 
-    @property
     @abstractmethod
-    def params(self):
-        pass
-
-    @property
-    @abstractmethod
-    def interface(self) -> Interface:
-        pass
+    def __init__(self, interface: Interface, params):
+        self.interface = interface
+        self.params = params
 
     @abstractmethod
-    def get_current_x(self) -> np.ndarray:
+    def get_x(self) -> np.ndarray:
         pass
 
     @abstractmethod
+    def set_x(self, x: np.ndarray):
+        pass
+
+    @abstractmethod
+    def get_y(self) -> np.ndarray:
+        pass
+
     def evaluate(self, X: np.ndarray) -> np.ndarray:
-        pass
+        Y = []
+        for x in X:
+            self.set_x(x)
+            y = self.get_y()
+            Y.append(y)
+        Y = np.array(Y)
+
+        return Y
