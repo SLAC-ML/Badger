@@ -1,0 +1,7 @@
+---
+version: '0.1'
+dependencies:
+- numpy
+params:
+  dimension: 1
+  max_iter: 42

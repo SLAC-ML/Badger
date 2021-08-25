@@ -1,0 +1,8 @@
+---
+version: '0.1'
+dependencies:
+- numpy
+- badger-opt
+params:
+  channel_prefix: c
+  channel_count: 4
