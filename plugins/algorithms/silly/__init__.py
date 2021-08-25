@@ -9,6 +9,7 @@ def optimize(evaluate, params):
     for i in range(max_iter):
         x = np.random.rand(D).reshape(1, -1)
         y = evaluate(x)
+        print(f'yo! {x}: {y}')
         if y < y_opt:  # assume a minimize problem
             x_opt = x
             y_opt = y
