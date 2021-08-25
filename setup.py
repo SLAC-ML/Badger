@@ -11,7 +11,8 @@ setup(
     package_dir={'': 'badger'},
     packages=find_packages(where='badger'),
     install_requires=[
-        'numpy'
+        'numpy',
+        'pyyaml'
     ],
     python_requires='>=3.6',
 )
