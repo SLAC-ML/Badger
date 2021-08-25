@@ -1,10 +1,10 @@
 {
     "version": "0.1",
     "dependencies": [
-        "numpy"
+        "numpy",
+        "badger-opt"
     ],
     "params": {
-        "dimension": 1,
-        "max_iter": 42
+        "dimension": 2
     }
 }
