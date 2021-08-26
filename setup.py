@@ -8,11 +8,16 @@ setup(
     author='Zhe Zhang',
     author_email='zhezhang@slac.stanford.edu',
     license='GPL',
-    package_dir={'': 'badger'},
-    packages=find_packages(where='badger'),
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
     install_requires=[
         'numpy',
         'pyyaml'
     ],
     python_requires='>=3.6',
+    entry_points={
+        'console_scripts': [
+            'badger = badger.__main__:main'
+        ]
+    },
 )
