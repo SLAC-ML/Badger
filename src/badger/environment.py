@@ -1,6 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
-from interface import Interface
+from .interface import Interface
 
 class Environment(ABC):
 
