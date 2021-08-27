@@ -18,6 +18,8 @@ def scan_plugins(root):
         plugins = [fname for fname in os.listdir(proot)
                    if os.path.exists(os.path.join(proot, fname, '__init__.py'))]
         for pname in plugins:
+            # TODO: Also load the configs here
+            # So that list plugins can access the metadata of the plugins
             factory[ptype][pname] = None
 
     return factory
@@ -37,23 +39,16 @@ def load_plugin(root, pname, ptype):
         except yaml.YAMLError:
             logging.error(
                 f'Error loading plugin {ptype} {pname}: invalid config')
-    if configs is None:
-        params = None
-    else:
-        try:
-            params = configs['params']
-        except KeyError:
-            params = None
 
     # Load module
     module = importlib.import_module(f'{ptype}s.{pname}')
 
     if ptype == 'algorithm':
-        plugin = [module.optimize, params]
+        plugin = [module.optimize, configs]
     elif ptype == 'interface':
-        plugin = [module.Interface, params]
+        plugin = [module.Interface, configs]
     elif ptype == 'environment':
-        plugin = [module.Environment, params]
+        plugin = [module.Environment, configs]
 
     BADGER_FACTORY[ptype][pname] = plugin
 
@@ -84,6 +79,18 @@ def get_intf(name):
 
 def get_env(name):
     return get_plug(BADGER_PLUGIN_ROOT, name, 'environment')
+
+
+def list_algo():
+    return sorted(BADGER_FACTORY['algorithm'])
+
+
+def list_intf():
+    return sorted(BADGER_FACTORY['interface'])
+
+
+def list_env():
+    return sorted(BADGER_FACTORY['environment'])
 
 
 BADGER_FACTORY = scan_plugins(BADGER_PLUGIN_ROOT)
