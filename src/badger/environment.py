@@ -2,6 +2,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from .interface import Interface
 
+
 class Environment(ABC):
 
     @property
@@ -14,24 +15,38 @@ class Environment(ABC):
         self.interface = interface
         self.params = params
 
+    # Get current variable
     @abstractmethod
-    def get_x(self) -> np.ndarray:
+    def get_var(self, var: str):
         pass
 
+    # Set variable
     @abstractmethod
-    def set_x(self, x: np.ndarray):
+    def set_var(self, var: str, x):
         pass
 
+    # Get observation
     @abstractmethod
-    def get_y(self) -> np.ndarray:
+    def get_obs(self, obs: str):
         pass
 
-    def evaluate(self, X: np.ndarray) -> np.ndarray:
-        Y = []
-        for x in X:
-            self.set_x(x)
-            y = self.get_y()
-            Y.append(y)
-        Y = np.array(Y)
+    def get_vars(self, vars: list[str]) -> list:
+        values = []
+        for var in vars:
+            values.append(self.get_var(var))
 
-        return Y
+        return values
+
+    def set_vars(self, vars: list[str], values: list):
+        assert len(vars) == len(
+            values), 'Variables and values number mismatch!'
+
+        for idx, var in enumerate(vars):
+            self.set_var(var, values[idx])
+
+    def get_obses(self, obses: list[str]) -> list:
+        values = []
+        for obs in obses:
+            values.append(self.get_obs(obs))
+
+        return values
