@@ -1,4 +1,9 @@
-from ..factory import list_intf
+import yaml
+from ..factory import list_intf, get_intf
+
 
 def show_intf(args):
-    print(list_intf())
+    if args.intf_name is None:
+        print(yaml.dump(list_intf()))
+    else:
+        print(yaml.dump(get_intf(args.intf_name)[1]))
