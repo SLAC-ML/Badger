@@ -4,12 +4,12 @@ from ..factory import get_algo, get_intf, get_env
 
 def run_routine(args):
     Interface, configs_intf = get_intf('silly')
-    Environment, configs_env = get_env('silly')
+    Environment, configs_env = get_env('dumb')
     optimize, configs_algo = get_algo('silly')
 
     configs_routine = {
-        'variables': ['q1', 'q2'],
-        'objectives': [{'l1': 'MINIMIZE'}],
+        'variables': ['q1', 'q3', 'q4', 's2'],
+        'objectives': [{'l2_x_mean': 'MINIMIZE'}],
         'constraints': None,
     }
 
@@ -19,7 +19,7 @@ def run_routine(args):
     params_algo['dimension'] = len(configs_routine['variables'])
     params_algo['max_iter'] = 100
     params_intf['channel_prefix'] = 'c'
-    params_intf['channel_count'] = 4
+    params_intf['channel_count'] = 6
 
     intf = Interface(params_intf)
     env = Environment(intf, params_env)
