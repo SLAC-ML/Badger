@@ -12,7 +12,8 @@ setup(
     packages=find_packages(where='src'),
     install_requires=[
         'numpy',
-        'pyyaml'
+        'pyyaml',
+        'coolname'
     ],
     python_requires='>=3.6',
     entry_points={
