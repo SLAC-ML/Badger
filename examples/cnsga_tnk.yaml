@@ -1,0 +1,14 @@
+name: CNSGA vs TNK
+variables:
+  - x1
+  - x2
+objectives:
+  - y1: MINIMIZE
+  - y2: MINIMIZE
+constraints:
+  - c1:
+      - GREATER_THAN
+      - 0
+  - c2:
+      - LESS_THAN
+      - 0.5
