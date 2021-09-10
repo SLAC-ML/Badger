@@ -1,52 +1,81 @@
+import os
 import numpy as np
-from ..factory import get_algo, get_intf, get_env
+import matplotlib.pyplot as plt
+from coolname import generate_slug
+from ..factory import get_algo, get_env
+from ..utils import config_list_to_dict, normalize_config_vars, \
+    load_config, yprint
+
+# Temp fix for the duplicated MP lib error
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 def run_test(args):
-    Interface, configs_intf = get_intf('silly')
-    Environment, configs_env = get_env('dumb')
-    optimize, configs_algo = get_algo('silly')
+    Environment, configs_env = get_env(args.env)
+    optimize, configs_algo = get_algo(args.algo)
+    configs_routine = load_config(args.config)
+    try:
+        routine_name = configs_routine['name']
+    except KeyError:
+        routine_name = generate_slug(2)
+    _configs_env = load_config(args.env_config)
+    if _configs_env:
+        configs_env = {**configs_env, **_configs_env}
+    _configs_algo = load_config(args.algo_config)
+    if _configs_algo:
+        configs_algo = {**configs_algo, **_configs_algo}
 
-    configs_routine = {
-        'variables': ['x1', 'x2'],
-        'objectives': [
-            {'y1': 'MINIMIZE'},
-            {'y2': 'MINIMIZE'},
-        ],
-        'constraints': [
-            {'c1': ['GREATER_THAN', 0]},
-            {'c2': ['LESS_THAN', 0.5]},
-        ],
+    # TODO: Sanity check here
+
+    yprint(configs_routine)
+
+    params_env = {
+        'params': configs_env['params'],
+        'variables': configs_env['variables'],
+        'observations': configs_env['observations'],
+    }
+    env = Environment(None, params_env)
+
+    def evaluate(inputs, extra_option='abc', **params):
+        env.set_vars_dict(inputs)
+        outputs = env.get_obses_dict()
+
+        return outputs
+
+    config = {
+        'xopt': {
+            'output_path': None,
+            'verbose': True,
+        },
+        'algorithm': {
+            'name': configs_algo['name'],
+            'options': configs_algo['params'],
+        },
+        'simulation': {
+            'name': configs_env['name'],
+            'evaluate': evaluate,
+        },
+        'vocs': {
+            'name': routine_name,
+            'description': None,
+            'simulation': configs_env['name'],
+            'templates': None,
+            'variables': config_list_to_dict(normalize_config_vars(configs_routine['variables'])),
+            'objectives': config_list_to_dict(configs_routine['objectives']),
+            'constraints': config_list_to_dict(configs_routine['constraints']),
+        }
     }
 
-    params_algo = configs_algo['params'].copy()
-    params_intf = configs_intf['params'].copy()
-    params_env = None if not configs_env['params'] else configs_env['params'].copy()
-    params_algo['dimension'] = len(configs_routine['variables'])
-    params_algo['max_iter'] = 100
-    params_intf['channel_prefix'] = 'c'
-    params_intf['channel_count'] = 6
+    results = optimize(config)
+    print('done!')
 
-    intf = Interface(params_intf)
-    env = Environment(intf, params_env)
-    # Make a normalized evaluate function
-    def evaluate(X):
-        Y = []
-        for x in X:
-            env.set_vars(configs_routine['variables'], x)
-            obses = []
-            for obj in configs_routine['objectives']:
-                key = list(obj.keys())[0]
-                ptype = list(obj.values())[0]
-                obs = env.get_obs(key)
-                if ptype == 'MAXIMIZE':
-                    obses.append(-obs)
-                else:
-                    obses.append(obs)
-            Y.append(obses)
-        Y = np.array(Y)
-
-        return Y, None, None
-
-    y_opt, x_opt = optimize(evaluate, params_algo)
-    print(f'best! {x_opt}: {y_opt}')
+    # Plotting
+    # fig, ax = plt.subplots()
+    # variables = results['variables']
+    # valid = results['variables'][results['feasibility'].flatten()]
+    # ax.plot(variables[:, 0], variables[:, 1], '-o', label='all')
+    # ax.plot(valid[:, 0], valid[:, 1], 'o', label='valid')
+    # ax.set_xlabel('$x_1$')
+    # ax.set_ylabel('$x_2$')
+    # ax.legend()
+    # plt.show()
