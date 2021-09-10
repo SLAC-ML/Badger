@@ -37,6 +37,14 @@ class Environment(ABC):
 
         return values
 
+    def get_vars_dict(self) -> dict:
+        vars = self.params['variables']
+        book = {}
+        for var in vars:
+            book[var] = self.get_var(var)
+
+        return book
+
     def set_vars(self, vars: list[str], values: list):
         assert len(vars) == len(
             values), 'Variables and values number mismatch!'
@@ -44,9 +52,21 @@ class Environment(ABC):
         for idx, var in enumerate(vars):
             self.set_var(var, values[idx])
 
+    def set_vars_dict(self, book: dict):
+        for var, val in book.items():
+            self.set_var(var, val)
+
     def get_obses(self, obses: list[str]) -> list:
         values = []
         for obs in obses:
             values.append(self.get_obs(obs))
 
         return values
+
+    def get_obses_dict(self) -> dict:
+        obses = self.params['observations']
+        book = {}
+        for obs in obses:
+            book[obs] = self.get_obs(obs)
+
+        return book
