@@ -46,8 +46,16 @@ def load_plugin(root, pname, ptype):
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
+        params = module.Interface.get_default_params()
+        configs['params'] = params
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
+        vars = module.Environment.list_vars()
+        obses = module.Environment.list_obses()
+        params = module.Environment.get_default_params()
+        configs['params'] = params
+        configs['variables'] = vars
+        configs['observations'] = obses
         plugin = [module.Environment, configs]
 
     BADGER_FACTORY[ptype][pname] = plugin

@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from .utils import merge_params
+
 
 class Interface(ABC):
 
@@ -8,8 +10,14 @@ class Interface(ABC):
         pass
 
     @abstractmethod
-    def __init__(self, params):
-        self.params = params
+    def __init__(self, params=None):
+        self.params = merge_params(self.get_default_params(), params)
+
+    # Get the default params of the interface
+    @staticmethod
+    @abstractmethod
+    def get_default_params() -> dict:
+        pass
 
     @abstractmethod
     def get_value(self, channel: str):
@@ -27,7 +35,8 @@ class Interface(ABC):
         return values
 
     def set_values(self, channels: list[str], values: list):
-        assert len(channels) == len(values), 'Channels and values number mismatch!'
+        assert len(channels) == len(
+            values), 'Channels and values number mismatch!'
 
         for idx, c in enumerate(channels):
             self.set_value(c, values[idx])
