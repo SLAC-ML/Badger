@@ -1,3 +1,4 @@
+import os
 import yaml
 import logging
 
@@ -47,6 +48,16 @@ def load_config(fname):
     if fname is None:
         return configs
 
+    # if fname is a yaml string
+    if not os.path.exists(fname):
+        try:
+            configs = yaml.safe_load(fname)
+            return configs
+        except yaml.YAMLError:
+            logging.error(
+                f'Error parsing config {fname}: invalid yaml')
+            return configs
+
     with open(fname, 'r') as f:
         try:
             configs = yaml.safe_load(f)
@@ -55,3 +66,16 @@ def load_config(fname):
                 f'Error loading config {fname}: invalid yaml')
 
     return configs
+
+
+def merge_params(default_params, params):
+    merged_params = None
+
+    if params is None:
+        merged_params = default_params
+    elif default_params is None:
+        merged_params = params
+    else:
+        merged_params = {**default_params, **params}
+
+    return merged_params
