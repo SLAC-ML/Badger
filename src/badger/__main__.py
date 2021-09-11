@@ -46,12 +46,12 @@ def main():
     parser_test = subparsers.add_parser('test', help='For dev')
     parser_test.add_argument('-a', '--algo', required=True,
                              help='Algorithm to use')
-    parser_test.add_argument('-ac', '--algo_config',
-                             help='Config for the algorithm')
+    parser_test.add_argument('-ap', '--algo_params',
+                             help='Parameters for the algorithm')
     parser_test.add_argument('-e', '--env', required=True,
                              help='Environment to use')
-    parser_test.add_argument('-ec', '--env_config',
-                             help='Config for the environment')
+    parser_test.add_argument('-ep', '--env_params',
+                             help='Parameters for the environment')
     parser_test.add_argument('-c', '--config', required=True,
                              help='Config for the routine')
     parser_test.add_argument('-s', '--save',
