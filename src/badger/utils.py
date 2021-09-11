@@ -11,7 +11,8 @@ class Dumper(yaml.Dumper):
 
 
 def yprint(content):
-    print(yaml.dump(content, Dumper=Dumper, default_flow_style=False), end='')
+    print(yaml.dump(content, Dumper=Dumper,
+          default_flow_style=False, sort_keys=False), end='')
 
 
 def denorm(x, lb, ub):
