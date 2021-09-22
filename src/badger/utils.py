@@ -16,6 +16,10 @@ def yprint(content):
           default_flow_style=False, sort_keys=False), end='')
 
 
+def norm(x, lb, ub):
+    return (x - lb) / (ub - lb)
+
+
 def denorm(x, lb, ub):
     return (1 - x) * lb + x * ub
 
