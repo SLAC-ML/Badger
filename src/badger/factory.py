@@ -4,7 +4,20 @@ import importlib
 import yaml
 import logging
 
-BADGER_PLUGIN_ROOT = 'D:/Projects/Badger-Plugins'
+# Check badger plugin root
+BADGER_PLUGIN_ROOT = os.getenv('BADGER_PLUGIN_ROOT')
+if BADGER_PLUGIN_ROOT is None:
+    logging.error('Please set the BADGER_PLUGIN_ROOT env var!')
+    sys.exit()
+elif not os.path.exists(BADGER_PLUGIN_ROOT):
+    logging.error(
+        f'The badger plugin root {BADGER_PLUGIN_ROOT} does not exist!')
+    sys.exit()
+else:
+    module_file = os.path.join(BADGER_PLUGIN_ROOT, '__init__.py')
+    if not os.path.exists(module_file):
+        with open(module_file, 'w') as f:
+            pass
 sys.path.append(BADGER_PLUGIN_ROOT)
 
 
