@@ -40,6 +40,18 @@ def main():
 
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='Run routines')
+    parser_run.add_argument('-a', '--algo', required=True,
+                             help='Algorithm to use')
+    parser_run.add_argument('-ap', '--algo_params',
+                             help='Parameters for the algorithm')
+    parser_run.add_argument('-e', '--env', required=True,
+                             help='Environment to use')
+    parser_run.add_argument('-ep', '--env_params',
+                             help='Parameters for the environment')
+    parser_run.add_argument('-c', '--config', required=True,
+                             help='Config for the routine')
+    parser_run.add_argument('-s', '--save',
+                             help='The routine name to be saved')
     parser_run.set_defaults(func=run_routine)
 
     # Parser for the 'test' command
