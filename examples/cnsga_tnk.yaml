@@ -3,10 +3,10 @@ variables:
   - x1
   - x2
 objectives:
-  - y1: MINIMIZE
+  - c1: MINIMIZE
   - y2: MINIMIZE
 constraints:
-  - c1:
+  - y1:
       - GREATER_THAN
       - 0
   - c2:
