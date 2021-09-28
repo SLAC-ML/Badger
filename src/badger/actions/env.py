@@ -6,4 +6,7 @@ def show_env(args):
     if args.env_name is None:
         yprint(list_env())
     else:
-        yprint(get_env(args.env_name)[1])
+        env = get_env(args.env_name)
+        if env is None:
+            return
+        yprint(env[1])

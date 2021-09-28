@@ -6,4 +6,7 @@ def show_algo(args):
     if args.algo_name is None:
         yprint(list_algo())
     else:
-        yprint(get_algo(args.algo_name)[1])
+        algo = get_algo(args.algo_name)
+        if algo is None:
+            return
+        yprint(algo[1])

@@ -52,9 +52,15 @@ def load_plugin(root, pname, ptype):
         except yaml.YAMLError:
             logging.error(
                 f'Error loading plugin {ptype} {pname}: invalid config')
+            return
 
     # Load module
-    module = importlib.import_module(f'{ptype}s.{pname}')
+    try:
+        module = importlib.import_module(f'{ptype}s.{pname}')
+    except ImportError:
+        logging.error(
+            f'{ptype} {pname} is not available due to missing dependencies')
+        return
 
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
@@ -98,9 +104,14 @@ def scan_extensions(root):
     enames = [fname for fname in os.listdir(eroot)
               if os.path.exists(os.path.join(eroot, fname, '__init__.py'))]
     for ename in enames:
-        module = importlib.import_module(f'extensions.{ename}')
-        ext = module.Extension()
-        extensions[ename] = ext
+        try:
+            module = importlib.import_module(f'extensions.{ename}')
+            ext = module.Extension()
+            extensions[ename] = ext
+        except ImportError:
+            pass
+            # logging.warn(
+            #     f'Extension {ename} is not available due to missing dependencies')
 
     return extensions
 

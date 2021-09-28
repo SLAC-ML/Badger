@@ -6,4 +6,7 @@ def show_intf(args):
     if args.intf_name is None:
         yprint(list_intf())
     else:
-        yprint(get_intf(args.intf_name)[1])
+        intf = get_intf(args.intf_name)
+        if intf is None:
+            return
+        yprint(intf[1])
