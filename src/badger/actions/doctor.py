@@ -1,2 +1,2 @@
 def self_check(args):
-    print('Alright!')
+    print('Everything is fine!')
