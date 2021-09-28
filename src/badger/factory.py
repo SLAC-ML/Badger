@@ -77,8 +77,28 @@ def get_plug(root, name, ptype):
     return plug
 
 
+def scan_extensions(root):
+    extensions = {}
+
+    eroot = os.path.join(root, 'extensions')
+
+    enames = [fname for fname in os.listdir(eroot)
+              if os.path.exists(os.path.join(eroot, fname, '__init__.py'))]
+    for ename in enames:
+        module = importlib.import_module(f'extensions.{ename}')
+        ext = module.Extension()
+        extensions[ename] = ext
+
+    return extensions
+
+
 def get_algo(name):
-    return get_plug(BADGER_PLUGIN_ROOT, name, 'algorithm')
+    if name in BADGER_FACTORY['algorithm'].keys():
+        return get_plug(BADGER_PLUGIN_ROOT, name, 'algorithm')
+    else:
+        for ext in BADGER_EXTENSIONS.values():
+            if name in ext.list_algo():
+                return [ext, ext.get_algo_config(name)]
 
 
 def get_intf(name):
@@ -90,7 +110,11 @@ def get_env(name):
 
 
 def list_algo():
-    return sorted(BADGER_FACTORY['algorithm'])
+    algos = []
+    algos += BADGER_FACTORY['algorithm']
+    for ext in BADGER_EXTENSIONS.values():
+        algos += ext.list_algo()
+    return sorted(algos)
 
 
 def list_intf():
@@ -102,3 +126,4 @@ def list_env():
 
 
 BADGER_FACTORY = scan_plugins(BADGER_PLUGIN_ROOT)
+BADGER_EXTENSIONS = scan_extensions(BADGER_PLUGIN_ROOT)
