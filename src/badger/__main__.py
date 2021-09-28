@@ -1,5 +1,6 @@
 import argparse
 
+from .actions import show_info
 from .actions.doctor import self_check
 from .actions.routine import show_routine
 from .actions.algo import show_algo
@@ -12,6 +13,7 @@ from .actions.test import run_test
 def main():
     # Create the top-level parser
     parser = argparse.ArgumentParser(description='Badger the optimizer')
+    parser.set_defaults(func=show_info)
     subparsers = parser.add_subparsers(help='Badger commands help')
 
     # Parser for the 'doctor' command
@@ -41,17 +43,17 @@ def main():
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='Run routines')
     parser_run.add_argument('-a', '--algo', required=True,
-                             help='Algorithm to use')
+                            help='Algorithm to use')
     parser_run.add_argument('-ap', '--algo_params',
-                             help='Parameters for the algorithm')
+                            help='Parameters for the algorithm')
     parser_run.add_argument('-e', '--env', required=True,
-                             help='Environment to use')
+                            help='Environment to use')
     parser_run.add_argument('-ep', '--env_params',
-                             help='Parameters for the environment')
+                            help='Parameters for the environment')
     parser_run.add_argument('-c', '--config', required=True,
-                             help='Config for the routine')
+                            help='Config for the routine')
     parser_run.add_argument('-s', '--save',
-                             help='The routine name to be saved')
+                            help='The routine name to be saved')
     parser_run.set_defaults(func=run_routine)
 
     # Parser for the 'test' command
