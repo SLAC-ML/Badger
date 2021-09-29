@@ -1,6 +1,5 @@
 import os
 import yaml
-import logging
 
 
 # https://stackoverflow.com/a/39681672/4263605
@@ -58,16 +57,13 @@ def load_config(fname):
             configs = yaml.safe_load(fname)
             return configs
         except yaml.YAMLError:
-            logging.error(
-                f'Error parsing config {fname}: invalid yaml')
-            return configs
+            raise Exception(f'Error parsing config {fname}: invalid yaml')
 
     with open(fname, 'r') as f:
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            logging.error(
-                f'Error loading config {fname}: invalid yaml')
+            raise Exception(f'Error loading config {fname}: invalid yaml')
 
     return configs
 
