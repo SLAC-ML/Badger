@@ -145,12 +145,55 @@ There are several important properties here:
 ### Run an optimization
 
 ```bash
-badger run badger run [-h] -a ALGO_NAME [-ap ALGO_PARAMS] -e ENV_NAME [-ep ENV_PARAMS] -c ROUTINE_CONFIG
+badger run [-h] -a ALGO_NAME [-ap ALGO_PARAMS] -e ENV_NAME [-ep ENV_PARAMS] -c ROUTINE_CONFIG
 ```
 
-Here are some examples:
+The `-ap` and `-ep` optional arguments, and the `-c` argument accept either a `.yaml` file path or a yaml string. The configs set to `-ap` and `-ep` optional arguments should be treated as "patch" on the default algorithm and environment parameters, respectively, which means that you only need to specify the paramters that you'd like to change on top of the default configs, rather than pass in a full config. The content of the `ROUTINE_CONFIG` (aka routine configs) should look like this:
 
-**WIP**
+```yaml
+name: CNSGA vs TNK
+variables:
+  - x1
+  - x2
+objectives:
+  - c1: MINIMIZE
+  - y2: MINIMIZE
+constraints:
+  - y1:
+      - GREATER_THAN
+      - 0
+  - c2:
+      - LESS_THAN
+      - 0.5
+```
+
+The `name`, `variables`, `objectives`, and `constraints` properties are required. The value of the `constraints` property could be set to `null` if there are no constraints for your optimization problem. The names listed in `variables` should come from `variables` of the env specified by the `-e` argument, while the names listed in `objectives` and `constraints` should come from `observations` of that env.
+
+Several example routine configs can be found in the `examples` folder.
+
+Below are some example `badger run` commands. They were run from the project root (note the relative path of the routine config).
+
+```bash
+badger run -a silly -e TNK -c examples/silly_tnk.yaml
+```
+
+```bash
+badger run -a silly -ap "dimension: 4" -e dumb -c examples/silly_dumb.yaml
+```
+
+```bash
+badger run -a silly -ap "{dimension: 4, max_iter: 10}" -e dumb -c examples/silly_dumb.yaml
+```
+
+In order to run the following commands, you'll need to [set up xopt](https://github.com/ChristopherMayes/Xopt#installing-xopt) on your computer (since the algorithms are provided by xopt).
+
+```bash
+badger run -a cnsga -ap "max_generations: 10" -e TNK -c examples/cnsga_tnk.yaml
+```
+
+```bash
+badger run -a bayesian_exploration -ap "n_steps: 5" -e TNK -c examples/bayesian_tnk.yaml
+```
 
 ## Development
 
