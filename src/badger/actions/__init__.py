@@ -1,5 +1,6 @@
 from pkg_resources import get_distribution
 from ..factory import BADGER_PLUGIN_ROOT, BADGER_EXTENSIONS
+from ..db import BADGER_DB_ROOT
 from ..utils import yprint
 
 
@@ -13,6 +14,7 @@ def show_info(args):
             'name': 'Badger the optimizer',
             'version': get_distribution('badger-opt').version,
             'plugin root': BADGER_PLUGIN_ROOT,
+            'database root': BADGER_DB_ROOT,
         }
 
         extensions = list(BADGER_EXTENSIONS.keys())
