@@ -57,10 +57,10 @@ def load_plugin(root, pname, ptype):
     # Load module
     try:
         module = importlib.import_module(f'{ptype}s.{pname}')
-    except ImportError:
+    except ImportError as e:
         logging.error(
-            f'{ptype} {pname} is not available due to missing dependencies')
-        return
+            f'{ptype} {pname} is not available due to missing dependencies: {e}')
+        return [None, configs]
 
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
@@ -123,6 +123,10 @@ def get_algo(name):
         for ext in BADGER_EXTENSIONS.values():
             if name in ext.list_algo():
                 return [ext, ext.get_algo_config(name)]
+
+        logging.error(
+            f'Error loading plugin algorithm {name}: plugin not found')
+        return None
 
 
 def get_intf(name):
