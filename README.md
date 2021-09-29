@@ -171,7 +171,7 @@ The `name`, `variables`, `objectives`, and `constraints` properties are required
 
 Several example routine configs can be found in the `examples` folder.
 
-Below are some example `badger run` commands. They were run from the project root (note the relative path of the routine config).
+Below are some example `badger run` commands. They were run from the Badger project root only because of a simpler relative path of the routine config:) You could run them from any directory, just remember to change the routine config path accordingly.
 
 ```bash
 badger run -a silly -e TNK -c examples/silly_tnk.yaml
@@ -190,6 +190,8 @@ In order to run the following commands, you'll need to [set up xopt](https://git
 ```bash
 badger run -a cnsga -ap "max_generations: 10" -e TNK -c examples/cnsga_tnk.yaml
 ```
+
+You may encounter an error when running the one below, even with xopt installed. This is caused by the outdated xopt on conda. To resolve this, you'll need to clone the xopt repo and `pip install -e .` to install the latest version of xopt.
 
 ```bash
 badger run -a bayesian_exploration -ap "n_steps: 5" -e TNK -c examples/bayesian_tnk.yaml
