@@ -1,8 +1,9 @@
+import sqlite3
 import numpy as np
-import sys
 import logging
 from coolname import generate_slug
 from ..factory import get_algo, get_intf, get_env
+from ..db import save_routine
 from ..utils import load_config, yprint, merge_params
 
 
@@ -36,7 +37,25 @@ def run_routine(args):
 
     # TODO: Sanity check here
 
-    yprint(configs_routine)
+    routine = {
+        'name': args.save,
+        'algo': args.algo,
+        'env': args.env,
+        'algo_params': params_algo,
+        'env_params': params_env,
+        'config': configs_routine,
+    }
+
+    # Save routine if specified
+    if args.save:
+        try:
+            save_routine(routine)
+        except sqlite3.IntegrityError:
+            logging.error(f'Routine {args.save} already existed in the database! Please choose another name.')
+            return
+
+    # Print out the routine info
+    yprint(routine)
 
     env = Environment(intf, params_env)
 
