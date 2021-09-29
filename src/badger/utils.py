@@ -55,6 +55,10 @@ def load_config(fname):
     if not os.path.exists(fname):
         try:
             configs = yaml.safe_load(fname)
+            # A string is also a valid yaml
+            if type(configs) is str:
+                raise Exception(f'Error loading config {fname}: file not found')
+
             return configs
         except yaml.YAMLError:
             raise Exception(f'Error parsing config {fname}: invalid yaml')
