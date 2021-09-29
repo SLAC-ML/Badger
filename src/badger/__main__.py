@@ -13,6 +13,8 @@ from .actions.test import run_test
 def main():
     # Create the top-level parser
     parser = argparse.ArgumentParser(description='Badger the optimizer')
+    parser.add_argument('-g', '--gui', action='store_true',
+                        help='launch the GUI')
     parser.set_defaults(func=show_info)
     subparsers = parser.add_subparsers(help='Badger commands help')
 
@@ -41,35 +43,35 @@ def main():
     parser_env.set_defaults(func=show_env)
 
     # Parser for the 'run' command
-    parser_run = subparsers.add_parser('run', help='Run routines')
+    parser_run = subparsers.add_parser('run', help='run routines')
     parser_run.add_argument('-a', '--algo', required=True,
-                            help='Algorithm to use')
+                            help='algorithm to use')
     parser_run.add_argument('-ap', '--algo_params',
-                            help='Parameters for the algorithm')
+                            help='parameters for the algorithm')
     parser_run.add_argument('-e', '--env', required=True,
-                            help='Environment to use')
+                            help='environment to use')
     parser_run.add_argument('-ep', '--env_params',
-                            help='Parameters for the environment')
+                            help='parameters for the environment')
     parser_run.add_argument('-c', '--config', required=True,
-                            help='Config for the routine')
+                            help='config for the routine')
     parser_run.add_argument('-s', '--save',
-                            help='The routine name to be saved')
+                            help='the routine name to be saved')
     parser_run.set_defaults(func=run_routine)
 
     # Parser for the 'test' command
-    parser_test = subparsers.add_parser('test', help='For dev')
+    parser_test = subparsers.add_parser('test', help='for dev')
     parser_test.add_argument('-a', '--algo', required=True,
-                             help='Algorithm to use')
+                             help='algorithm to use')
     parser_test.add_argument('-ap', '--algo_params',
-                             help='Parameters for the algorithm')
+                             help='parameters for the algorithm')
     parser_test.add_argument('-e', '--env', required=True,
-                             help='Environment to use')
+                             help='environment to use')
     parser_test.add_argument('-ep', '--env_params',
-                             help='Parameters for the environment')
+                             help='parameters for the environment')
     parser_test.add_argument('-c', '--config', required=True,
-                             help='Config for the routine')
+                             help='config for the routine')
     parser_test.add_argument('-s', '--save',
-                             help='The routine name to be saved')
+                             help='the routine name to be saved')
     parser_test.set_defaults(func=run_test)
 
     args = parser.parse_args()
