@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+import logging
 from coolname import generate_slug
 from ..factory import get_algo, get_intf, get_env
 from ..utils import load_config, yprint, merge_params
@@ -14,14 +16,22 @@ def run_routine(args):
         intf = None
 
     optimize, configs_algo = get_algo(args.algo)
-    configs_routine = load_config(args.config)
+    try:
+        configs_routine = load_config(args.config)
+    except Exception as e:
+        logging.error(e)
+        return
     try:
         routine_name = configs_routine['name']
     except KeyError:
         routine_name = generate_slug(2)
         configs_routine['name'] = routine_name
-    params_env = load_config(args.env_params)
-    params_algo = load_config(args.algo_params)
+    try:
+        params_env = load_config(args.env_params)
+        params_algo = load_config(args.algo_params)
+    except Exception as e:
+        logging.error(e)
+        return
     params_algo = merge_params(configs_algo['params'], params_algo)
 
     # TODO: Sanity check here
