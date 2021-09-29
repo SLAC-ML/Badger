@@ -16,7 +16,7 @@ Clone the [badger plugins repo](https://github.com/SLAC-ML/Badger-Plugins) to so
 
 Then you'll need to set `BADGER_PLUGIN_ROOT` environment variable in the session where you'll run the badger CLI:
 
-If you're using bash-like terminal, run this:
+If you're using bash-like shell, run this:
 
 ```bash
 export BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
