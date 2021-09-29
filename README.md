@@ -1,1 +1,187 @@
 # Badger: The Ocelot Optimizer Rebirth
+
+## Installation
+
+### Install the Badger core
+
+Clone this repo and `cd` to the project root, then install badger in dev mode:
+
+```bash
+pip install -e .
+```
+
+### Set up the Badger plugins
+
+Clone the [badger plugins repo](https://github.com/SLAC-ML/Badger-Plugins) to some directory on your computer.
+
+Then you'll need to set `BADGER_PLUGIN_ROOT` environment variable in the session where you'll run the badger CLI:
+
+If you're using bash-like terminal, run this:
+
+```bash
+export BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
+```
+
+Else if you're using powershell:
+
+```powershell
+$Env:BADGER_PLUGIN_ROOT = PATH_TO_THE_BADGER_PLUGINS
+```
+
+Or you're on Windows cmd:
+
+```cmd
+set BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
+```
+
+Where `PATH_TO_THE_BADGER_PLUGINS` is the path to the cloned badger plugins repo on your computer.
+
+That's it!
+
+### Uninstall Badger
+
+To uninstall badger, run the following command under the project root:
+
+```bash
+python setup.py develop -u
+```
+
+## Usage
+
+For all the implemented and planned CLI usage, please refer to [these slides](https://docs.google.com/presentation/d/1APlLgaRik2VPGL7FuxEUmwHvx6egTeIRaxBKGS1TnsE/edit#slide=id.ge68b2a5657_0_5). We'll highlight several common CLI use cases of Badger in the following sections.
+
+### Get help
+
+```bash
+badger -h
+```
+
+Or [shoot me an email](mailto:zhezhang@slac.stanford.edu)!
+
+### Show metadata of Badger
+
+To show the version number and some other metadata such as plugin directory:
+
+```bash
+badger
+```
+
+### Get information of the algorithms
+
+List all the available algorithms:
+
+```bash
+badger algo
+```
+
+Get the configs of a specific algorithm:
+
+```bash
+badger algo ALGO_NAME
+```
+
+You'll get something like:
+
+```yaml
+name: silly
+version: '0.1'
+dependencies:
+  - numpy
+params:
+  dimension: 1
+  max_iter: 42
+```
+
+Note that in order to use this plugin, you'll need to install the dependencies listed in the command output. This dependency installation will be handled automatically if the plugin was installed through the `badger install` command, but that command is not available yet (it is coming soon).
+
+The `params` part shows all the intrinsic parameters that can be tuned when doing optimization with this algorithm.
+
+### Get information of the environments
+
+List all the available environments:
+
+```bash
+badger env
+```
+
+Get the configs of a specific environment:
+
+```bash
+badger env ENV_NAME
+```
+
+The command will print out something like:
+
+```yaml
+name: dumb
+version: '0.1'
+dependencies:
+  - numpy
+  - badger-opt
+interface:
+  - silly
+environments:
+  - silly
+  - naive
+params: null
+variables:
+  - q1
+  - q2
+  - q3
+  - q4
+  - s1
+  - s2
+observations:
+  - l2
+  - mean
+  - l2_x_mean
+```
+
+There are several important properties here:
+
+- `variables`: The tunable variables provided by this environment. You could choose a subset of the variables as the desicion variables for the optimization in the routine config
+- `observations`: The measurements provided by this environment. You could choose some observations as the objectives, and some other observations as the constraints in the routine config
+
+### Run an optimization
+
+```bash
+badger run badger run [-h] -a ALGO_NAME [-ap ALGO_PARAMS] -e ENV_NAME [-ep ENV_PARAMS] -c ROUTINE_CONFIG
+```
+
+Here are some examples:
+
+**WIP**
+
+## Development
+
+### Develop algorithm plugins for Badger
+
+Algorithm in Badger is just a function has the following signature:
+
+```
+result = optimize(evaluate, params)
+```
+
+Where `evaluate` is an evaluation function for the problem to be optimized, with the signature below:
+
+```
+Y, I, E = evaluate(X)
+```
+
+Here `X`, `Y` are the decision vectors and the objectives, respectively. `I` is the inequality constraints, `E` the equality constraints. `X` and `Y` are 2D arrays, and `I` and `E` are either 2D arrays or `None`, depends on whether the optimization problem has the corresponding constraints or not.
+
+To see an example of a Badger algorithm plugin, please have a look at the algorithms in the [official Badger algo registry](https://github.com/SLAC-ML/Badger-Plugins/tree/master/algorithms).
+
+For now, you could simply create a folder named after your algorithm under the `$BADGER_PLUGIN_ROOT/algorithms` directory, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your algorithm folder.
+
+You can then `badger algo` to see if your algorithm is there.
+
+### Develop environment plugins for Badger
+
+Before developing new environments for Badger, please have a look at the [available environments](https://github.com/SLAC-ML/Badger-Plugins/tree/master/environments) in the official Badger plugins repo.
+
+The existing envs could boost up your new env development process since Badger supports **nested environments**, which means that you could use environments in other environment, to reuse the observations/variables in the existing environments. To see an example of a nested environment, please check out the code of `silly`, `naive`, and `dumb` envs in the official Badger env registry. Note `dumb = silly + naive`.
+
+For now, you could simply create a folder named after your env under the `$BADGER_PLUGIN_ROOT/environments` directory, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your env folder.
+
+You can then `badger env` to see if your environment is there.
