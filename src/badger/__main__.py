@@ -25,6 +25,7 @@ def main():
 
     # Parser for the 'routine' command
     parser_routine = subparsers.add_parser('routine', help='Badger routines')
+    parser_routine.add_argument('routine_name', nargs='?', type=str, default=None)
     parser_routine.set_defaults(func=show_routine)
 
     # Parser for the 'algo' command
