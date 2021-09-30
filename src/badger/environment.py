@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from typing import List
 from .interface import Interface
 from .utils import merge_params
 
@@ -19,13 +20,13 @@ class Environment(ABC):
     # List all available variables
     @staticmethod
     @abstractmethod
-    def list_vars() -> list[str]:
+    def list_vars() -> List[str]:
         pass
 
     # List all available observations
     @staticmethod
     @abstractmethod
-    def list_obses() -> list[str]:
+    def list_obses() -> List[str]:
         pass
 
     # Get the default params of the environment
@@ -73,7 +74,7 @@ class Environment(ABC):
 
         return self._get_obs(obs)
 
-    def get_vars(self, vars: list[str]) -> list:
+    def get_vars(self, vars: List[str]) -> list:
         values = []
         for var in vars:
             values.append(self.get_var(var))
@@ -88,7 +89,7 @@ class Environment(ABC):
 
         return book
 
-    def set_vars(self, vars: list[str], values: list):
+    def set_vars(self, vars: List[str], values: list):
         assert len(vars) == len(
             values), 'Variables and values number mismatch!'
 
@@ -99,7 +100,7 @@ class Environment(ABC):
         for var, val in book.items():
             self.set_var(var, val)
 
-    def get_obses(self, obses: list[str]) -> list:
+    def get_obses(self, obses: List[str]) -> list:
         values = []
         for obs in obses:
             values.append(self._get_obs(obs))

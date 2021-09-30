@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from typing import List
 
 
 class Extension(ABC):
@@ -15,7 +16,7 @@ class Extension(ABC):
 
     # List all available algorithms
     @abstractmethod
-    def list_algo(self) -> list[str]:
+    def list_algo(self) -> List[str]:
         pass
 
     # Get config of an algorithm
