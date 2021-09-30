@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 from .utils import merge_params
 
 
@@ -27,14 +28,14 @@ class Interface(ABC):
     def set_value(self, channel: str, value):
         pass
 
-    def get_values(self, channels: list[str]) -> list:
+    def get_values(self, channels: List[str]) -> list:
         values = []
         for c in channels:
             values.append(self.get_value(c))
 
         return values
 
-    def set_values(self, channels: list[str], values: list):
+    def set_values(self, channels: List[str], values: list):
         assert len(channels) == len(
             values), 'Channels and values number mismatch!'
 
