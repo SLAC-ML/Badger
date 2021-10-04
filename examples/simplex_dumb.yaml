@@ -1,0 +1,7 @@
+name: Simplex vs Dumb
+variables:
+  - q1
+  - s2
+objectives:
+  - l2_x_mean:
+constraints:
