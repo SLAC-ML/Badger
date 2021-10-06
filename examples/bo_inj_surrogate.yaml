@@ -1,0 +1,8 @@
+name: Basic BO vs Injector Surrogate
+variables:
+  - SOL1:solenoid_field_scale
+  - SQ01:b1_gradient
+  - CQ01:b1_gradient
+objectives:
+  - norm_emit: MINIMIZE
+constraints:
