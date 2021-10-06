@@ -70,10 +70,18 @@ def load_plugin(root, pname, ptype):
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
         vars = module.Environment.list_vars()
+        vranges = module.Environment.get_vranges()
         obses = module.Environment.list_obses()
         params = module.Environment.get_default_params()
+
+        vars_info = []
+        for i, var in enumerate(vars):
+            var_info = {}
+            var_info[var] = f'{vranges[i][0]} -> {vranges[i][1]}'
+            vars_info.append(var_info)
+
         configs['params'] = params
-        configs['variables'] = vars
+        configs['variables'] = vars_info
         configs['observations'] = obses
         plugin = [module.Environment, configs]
 
