@@ -179,3 +179,101 @@ class ParetoFront:
             (self.pareto_front[idx_keep], candidate[1]))
         self.pareto_set = np.vstack((self.pareto_set[idx_keep], candidate[0]))
         return False
+
+
+def run_routine(routine, skip_review=False, save=None, verbose=2):
+    # Review the routine
+    if not skip_review:
+        print('Please review the routine to be run:\n')
+
+        routine_configs_var = routine['config']['variables']
+        routine['config']['variables'] = range_to_str(routine_configs_var)
+        print('=== Optimization Routine ===')
+        yprint(routine)
+        print('')
+
+        while True:
+            res = input('Proceed ([y]/n)? ')
+            if res == 'n':
+                return
+            elif (not res) or (res == 'y'):
+                break
+            else:
+                print(f'Invalid choice: {res}')
+
+        routine['config']['variables'] = routine_configs_var
+
+    # Save routine if specified
+    if save is not None:
+        import sqlite3
+        from .db import save_routine
+
+        try:
+            save_routine(routine)
+        except sqlite3.IntegrityError:
+            raise Exception(
+                f'Routine {routine["name"]} already existed in the database! Please choose another name.')
+
+    # Set up and run the optimization
+    from .factory import get_algo, get_intf, get_env
+
+    Environment, configs_env = get_env(routine['env'])
+    try:
+        intf_name = configs_env['interface'][0]
+        Interface, _ = get_intf(intf_name)
+        intf = Interface()
+    except Exception:
+        intf = None
+    env = Environment(intf, routine['env_params'])
+
+    optimize, configs_algo = get_algo(routine['algo'])
+    if not callable(optimize):  # Doing optimization through extensions
+        configs = {
+            'routine_configs': routine['config'],
+            'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']})
+        }
+        optimize.run(env, configs)
+        print('done!')
+    else:
+        from .logger import _get_default_logger
+        from .logger.event import Events
+
+        logger = _get_default_logger(verbose)  # log the optimization progress
+        var_names = [next(iter(d)) for d in routine['config']['variables']]
+        vranges = np.array([d[next(iter(d))]
+                           for d in routine['config']['variables']])
+        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+        rules = [d[next(iter(d))] for d in routine['config']['objectives']]
+        pf = ParetoFront(rules)
+
+        # Make a normalized evaluate function
+        def evaluate(X):
+            Y = []
+            for x in X:
+                _x = denorm(x, vranges[:, 0], vranges[:, 1])
+                env.set_vars(var_names, _x)
+                obses = []
+                obses_raw = []
+                for i, obj_name in enumerate(obj_names):
+                    rule = rules[i]
+                    obs = env.get_obs(obj_name)
+                    if rule == 'MAXIMIZE':
+                        obses.append(-obs)
+                    else:
+                        obses.append(obs)
+                    obses_raw.append(obs)
+                Y.append(obses)
+                obses_raw = np.array(obses_raw)
+                is_optimal = not pf.is_dominated((_x, obses_raw))
+                solution = (_x, obses_raw, is_optimal, var_names, obj_names)
+                logger.update(Events.OPTIMIZATION_STEP, solution)
+
+            Y = np.array(Y)
+
+            return Y, None, None
+
+        solution = (None, None, None, var_names, obj_names)
+        print('')
+        logger.update(Events.OPTIMIZATION_START, solution)
+        optimize(evaluate, routine['algo_params'])
+        logger.update(Events.OPTIMIZATION_END, solution)
