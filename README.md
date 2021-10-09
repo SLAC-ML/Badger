@@ -151,7 +151,6 @@ badger run [-h] -a ALGO_NAME [-ap ALGO_PARAMS] -e ENV_NAME [-ep ENV_PARAMS] -c R
 The `-ap` and `-ep` optional arguments, and the `-c` argument accept either a `.yaml` file path or a yaml string. The configs set to `-ap` and `-ep` optional arguments should be treated as "patch" on the default algorithm and environment parameters, respectively, which means that you only need to specify the paramters that you'd like to change on top of the default configs, rather than pass in a full config. The content of the `ROUTINE_CONFIG` (aka routine configs) should look like this:
 
 ```yaml
-name: CNSGA vs TNK
 variables:
   - x1
   - x2
@@ -167,7 +166,7 @@ constraints:
       - 0.5
 ```
 
-The `name`, `variables`, `objectives`, and `constraints` properties are required. The value of the `constraints` property could be set to `null` if there are no constraints for your optimization problem. The names listed in `variables` should come from `variables` of the env specified by the `-e` argument, while the names listed in `objectives` and `constraints` should come from `observations` of that env.
+The `variables`, `objectives`, and `constraints` properties are required. The value of the `constraints` property could be set to `null` if there are no constraints for your optimization problem. The names listed in `variables` should come from `variables` of the env specified by the `-e` argument, while the names listed in `objectives` and `constraints` should come from `observations` of that env.
 
 Several example routine configs can be found in the `examples` folder.
 
