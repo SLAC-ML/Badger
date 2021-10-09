@@ -5,8 +5,9 @@ from ..utils import yprint
 def show_intf(args):
     if args.intf_name is None:
         yprint(list_intf())
-    else:
-        intf = get_intf(args.intf_name)
-        if intf is None:
-            return
-        yprint(intf[1])
+        return
+
+    intf = get_intf(args.intf_name)
+    if intf is None:
+        return
+    yprint(intf[1])
