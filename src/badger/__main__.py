@@ -55,8 +55,10 @@ def main():
                             help='parameters for the environment')
     parser_run.add_argument('-c', '--config', required=True,
                             help='config for the routine')
-    parser_run.add_argument('-s', '--save',
+    parser_run.add_argument('-s', '--save', nargs='?', const='',
                             help='the routine name to be saved')
+    parser_run.add_argument('-y', '--yes', action='store_true',
+                            help='run the routine without confirmation')
     parser_run.set_defaults(func=run_routine)
 
     # Parser for the 'test' command
@@ -71,7 +73,7 @@ def main():
                              help='parameters for the environment')
     parser_test.add_argument('-c', '--config', required=True,
                              help='config for the routine')
-    parser_test.add_argument('-s', '--save',
+    parser_test.add_argument('-s', '--save', default='',
                              help='the routine name to be saved')
     parser_test.set_defaults(func=run_test)
 

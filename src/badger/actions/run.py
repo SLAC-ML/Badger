@@ -57,29 +57,32 @@ def run_routine(args):
         logging.error(e)
         return
 
-    # Print out the routine to be reviewed by user
-    print('Please review the routine to be run:\n')
+    # Review the routine
+    if not args.yes:
+        # Print out the routine to be reviewed by user
+        print('Please review the routine to be run:\n')
+
     routine_configs_var = routine['config']['variables']
     routine['config']['variables'] = range_to_str(routine_configs_var)
     print('=== Optimization Routine ===')
     yprint(routine)
     print('')
 
-    while True:
-        res = input('Proceed ([y]/n)? ')
-        if res == 'n':
-            return
-        elif (not res) or (res == 'y'):
-            print('')
-            break
-        else:
-            print(f'Invalid choice: {res}')
+    if not args.yes:
+        while True:
+            res = input('Proceed ([y]/n)? ')
+            if res == 'n':
+                return
+            elif (not res) or (res == 'y'):
+                print('')
+                break
+            else:
+                print(f'Invalid choice: {res}')
 
-    # TODO: Ask for user input if '-y' is not specified
     routine['config']['variables'] = routine_configs_var
 
     # Save routine if specified
-    if args.save:
+    if args.save is not None:
         try:
             save_routine(routine)
         except sqlite3.IntegrityError:
