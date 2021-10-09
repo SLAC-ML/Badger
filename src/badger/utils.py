@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import yaml
+import logging
 
 
 # https://stackoverflow.com/a/39681672/4263605
@@ -58,7 +59,8 @@ def load_config(fname):
             configs = yaml.safe_load(fname)
             # A string is also a valid yaml
             if type(configs) is str:
-                raise Exception(f'Error loading config {fname}: file not found')
+                raise Exception(
+                    f'Error loading config {fname}: file not found')
 
             return configs
         except yaml.YAMLError:
@@ -86,6 +88,82 @@ def merge_params(default_params, params):
     return merged_params
 
 
+def range_to_str(vranges):
+    # Transfer the range list to a string for better printing
+    vranges_str = []
+    for var_dict in vranges:
+        var = next(iter(var_dict))
+        vrange = var_dict[var]
+        vranges_str.append({})
+        vranges_str[-1][var] = f'{vrange[0]} -> {vrange[1]}'
+
+    return vranges_str
+
+
+def normalize_routine(routine):
+    # Sanity check and config normalization
+    #
+    # routine
+    #  name
+    #  algo
+    #  env
+    #  algo_params
+    #  env_params
+    #  env_vranges: use for vars normalization in config
+    #  config: change the var ranges, the obj rules, and the constraints
+    env_vranges = routine['env_vranges']
+    config = routine['config']
+
+    # Normalize the variables
+    for i, var in enumerate(config['variables']):
+        if type(var) is str:
+            config['variables'][i] = _dict = {}
+            _dict[var] = env_vranges[var]
+        else:
+            var_name = next(iter(var))  # get the only (first) key in the dict
+            vrange_vocs = var[var_name]
+            vrange_default = env_vranges[var_name]
+
+            if vrange_vocs is None:
+                var[var_name] = vrange_default
+                continue
+
+            if vrange_vocs[0] < vrange_default[0]:
+                logging.warn(
+                    f'variable {var_name}: lower limit {vrange_vocs[0]} exceeds the bound, set to the lower bound {vrange_default[0]}')
+                lb = vrange_default[0]
+            else:
+                lb = vrange_vocs[0]
+            if vrange_vocs[1] > vrange_default[1]:
+                logging.warn(
+                    f'variable {var_name}: upper limit {vrange_vocs[1]} exceeds the bound, set to the upper bound {vrange_default[1]}')
+                ub = vrange_default[1]
+            else:
+                ub = vrange_vocs[1]
+
+            if lb >= ub:  # TODO: add logic to deal with the == condition
+                raise Exception(
+                    f'variable {var_name}: lower limit {lb} must be lower than the upper limit {ub}!')
+            var[var_name] = [lb, ub]
+
+    # Normalize the objectives
+    for i, obj in enumerate(config['objectives']):
+        if type(obj) is str:
+            config['objectives'][i] = _dict = {}
+            _dict[obj] = 'MINIMIZE'
+        else:
+            obj_name = next(iter(obj))
+            if obj[obj_name] is None:
+                obj[obj_name] = 'MINIMIZE'
+
+    # TODO: Normalize the constraints
+
+    # Remove the additional info
+    del routine['env_vranges']
+
+    return routine
+
+
 class ParetoFront:
 
     def __init__(self, rules):
@@ -110,6 +188,7 @@ class ParetoFront:
 
         # Drop points that are dominated by candidate
         idx_keep = (scores != self.dimension)
-        self.pareto_front = np.vstack((self.pareto_front[idx_keep], candidate[1]))
+        self.pareto_front = np.vstack(
+            (self.pareto_front[idx_keep], candidate[1]))
         self.pareto_set = np.vstack((self.pareto_set[idx_keep], candidate[0]))
         return False
