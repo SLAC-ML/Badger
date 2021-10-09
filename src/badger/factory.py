@@ -77,7 +77,7 @@ def load_plugin(root, pname, ptype):
         vars_info = []
         for i, var in enumerate(vars):
             var_info = {}
-            var_info[var] = f'{vranges[i][0]} -> {vranges[i][1]}'
+            var_info[var] = vranges[i]
             vars_info.append(var_info)
 
         configs['params'] = params
@@ -96,6 +96,8 @@ def get_plug(root, name, ptype):
         if plug is None:  # lazy loading
             plug = load_plugin(root, name, ptype)
             BADGER_FACTORY[ptype][name] = plug
+        # Prevent accidentially modifying default configs
+        plug = [plug[0], plug[1].copy()]
     except KeyError:
         logging.error(
             f'Error loading plugin {ptype} {name}: plugin not found')
