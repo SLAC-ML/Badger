@@ -25,19 +25,6 @@ def denorm(x, lb, ub):
     return (1 - x) * lb + x * ub
 
 
-def normalize_config_vars(config_vars):
-    config = []
-    for var in config_vars:
-        if type(var) is dict:
-            config.append(var)
-        else:
-            _var = {}
-            _var[var] = [0, 1]
-            config.append(_var)
-
-    return config
-
-
 def config_list_to_dict(config_list):
     book = {}
     for config in config_list:
