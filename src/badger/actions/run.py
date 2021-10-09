@@ -1,7 +1,7 @@
 import sqlite3
 import numpy as np
 import logging
-# from coolname import generate_slug
+from coolname import generate_slug
 from ..factory import get_algo, get_intf, get_env
 from ..db import save_routine
 from ..utils import load_config, yprint, merge_params, denorm, normalize_routine
@@ -40,7 +40,7 @@ def run_routine(args):
         return
 
     routine = {
-        'name': args.save,
+        'name': args.save or generate_slug(2),
         'algo': args.algo,
         'env': args.env,
         'algo_params': params_algo,
@@ -57,6 +57,27 @@ def run_routine(args):
         logging.error(e)
         return
 
+    # Print out the routine to be reviewed by user
+    print('Please review the routine to be run:\n')
+    routine_configs_var = routine['config']['variables']
+    routine['config']['variables'] = range_to_str(routine_configs_var)
+    print('=== Optimization Routine ===')
+    yprint(routine)
+    print('')
+
+    while True:
+        res = input('Proceed ([y]/n)? ')
+        if res == 'n':
+            return
+        elif (not res) or (res == 'y'):
+            print('')
+            break
+        else:
+            print(f'Invalid choice: {res}')
+
+    # TODO: Ask for user input if '-y' is not specified
+    routine['config']['variables'] = routine_configs_var
+
     # Save routine if specified
     if args.save:
         try:
@@ -66,15 +87,7 @@ def run_routine(args):
                 f'Routine {args.save} already existed in the database! Please choose another name.')
             return
 
-    # Print out the routine info
-    print('\n=== Optimization Routine ===')
-    routine_configs_var = routine['config']['variables']
-    routine['config']['variables'] = range_to_str(routine_configs_var)
-    yprint(routine)
-    print('')
-    # TODO: Ask for user input if '-y' is not specified
-    routine['config']['variables'] = routine_configs_var
-
+    # Set up the env and run the optimization
     env = Environment(intf, params_env)
 
     if not callable(optimize):  # Doing optimization through extensions
@@ -82,7 +95,7 @@ def run_routine(args):
             'routine_configs': routine['config'],
             'algo_configs': merge_params(configs_algo, {'params': params_algo})
         }
-        results = optimize.run(env, configs)
+        optimize.run(env, configs)
         print('done!')
     else:
         # TODO: Make log level a CLI argument
