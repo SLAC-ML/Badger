@@ -1,6 +1,5 @@
-name: Silly vs TNK
 variables:
   - x2
 objectives:
-  - c1:
+  - c1
 constraints:

@@ -1,8 +1,7 @@
-name: Basic BO vs Silly
 variables:
   - q1
   - q2
   - q4
 objectives:
-  - l2:
+  - l2
 constraints:

@@ -1,9 +1,8 @@
-name: Bayesian Exploration vs TNK
 variables:
   - x1
   - x2
 objectives:
-  - y1:
+  - y1
 constraints:
   - c1:
       - GREATER_THAN

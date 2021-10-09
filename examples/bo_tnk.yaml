@@ -1,7 +1,6 @@
-name: Basic BO vs TNK
 variables:
   - x1
   - x2
 objectives:
-  - c1:
+  - c1
 constraints:

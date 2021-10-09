@@ -1,4 +1,3 @@
-name: Basic BO vs Injector Surrogate
 variables:
   - SOL1:solenoid_field_scale
   - SQ01:b1_gradient
