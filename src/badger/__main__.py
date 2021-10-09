@@ -25,7 +25,15 @@ def main():
 
     # Parser for the 'routine' command
     parser_routine = subparsers.add_parser('routine', help='Badger routines')
-    parser_routine.add_argument('routine_name', nargs='?', type=str, default=None)
+    parser_routine.add_argument('routine_name',
+                                nargs='?', type=str, default=None)
+    parser_routine.add_argument('-r', '--run', action='store_true',
+                                help='run the routine')
+    parser_routine.add_argument('-y', '--yes', action='store_true',
+                                help='run the routine without confirmation')
+    parser_routine.add_argument('-v', '--verbose', type=int, choices=[0, 1, 2],
+                                default=2, const=2, nargs='?',
+                                help='verbose level of optimization progress')
     parser_routine.set_defaults(func=show_routine)
 
     # Parser for the 'algo' command
@@ -59,6 +67,9 @@ def main():
                             help='the routine name to be saved')
     parser_run.add_argument('-y', '--yes', action='store_true',
                             help='run the routine without confirmation')
+    parser_run.add_argument('-v', '--verbose', type=int, choices=[0, 1, 2],
+                            default=2, const=2, nargs='?',
+                            help='verbose level of optimization progress')
     parser_run.set_defaults(func=run_routine)
 
     # Parser for the 'test' command
