@@ -1,27 +1,18 @@
-import sqlite3
-import numpy as np
 import logging
 from coolname import generate_slug
-from ..factory import get_algo, get_intf, get_env
-from ..db import save_routine
-from ..utils import load_config, yprint, merge_params, denorm, normalize_routine
-from ..utils import config_list_to_dict, range_to_str, ParetoFront
-from ..logger import _get_default_logger
-from ..logger.event import Events
+from ..factory import get_algo, get_env
+from ..utils import load_config, merge_params, normalize_routine
+from ..utils import config_list_to_dict
+from ..utils import run_routine as run
 
 
 def run_routine(args):
-    # Load env
-    Environment, configs_env = get_env(args.env)
-    try:
-        intf_name = configs_env['interface'][0]
-        Interface, _ = get_intf(intf_name)
-        intf = Interface()
-    except Exception:
-        intf = None
+    # Get env params
+    _, configs_env = get_env(args.env)
 
-    # Load algo
-    optimize, configs_algo = get_algo(args.algo)
+    # Get algo params
+    _, configs_algo = get_algo(args.algo)
+
     # Normalize the algo and env params
     try:
         params_env = load_config(args.env_params)
@@ -39,6 +30,7 @@ def run_routine(args):
         logging.error(e)
         return
 
+    # Compose the routine
     routine = {
         'name': args.save or generate_slug(2),
         'algo': args.algo,
@@ -50,6 +42,7 @@ def run_routine(args):
         'env_vranges': config_list_to_dict(configs_env['variables']),
         'config': configs_routine,
     }
+
     # Sanity check and config normalization
     try:
         routine = normalize_routine(routine)
@@ -57,86 +50,7 @@ def run_routine(args):
         logging.error(e)
         return
 
-    # Review the routine
-    if not args.yes:
-        # Print out the routine to be reviewed by user
-        print('Please review the routine to be run:\n')
-
-    routine_configs_var = routine['config']['variables']
-    routine['config']['variables'] = range_to_str(routine_configs_var)
-    print('=== Optimization Routine ===')
-    yprint(routine)
-    print('')
-
-    if not args.yes:
-        while True:
-            res = input('Proceed ([y]/n)? ')
-            if res == 'n':
-                return
-            elif (not res) or (res == 'y'):
-                print('')
-                break
-            else:
-                print(f'Invalid choice: {res}')
-
-    routine['config']['variables'] = routine_configs_var
-
-    # Save routine if specified
-    if args.save is not None:
-        try:
-            save_routine(routine)
-        except sqlite3.IntegrityError:
-            logging.error(
-                f'Routine {args.save} already existed in the database! Please choose another name.')
-            return
-
-    # Set up the env and run the optimization
-    env = Environment(intf, params_env)
-
-    if not callable(optimize):  # Doing optimization through extensions
-        configs = {
-            'routine_configs': routine['config'],
-            'algo_configs': merge_params(configs_algo, {'params': params_algo})
-        }
-        optimize.run(env, configs)
-        print('done!')
-    else:
-        # TODO: Make log level a CLI argument
-        logger = _get_default_logger(2)  # log the optimization progress
-        var_names = [next(iter(d)) for d in routine['config']['variables']]
-        vranges = np.array([d[next(iter(d))] for d in routine['config']['variables']])
-        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-        rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-        pf = ParetoFront(rules)
-
-        # Make a normalized evaluate function
-        def evaluate(X):
-            Y = []
-            for x in X:
-                _x = denorm(x, vranges[:, 0], vranges[:, 1])
-                env.set_vars(var_names, _x)
-                obses = []
-                obses_raw = []
-                for obj in configs_routine['objectives']:
-                    key = list(obj.keys())[0]
-                    ptype = list(obj.values())[0]
-                    obs = env.get_obs(key)
-                    if ptype == 'MAXIMIZE':
-                        obses.append(-obs)
-                    else:
-                        obses.append(obs)
-                    obses_raw.append(obs)
-                Y.append(obses)
-                obses_raw = np.array(obses_raw)
-                is_optimal = not pf.is_dominated((_x, obses_raw))
-                solution = (_x, obses_raw, is_optimal, var_names, obj_names)
-                logger.update(Events.OPTIMIZATION_STEP, solution)
-
-            Y = np.array(Y)
-
-            return Y, None, None
-
-        solution = (None, None, None, var_names, obj_names)
-        logger.update(Events.OPTIMIZATION_START, solution)
-        optimize(evaluate, params_algo)
-        logger.update(Events.OPTIMIZATION_END, solution)
+    try:
+        run(routine, args.yes, args.save, args.verbose)
+    except Exception as e:
+        logging.error(e)
