@@ -1,5 +1,5 @@
 from ..factory import list_env, get_env
-from ..utils import yprint
+from ..utils import range_to_str, yprint
 
 
 def show_env(args):
@@ -9,4 +9,7 @@ def show_env(args):
         env = get_env(args.env_name)
         if env is None:
             return
-        yprint(env[1])
+
+        configs = env[1]
+        configs['variables'] = range_to_str(configs['variables'])
+        yprint(configs)
