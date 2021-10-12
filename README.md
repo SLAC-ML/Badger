@@ -36,6 +36,30 @@ set BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
 
 Where `PATH_TO_THE_BADGER_PLUGINS` is the path to the cloned badger plugins repo on your computer.
 
+### Set up the database directory
+
+Badger saves the optimization-related information (routines, history data, etc) in a database. You'll need to set `BADGER_DB_ROOT` environment variable to tell Badger where to create/look for the database.
+
+If you're using bash-like shell, run this:
+
+```bash
+export BADGER_DB_ROOT=PATH_TO_THE_DATABASE
+```
+
+Else if you're using powershell:
+
+```powershell
+$Env:BADGER_DB_ROOT = PATH_TO_THE_DATABASE
+```
+
+Or you're on Windows cmd:
+
+```cmd
+set BADGER_DB_ROOT=PATH_TO_THE_DATABASE
+```
+
+Where `PATH_TO_THE_DATABASE` is the directory where you'd like Badger to create or look for the database.
+
 That's it!
 
 ### Uninstall Badger
