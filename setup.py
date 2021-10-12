@@ -13,7 +13,8 @@ setup(
     install_requires=[
         'numpy',
         'pyyaml',
-        'coolname'
+        'coolname',
+        'PyQt6'
     ],
     python_requires='>=3.6',
     entry_points={
