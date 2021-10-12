@@ -101,7 +101,7 @@ def get_plug(root, name, ptype):
     except KeyError:
         logging.error(
             f'Error loading plugin {ptype} {name}: plugin not found')
-        plug = None
+        plug = [None, None]
 
     return plug
 
@@ -136,7 +136,7 @@ def get_algo(name):
 
         logging.error(
             f'Error loading plugin algorithm {name}: plugin not found')
-        return None
+        return [None, None]
 
 
 def get_intf(name):
