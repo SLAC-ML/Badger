@@ -1,3 +1,4 @@
+from pkg_resources import get_distribution
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from PyQt6.QtWidgets import QPushButton, QLabel
 from PyQt6.QtGui import QIcon
@@ -11,7 +12,8 @@ class BadgerMainWindow(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle(f'Badger v{0.1}')
+        version = get_distribution('badger-opt').version
+        self.setWindowTitle(f'Badger v{version}')
         # self.setWindowIcon(QIcon('qt.png'))
         self.resize(640, 480)
         self.center()
