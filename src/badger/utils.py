@@ -256,7 +256,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
                 obses_raw = []
                 for i, obj_name in enumerate(obj_names):
                     rule = rules[i]
-                    obs = env.get_obs(obj_name)
+                    obs = float(env.get_obs(obj_name))
                     if rule == 'MAXIMIZE':
                         obses.append(-obs)
                     else:
@@ -275,5 +275,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
         solution = (None, None, None, var_names, obj_names)
         print('')
         logger.update(Events.OPTIMIZATION_START, solution)
-        optimize(evaluate, routine['algo_params'])
+        try:
+            optimize(evaluate, routine['algo_params'])
+        except Exception as e:
+            logger.update(Events.OPTIMIZATION_END, solution)
+            raise e
         logger.update(Events.OPTIMIZATION_END, solution)
