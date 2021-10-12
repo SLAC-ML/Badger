@@ -6,5 +6,6 @@ def launch_gui():
     app = QApplication(sys.argv)
 
     window = BadgerMainWindow()
+
     window.show()
     sys.exit(app.exec())
