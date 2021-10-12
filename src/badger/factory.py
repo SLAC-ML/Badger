@@ -52,7 +52,7 @@ def load_plugin(root, pname, ptype):
         except yaml.YAMLError:
             logging.error(
                 f'Error loading plugin {ptype} {pname}: invalid config')
-            return
+            return [None, None]
 
     # Load module
     try:
