@@ -8,10 +8,13 @@ from ..utils import run_routine as run
 
 def run_routine(args):
     # Get env params
+    # TODO: throw an error in get_plugin rather than printing error logs
     _, configs_env = get_env(args.env)
+    if configs_env is None: return
 
     # Get algo params
     _, configs_algo = get_algo(args.algo)
+    if configs_algo is None: return
 
     # Normalize the algo and env params
     try:
