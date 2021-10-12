@@ -12,7 +12,7 @@ def _get_default_logger(verbose):
 
 
 class ScreenLogger(_Tracker):
-    _default_cell_size = 9
+    _default_cell_size = 10
     _default_precision = 4
 
     def __init__(self, verbose=2):
