@@ -1,5 +1,5 @@
 from ..factory import list_algo, get_algo
-from ..utils import yprint
+from ..utils import config_list_to_dict, yprint
 
 
 def show_algo(args):
@@ -7,7 +7,7 @@ def show_algo(args):
         yprint(list_algo())
         return
 
-    algo = get_algo(args.algo_name)
+    algo, configs = get_algo(args.algo_name)
     if algo is None:
         return
-    yprint(algo[1])
+    yprint(configs)

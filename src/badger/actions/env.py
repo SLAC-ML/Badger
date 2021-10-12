@@ -7,10 +7,9 @@ def show_env(args):
         yprint(list_env())
         return
 
-    env = get_env(args.env_name)
+    env, configs = get_env(args.env_name)
     if env is None:
         return
 
-    configs = env[1]
     configs['variables'] = range_to_str(configs['variables'])
     yprint(configs)
