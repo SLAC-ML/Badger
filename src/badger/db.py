@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 import logging
 import yaml
 import sqlite3
@@ -23,14 +24,19 @@ def save_routine(routine):
     if not os.path.exists(db_routine):
         con = sqlite3.connect(db_routine)
         cur = con.cursor()
-        cur.execute('create table routine (name not null primary key, config)')
+        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
     else:
         con = sqlite3.connect(db_routine)
         cur = con.cursor()
 
     # Insert a record
-    cur.execute('insert into routine values (?, ?)',
-                (routine['name'], yaml.dump(routine, sort_keys=False)))
+    try:
+        cur.execute('insert into routine values (?, ?, ?)',
+                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
+    except sqlite3.OperationalError:
+        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
+        cur.execute('insert into routine values (?, ?, ?)',
+                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
     con.commit()
     con.close()
 
@@ -45,10 +51,10 @@ def load_routine(name):
     con.close()
 
     if len(records) == 1:
-        return yaml.safe_load(records[0][1])
+        return yaml.safe_load(records[0][1]), records[0][2]
     elif len(records) == 0:
         logging.warn(f'Routine {name} not found in the database!')
-        return None
+        return None, None
     else:
         raise Exception(
             f'Multiple routines with name {name} found in the database!')
@@ -59,11 +65,12 @@ def list_routines():
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    cur.execute('select name from routine')
+    cur.execute('select name, savedAt from routine')
     names = [record[0] for record in cur.fetchall()]
+    timestamps = [record[0] for record in cur.fetchall()]
     con.close()
 
-    return names
+    return names, timestamps
 
 
 def save_run(run):
