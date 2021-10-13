@@ -15,7 +15,7 @@ class BadgerMainWindow(QMainWindow):
         version = get_distribution('badger-opt').version
         self.setWindowTitle(f'Badger v{version}')
         # self.setWindowIcon(QIcon('badger.png'))
-        self.resize(640, 480)
+        self.resize(864, 648)
         self.center()
 
         # Add pages
