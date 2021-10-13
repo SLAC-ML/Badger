@@ -3,8 +3,10 @@ from PyQt6.QtWidgets import QPushButton, QLabel
 
 
 class BadgerRoutinePage(QWidget):
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
+
+        self.name = name
 
         self.init_ui()
 
@@ -12,11 +14,9 @@ class BadgerRoutinePage(QWidget):
         # Set up the layout
         vbox = QVBoxLayout(self)
 
-        # Search bar
-        panel_search = QWidget()
-        hbox_search = QHBoxLayout(panel_search)
+        # Action bar
+        self.btn_back = btn_back = QPushButton('Back')
+        btn_back.setFixedWidth(64)
+        vbox.addWidget(btn_back)
 
-        btn_setting = QPushButton('Settings')
-        hbox_search.addWidget(btn_setting)
-
-        vbox.addWidget(panel_search)
+        vbox.addStretch()
