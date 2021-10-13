@@ -66,8 +66,9 @@ def list_routines():
     cur = con.cursor()
 
     cur.execute('select name, savedAt from routine')
-    names = [record[0] for record in cur.fetchall()]
-    timestamps = [record[0] for record in cur.fetchall()]
+    records = cur.fetchall()
+    names = [record[0] for record in records]
+    timestamps = [record[1] for record in records]
     con.close()
 
     return names, timestamps
