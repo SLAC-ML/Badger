@@ -12,9 +12,15 @@ class Dumper(yaml.Dumper):
         return super(Dumper, self).increase_indent(flow, False)
 
 
+def ystring(content):
+    if content is None:
+        return ''
+
+    return yaml.dump(content, Dumper=Dumper, default_flow_style=False, sort_keys=False)
+
+
 def yprint(content):
-    print(yaml.dump(content, Dumper=Dumper,
-          default_flow_style=False, sort_keys=False), end='')
+    print(ystring(content), end='')
 
 
 def norm(x, lb, ub):
