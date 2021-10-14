@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='badger-opt',
-    version='0.2',
+    version='0.3',
     description='Core of the Badger optimizer',
     url='https://github.com/SLAC-ML/Badger',
     author='Zhe Zhang',
