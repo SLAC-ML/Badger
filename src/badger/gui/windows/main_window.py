@@ -20,7 +20,7 @@ class BadgerMainWindow(QMainWindow):
 
         # Add pages
         self.home_page = BadgerHomePage()
-        self.routine_page = BadgerRoutinePage(None)
+        self.routine_page = BadgerRoutinePage()
 
         self.stacks = stacks = QStackedWidget()
         stacks.addWidget(self.home_page)
@@ -45,4 +45,5 @@ class BadgerMainWindow(QMainWindow):
         self.stacks.setCurrentIndex(1)
 
     def show_home_page(self):
+        self.home_page.refresh_ui()
         self.stacks.setCurrentIndex(0)

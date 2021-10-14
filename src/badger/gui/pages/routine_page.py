@@ -6,13 +6,13 @@ from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, run_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
+from ..windows.review_dialog import BadgerReviewDialog
 
 
 class BadgerRoutinePage(QWidget):
-    def __init__(self, name):
+    def __init__(self):
         super().__init__()
 
-        self.name = name
         self.configs_algo = None
         self.configs_env = None
 
@@ -20,9 +20,6 @@ class BadgerRoutinePage(QWidget):
         self.config_logic()
 
     def init_ui(self):
-        if self.name is None:
-            pass
-
         self.algos = algos = list_algo()
         self.envs = envs = list_env()
 
@@ -272,10 +269,7 @@ class BadgerRoutinePage(QWidget):
         else:
             self.edit_save.setDisabled(True)
 
-    def review(self):
-        pass
-
-    def run(self):
+    def _compose_routine(self):
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
         algo = self.cb_algo.currentText()
@@ -328,6 +322,16 @@ class BadgerRoutinePage(QWidget):
         except Exception as e:
             raise e
 
+        return routine
+
+    def review(self):
+        routine = self._compose_routine()
+        dlg = BadgerReviewDialog(routine)
+        if dlg.exec():
+            pass
+
+    def run(self):
+        routine = self._compose_routine()
         save = self.check_save.isChecked()
 
         run_routine(routine, True, save)
