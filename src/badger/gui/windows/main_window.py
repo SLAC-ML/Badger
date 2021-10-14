@@ -46,4 +46,5 @@ class BadgerMainWindow(QMainWindow):
 
     def show_home_page(self):
         self.home_page.refresh_ui()
+        self.home_page.reconfig_logic()
         self.stacks.setCurrentIndex(0)

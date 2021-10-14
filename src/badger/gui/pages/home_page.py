@@ -18,6 +18,9 @@ class BadgerHomePage(QWidget):
     def init_ui(self):
         routines, timestamps = list_routines()
 
+        self.recent_routines = []
+        self.all_routines = []
+
         # Set up the layout
         vbox = QVBoxLayout(self)
 
@@ -45,6 +48,7 @@ class BadgerHomePage(QWidget):
             btn = QPushButton(routine)
             btn.setMinimumHeight(64)
             hbox_recent.addWidget(btn)
+            self.recent_routines.append([routine, btn])
 
         vbox.addWidget(group_recent)
 
@@ -67,6 +71,7 @@ class BadgerHomePage(QWidget):
             item.setSizeHint(routine_widget.sizeHint())
             routine_list.addItem(item)
             routine_list.setItemWidget(item, btn)
+            self.all_routines.append([routine, btn])
 
         vbox.addWidget(group_all)
 
@@ -77,9 +82,15 @@ class BadgerHomePage(QWidget):
 
     def config_logic(self):
         self.btn_new.clicked.connect(lambda: self._go_routine(None))
+        for item in self.recent_routines + self.all_routines:
+            routine, btn = item
+            btn.clicked.connect(lambda x, routine=routine: self._go_routine(routine))
 
     def refresh_ui(self):
         routines, timestamps = list_routines()
+
+        self.recent_routines = []
+        self.all_routines = []
 
         # Update the search bar completer
         completer = QCompleter(routines)
@@ -100,6 +111,7 @@ class BadgerHomePage(QWidget):
             btn = QPushButton(routine)
             btn.setMinimumHeight(64)
             self.hbox_recent.addWidget(btn)
+            self.recent_routines.append([routine, btn])
 
         # Update all routines
         self.routine_list.clear()
@@ -117,6 +129,12 @@ class BadgerHomePage(QWidget):
             item.setSizeHint(routine_widget.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, btn)
+            self.all_routines.append([routine, btn])
+
+    def reconfig_logic(self):
+        for item in self.recent_routines + self.all_routines:
+            routine, btn = item
+            btn.clicked.connect(lambda x, routine=routine: self._go_routine(routine))
 
     def _go_routine(self, routine_name):
         if self.go_routine is None:

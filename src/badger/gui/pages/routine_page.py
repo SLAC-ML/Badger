@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QSize
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
@@ -15,15 +16,14 @@ class BadgerRoutinePage(QWidget):
 
         self.go_home = go_home
 
-        self.configs_algo = None
-        self.configs_env = None
+        self.algos = list_algo()
+        self.envs = list_env()
 
         self.init_ui()
         self.config_logic()
 
     def init_ui(self):
-        self.algos = algos = list_algo()
-        self.envs = envs = list_env()
+
 
         # Set up the layout
         vbox = QVBoxLayout(self)
@@ -36,7 +36,7 @@ class BadgerRoutinePage(QWidget):
         group_algo = QGroupBox('Algorithm')
         vbox_algo = QVBoxLayout(group_algo)
         self.cb_algo = cb_algo = QComboBox()
-        cb_algo.addItems(algos)
+        cb_algo.addItems(self.algos)
         cb_algo.setCurrentIndex(-1)
         vbox_algo.addWidget(cb_algo)
         self.edit_algo = edit_algo = QPlainTextEdit()
@@ -47,7 +47,7 @@ class BadgerRoutinePage(QWidget):
         group_env = QGroupBox('Environment')
         vbox_env = QVBoxLayout(group_env)
         self.cb_env = cb_env = QComboBox()
-        cb_env.addItems(envs)
+        cb_env.addItems(self.envs)
         cb_env.setCurrentIndex(-1)
         vbox_env.addWidget(cb_env)
         self.edit_env = edit_env = QPlainTextEdit()
@@ -145,21 +145,80 @@ class BadgerRoutinePage(QWidget):
         self.btn_run.clicked.connect(self.run)
 
     def refresh_ui(self, routine):
+        self.algos = list_algo()
+        self.envs = list_env()
+
         if routine is None:
+            # Reset the algo and env configs
+            self.cb_algo.setCurrentIndex(-1)
+            self.cb_env.setCurrentIndex(-1)
+
+            # Reset the routine configs check box status
+            self.check_only_var.setChecked(False)
+            self.check_only_obj.setChecked(False)
+
+            # Reset the save settings
+            name = generate_slug(2)
+            self.edit_save.setText('')
+            self.edit_save.setPlaceholderText(name)
+            self.check_save.setChecked(False)
+
             return
 
-        pass
+        # Fill in the algo and env configs
+        name_algo = routine['algo']
+        idx_algo = self.algos.index(name_algo)
+        self.cb_algo.setCurrentIndex(idx_algo)
+        self.edit_algo.setPlainText(ystring(routine['algo_params']))
+
+        name_env = routine['env']
+        idx_env = self.envs.index(name_env)
+        self.cb_env.setCurrentIndex(idx_env)
+        self.edit_env.setPlainText(ystring(routine['env_params']))
+
+        # Config the vocs panel
+        self.check_only_var.setChecked(True)
+        variables = [next(iter(v)) for v in routine['config']['variables']]
+        for i in range(self.list_var.count()):
+            item = self.list_var.item(i)
+            item_widget = self.list_var.itemWidget(item)
+            var_name = item_widget.check_name.text()
+            try:
+                idx = variables.index(var_name)
+                vrange = routine['config']['variables'][idx][var_name]
+                item_widget.sb_lower.sb.setValue(vrange[0])
+                item_widget.sb_upper.sb.setValue(vrange[1])
+            except ValueError:
+                item_widget.check_name.setChecked(False)
+
+        self.check_only_obj.setChecked(True)
+        objectives = [next(iter(v)) for v in routine['config']['objectives']]
+        for i in range(self.list_obj.count()):
+            item = self.list_obj.item(i)
+            item_widget = self.list_obj.itemWidget(item)
+            obj_name = item_widget.check_name.text()
+            try:
+                idx = objectives.index(obj_name)
+                rule = routine['config']['objectives'][idx][obj_name]
+                idx_rule = 0 if rule == 'MINIMIZE' else 1
+                item_widget.cb_rule.setCurrentIndex(idx_rule)
+            except ValueError:
+                item_widget.check_name.setChecked(False)
+
+        # Config the save settings
+        name = routine['name']
+        self.edit_save.setPlaceholderText(generate_slug(2))
+        self.edit_save.setText(name)
+        self.check_save.setChecked(False)
 
     def select_algo(self, i):
         if i == -1:
             self.edit_algo.setPlainText('')
-            self.configs_algo = None
             return
 
         name = self.algos[i]
         _, configs = get_algo(name)
         self.edit_algo.setPlainText(ystring(configs['params']))
-        self.configs_algo = configs
 
     def select_env(self, i):
         if i == -1:
@@ -335,7 +394,7 @@ class BadgerRoutinePage(QWidget):
 
     def review(self):
         routine = self._compose_routine()
-        dlg = BadgerReviewDialog(routine)
+        dlg = BadgerReviewDialog(self, routine)
         if dlg.exec():
             pass
 
@@ -343,4 +402,7 @@ class BadgerRoutinePage(QWidget):
         routine = self._compose_routine()
         save = self.check_save.isChecked()
 
-        run_routine(routine, True, save)
+        try:
+            run_routine(routine, True, save)
+        except Exception as e:
+            QMessageBox.critical(self, 'Error!', str(e))
