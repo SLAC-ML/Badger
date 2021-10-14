@@ -23,8 +23,6 @@ class BadgerRoutinePage(QWidget):
         self.config_logic()
 
     def init_ui(self):
-
-
         # Set up the layout
         vbox = QVBoxLayout(self)
 
@@ -127,7 +125,7 @@ class BadgerRoutinePage(QWidget):
         hbox_action.addWidget(check_save)
         hbox_action.addWidget(edit_save)
 
-        vbox.addSpacing(16)
+        # vbox.addSpacing(16)
         vbox.addWidget(action_bar)
 
     def config_logic(self):
