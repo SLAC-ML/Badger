@@ -2,5 +2,5 @@ __pycache__
 .DS_Store
 *.egg-info
 /dist
-/environment.yml
-/requirements.txt
+/environment*.yml
+/requirements*.txt
