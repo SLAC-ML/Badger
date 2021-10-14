@@ -19,8 +19,8 @@ class BadgerMainWindow(QMainWindow):
         self.center()
 
         # Add pages
-        self.home_page = BadgerHomePage()
-        self.routine_page = BadgerRoutinePage()
+        self.home_page = BadgerHomePage(self.show_routine_page)
+        self.routine_page = BadgerRoutinePage(self.show_home_page)
 
         self.stacks = stacks = QStackedWidget()
         stacks.addWidget(self.home_page)
@@ -38,10 +38,10 @@ class BadgerMainWindow(QMainWindow):
         self.move(qr.topLeft())
 
     def config_logic(self):
-        self.home_page.btn_new.clicked.connect(self.show_routine_page)
-        self.routine_page.btn_back.clicked.connect(self.show_home_page)
+        pass
 
-    def show_routine_page(self):
+    def show_routine_page(self, routine=None):
+        self.routine_page.refresh_ui(routine)
         self.stacks.setCurrentIndex(1)
 
     def show_home_page(self):

@@ -3,14 +3,17 @@ from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QComplete
 from PyQt6.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget
 from PyQt6.QtGui import QIcon
 from ..components.search_bar import search_bar
-from ...db import list_routines
+from ...db import list_routines, load_routine
 
 
 class BadgerHomePage(QWidget):
-    def __init__(self):
+    def __init__(self, go_routine=None):
         super().__init__()
 
+        self.go_routine = go_routine
+
         self.init_ui()
+        self.config_logic()
 
     def init_ui(self):
         routines, timestamps = list_routines()
@@ -72,6 +75,9 @@ class BadgerHomePage(QWidget):
         # )
         # self.setStyleSheet(stylesheet)
 
+    def config_logic(self):
+        self.btn_new.clicked.connect(lambda: self._go_routine(None))
+
     def refresh_ui(self):
         routines, timestamps = list_routines()
 
@@ -111,3 +117,14 @@ class BadgerHomePage(QWidget):
             item.setSizeHint(routine_widget.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, btn)
+
+    def _go_routine(self, routine_name):
+        if self.go_routine is None:
+            return
+
+        if routine_name is None:
+            self.go_routine(None)
+            return
+
+        routine, _ = load_routine(routine_name)
+        self.go_routine(routine)

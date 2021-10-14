@@ -10,8 +10,10 @@ from ..windows.review_dialog import BadgerReviewDialog
 
 
 class BadgerRoutinePage(QWidget):
-    def __init__(self):
+    def __init__(self, go_home=None):
         super().__init__()
+
+        self.go_home = go_home
 
         self.configs_algo = None
         self.configs_env = None
@@ -129,6 +131,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(action_bar)
 
     def config_logic(self):
+        self.btn_back.clicked.connect(self.go_home)
         self.cb_algo.currentIndexChanged.connect(self.select_algo)
         self.cb_env.currentIndexChanged.connect(self.select_env)
         self.btn_all_var.clicked.connect(self.check_all_var)
@@ -140,6 +143,12 @@ class BadgerRoutinePage(QWidget):
         self.check_save.stateChanged.connect(self.toggle_save)
         self.btn_review.clicked.connect(self.review)
         self.btn_run.clicked.connect(self.run)
+
+    def refresh_ui(self, routine):
+        if routine is None:
+            return
+
+        pass
 
     def select_algo(self, i):
         if i == -1:
