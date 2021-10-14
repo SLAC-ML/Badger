@@ -391,13 +391,20 @@ class BadgerRoutinePage(QWidget):
         return routine
 
     def review(self):
-        routine = self._compose_routine()
+        try:
+            routine = self._compose_routine()
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error!', str(e))
+
         dlg = BadgerReviewDialog(self, routine)
-        if dlg.exec():
-            pass
+        dlg.exec()
 
     def run(self):
-        routine = self._compose_routine()
+        try:
+            routine = self._compose_routine()
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error!', str(e))
+
         save = self.check_save.isChecked()
 
         try:
