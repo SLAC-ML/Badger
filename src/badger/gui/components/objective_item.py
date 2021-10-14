@@ -13,7 +13,7 @@ def objective_item(name, rule, callback=None):
     hbox = QHBoxLayout(widget_rule)
     hbox.setContentsMargins(0, 0, 0, 0)
     label = QLabel('rule')
-    cb_rule = QComboBox()
+    widget.cb_rule = cb_rule = QComboBox()
     cb_rule.addItems(['MINIMIZE', 'MAXIMIZE'])
     cb_rule.setCurrentIndex(rule)
     hbox.addWidget(label)

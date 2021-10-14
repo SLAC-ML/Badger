@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QPlainTextEdit, QCheckBox
+from PyQt6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
 from PyQt6.QtCore import QSize
+from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import ystring
+from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, run_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
 
@@ -12,6 +13,8 @@ class BadgerRoutinePage(QWidget):
         super().__init__()
 
         self.name = name
+        self.configs_algo = None
+        self.configs_env = None
 
         self.init_ui()
         self.config_logic()
@@ -25,11 +28,6 @@ class BadgerRoutinePage(QWidget):
 
         # Set up the layout
         vbox = QVBoxLayout(self)
-
-        # Action bar
-        self.btn_back = btn_back = QPushButton('Back')
-        btn_back.setFixedWidth(64)
-        vbox.addWidget(btn_back)
 
         # Algo and env configs
         panel_int = QWidget()
@@ -110,6 +108,29 @@ class BadgerRoutinePage(QWidget):
 
         vbox.addWidget(group_ext, 1)
 
+        # Action bar
+        action_bar = QWidget()
+        hbox_action = QHBoxLayout(action_bar)
+        hbox_action.setContentsMargins(0, 0, 0, 0)
+        self.btn_back = btn_back = QPushButton('Back')
+        self.btn_review = btn_review = QPushButton('Review')
+        self.btn_run = btn_run = QPushButton('Run Routine')
+        btn_run.setFixedWidth(256)
+        self.check_save = check_save = QCheckBox('Save as')
+        check_save.setChecked(False)
+        self.edit_save = edit_save = QLineEdit()
+        edit_save.setPlaceholderText(generate_slug(2))
+        edit_save.setDisabled(True)
+        hbox_action.addWidget(btn_back)
+        hbox_action.addWidget(btn_review)
+        hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_run)
+        hbox_action.addWidget(check_save)
+        hbox_action.addWidget(edit_save)
+
+        vbox.addSpacing(16)
+        vbox.addWidget(action_bar)
+
     def config_logic(self):
         self.cb_algo.currentIndexChanged.connect(self.select_algo)
         self.cb_env.currentIndexChanged.connect(self.select_env)
@@ -119,15 +140,20 @@ class BadgerRoutinePage(QWidget):
         self.btn_un_all_obj.clicked.connect(self.uncheck_all_obj)
         self.check_only_var.stateChanged.connect(self.toggle_check_only_var)
         self.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
+        self.check_save.stateChanged.connect(self.toggle_save)
+        self.btn_review.clicked.connect(self.review)
+        self.btn_run.clicked.connect(self.run)
 
     def select_algo(self, i):
         if i == -1:
             self.edit_algo.setPlainText('')
+            self.configs_algo = None
             return
 
         name = self.algos[i]
         _, configs = get_algo(name)
         self.edit_algo.setPlainText(ystring(configs['params']))
+        self.configs_algo = configs
 
     def select_env(self, i):
         if i == -1:
@@ -239,3 +265,69 @@ class BadgerRoutinePage(QWidget):
             else:
                 item_widget.hide()
                 item.setSizeHint(QSize(0, 0))
+
+    def toggle_save(self):
+        if self.check_save.isChecked():
+            self.edit_save.setDisabled(False)
+        else:
+            self.edit_save.setDisabled(True)
+
+    def review(self):
+        pass
+
+    def run(self):
+        # Compose the routine
+        name = self.edit_save.text() or self.edit_save.placeholderText()
+        algo = self.cb_algo.currentText()
+        env = self.cb_env.currentText()
+        algo_params = load_config(self.edit_algo.toPlainText())
+        env_params = load_config(self.edit_env.toPlainText())
+
+        variables = []
+        for i in range(self.list_var.count()):
+            item = self.list_var.item(i)
+            item_widget = self.list_var.itemWidget(item)
+            if item_widget.check_name.isChecked():
+                var_name = item_widget.check_name.text()
+                lb = item_widget.sb_lower.sb.value()
+                ub = item_widget.sb_upper.sb.value()
+                _dict = {}
+                _dict[var_name] = [lb, ub]
+                variables.append(_dict)
+
+        objectives = []
+        for i in range(self.list_obj.count()):
+            item = self.list_obj.item(i)
+            item_widget = self.list_obj.itemWidget(item)
+            if item_widget.check_name.isChecked():
+                obj_name = item_widget.check_name.text()
+                rule = item_widget.cb_rule.currentText()
+                _dict = {}
+                _dict[obj_name] = rule
+                objectives.append(_dict)
+
+        configs = {
+            'variables': variables,
+            'objectives': objectives,
+            'constraints': None,
+        }
+
+        routine = {
+            'name': name,
+            'algo': algo,
+            'env': env,
+            'algo_params': algo_params,
+            'env_params': env_params,
+            'env_vranges': config_list_to_dict(variables),
+            'config': configs,
+        }
+
+        # Sanity check and config normalization
+        try:
+            routine = normalize_routine(routine)
+        except Exception as e:
+            raise e
+
+        save = self.check_save.isChecked()
+
+        run_routine(routine, True, save)

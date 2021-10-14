@@ -6,7 +6,7 @@ def labeled_spinbox(name, default_value):
     hbox = QHBoxLayout(widget)
     hbox.setContentsMargins(0, 0, 0, 0)
     label = QLabel(name)
-    sb = QDoubleSpinBox()
+    widget.sb = sb = QDoubleSpinBox()
     sb.setValue(default_value)
     hbox.addWidget(label)
     hbox.addWidget(sb, 1)
