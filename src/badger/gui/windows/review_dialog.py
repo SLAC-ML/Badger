@@ -3,8 +3,8 @@ from ...utils import ystring
 
 
 class BadgerReviewDialog(QDialog):
-    def __init__(self, routine):
-        super().__init__()
+    def __init__(self, parent, routine):
+        super().__init__(parent)
 
         self.routine = routine
 
