@@ -210,7 +210,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
         routine['config']['variables'] = routine_configs_var
 
     # Save routine if specified
-    if save is not None:
+    if save:
         import sqlite3
         from .db import save_routine
 
