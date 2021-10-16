@@ -25,12 +25,5 @@ class BadgerReviewDialog(QDialog):
         vbox.addWidget(brow_routine)
         vbox.addWidget(btn_ok)
 
-    def center(self):
-        qr = self.frameGeometry()
-        cp = self.screen().availableGeometry().center()
-
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
     def config_logic(self):
         self.btn_ok.accepted.connect(self.accept)
