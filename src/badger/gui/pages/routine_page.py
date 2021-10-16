@@ -1,13 +1,15 @@
 from PyQt6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, QThread
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, run_routine
+from ...utils import run_routine, ystring, load_config, config_list_to_dict, normalize_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
+from ..components.routine_runner import BadgerRoutineRunner
 from ..windows.review_dialog import BadgerReviewDialog
+from ..windows.opt_monitor import BadgerOptMonitor
 
 
 class BadgerRoutinePage(QWidget):
@@ -399,6 +401,19 @@ class BadgerRoutinePage(QWidget):
         dlg = BadgerReviewDialog(self, routine)
         dlg.exec()
 
+    def run_routine(self, routine, save):
+        monitor = BadgerOptMonitor(self)
+        thread_routine = QThread()
+        routine_runner = BadgerRoutineRunner(routine, save)
+        routine_runner.moveToThread(thread_routine)
+        thread_routine.started.connect(routine_runner.run)
+        routine_runner.finished.connect(thread_routine.quit)
+        routine_runner.finished.connect(routine_runner.deleteLater)
+        thread_routine.finished.connect(routine_runner.deleteLater)
+        routine_runner.progress.connect(monitor.update)
+        thread_routine.start()
+        monitor.exec()
+
     def run(self):
         try:
             routine = self._compose_routine()
@@ -408,6 +423,6 @@ class BadgerRoutinePage(QWidget):
         save = self.check_save.isChecked()
 
         try:
-            run_routine(routine, True, save)
+            self.run_routine(routine, save)
         except Exception as e:
             QMessageBox.critical(self, 'Error!', str(e))
