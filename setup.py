@@ -14,7 +14,8 @@ setup(
         'numpy',
         'pyyaml',
         'coolname',
-        'PyQt6'
+        'PyQt6',
+        'pyqtgraph'
     ],
     python_requires='>=3.6',
     entry_points={
