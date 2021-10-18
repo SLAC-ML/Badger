@@ -1,71 +1,59 @@
-import numpy as np
-import sys
 import logging
 from coolname import generate_slug
-from ..factory import get_algo, get_intf, get_env
-from ..utils import load_config, yprint, merge_params
+from ..factory import get_algo, get_env
+from ..utils import load_config, merge_params, normalize_routine
+from ..utils import config_list_to_dict
+from ..utils import run_routine as run
 
 
 def run_routine(args):
-    Environment, configs_env = get_env(args.env)
-    try:
-        intf_name = configs_env['interface'][0]
-        Interface, _ = get_intf(intf_name)
-        intf = Interface()
-    except Exception:
-        intf = None
+    # Get env params
+    # TODO: throw an error in get_plugin rather than printing error logs
+    _, configs_env = get_env(args.env)
+    if configs_env is None: return
 
-    optimize, configs_algo = get_algo(args.algo)
-    try:
-        configs_routine = load_config(args.config)
-    except Exception as e:
-        logging.error(e)
-        return
-    try:
-        routine_name = configs_routine['name']
-    except KeyError:
-        routine_name = generate_slug(2)
-        configs_routine['name'] = routine_name
+    # Get algo params
+    _, configs_algo = get_algo(args.algo)
+    if configs_algo is None: return
+
+    # Normalize the algo and env params
     try:
         params_env = load_config(args.env_params)
         params_algo = load_config(args.algo_params)
     except Exception as e:
         logging.error(e)
         return
+    params_env = merge_params(configs_env['params'], params_env)
     params_algo = merge_params(configs_algo['params'], params_algo)
 
-    # TODO: Sanity check here
+    # Load routine configs
+    try:
+        configs_routine = load_config(args.config)
+    except Exception as e:
+        logging.error(e)
+        return
 
-    yprint(configs_routine)
+    # Compose the routine
+    routine = {
+        'name': args.save or generate_slug(2),
+        'algo': args.algo,
+        'env': args.env,
+        'algo_params': params_algo,
+        'env_params': params_env,
+        # env_vranges is an additional info for the normalization
+        # Will be removed after the normalization
+        'env_vranges': config_list_to_dict(configs_env['variables']),
+        'config': configs_routine,
+    }
 
-    env = Environment(intf, params_env)
+    # Sanity check and config normalization
+    try:
+        routine = normalize_routine(routine)
+    except Exception as e:
+        logging.error(e)
+        return
 
-    if not callable(optimize):
-        configs = {
-            'routine_configs': configs_routine,
-            'algo_configs': merge_params(configs_algo, {'params': params_algo})
-        }
-        results = optimize.run(env, configs)
-        print('done!')
-    else:
-        # Make a normalized evaluate function
-        def evaluate(X):
-            Y = []
-            for x in X:
-                env.set_vars(configs_routine['variables'], x)
-                obses = []
-                for obj in configs_routine['objectives']:
-                    key = list(obj.keys())[0]
-                    ptype = list(obj.values())[0]
-                    obs = env.get_obs(key)
-                    if ptype == 'MAXIMIZE':
-                        obses.append(-obs)
-                    else:
-                        obses.append(obs)
-                Y.append(obses)
-            Y = np.array(Y)
-
-            return Y, None, None
-
-        y_opt, x_opt = optimize(evaluate, params_algo)
-        print(f'best! {x_opt}: {y_opt}')
+    try:
+        run(routine, args.yes, args.save, args.verbose)
+    except Exception as e:
+        logging.error(e)

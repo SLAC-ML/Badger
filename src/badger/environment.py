@@ -53,6 +53,41 @@ class Environment(ABC):
     def _get_obs(self, obs: str):
         pass
 
+    # Get variable range
+    # Unsafe version
+    @classmethod
+    def _get_vrange(cls, var: str):
+        return [0, 1]
+
+    # Safe version of _get_vrange
+    @classmethod
+    def get_vrange(cls, var: str):
+        if var not in cls.list_vars():
+            raise Exception(f'Variable {var} doesn\'t exist!')
+
+        return cls._get_vrange(var)
+
+    # Get all the variable ranges
+    @classmethod
+    def get_vranges(cls, vars=None):
+        if vars is None:
+            return [cls._get_vrange(var) for var in cls.list_vars()]
+        else:
+            return [cls.get_vrange(var) for var in vars]
+
+    # Get all the variable ranges
+    @classmethod
+    def get_vranges_dict(cls, vars=None):
+        book = {}
+        if vars is None:
+            vars = cls.list_vars()
+            for var in vars:
+                book[var] = cls._get_vrange(var)
+        else:
+            for var in vars:
+                book[var] = cls.get_vrange(var)
+        return book
+
     # Safe version of _get_var
     def get_var(self, var: str):
         if var not in self.list_vars():

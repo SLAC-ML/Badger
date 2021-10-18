@@ -1,9 +1,8 @@
-name: Silly vs Dumb
 variables:
   - q1
-  - q2
-  - q4
-  - s2
+  - q2: [-1, 0.5]
+  - q4: [0, 1]
+  - s2: [0.51, 0.52]
 objectives:
-  - l2_x_mean:
+  - l2
 constraints:

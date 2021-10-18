@@ -1,12 +1,13 @@
 from ..factory import list_intf, get_intf
-from ..utils import yprint
+from ..utils import config_list_to_dict, yprint
 
 
 def show_intf(args):
     if args.intf_name is None:
         yprint(list_intf())
-    else:
-        intf = get_intf(args.intf_name)
-        if intf is None:
-            return
-        yprint(intf[1])
+        return
+
+    intf, configs = get_intf(args.intf_name)
+    if intf is None:
+        return
+    yprint(configs)

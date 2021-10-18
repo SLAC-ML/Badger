@@ -52,7 +52,7 @@ def load_plugin(root, pname, ptype):
         except yaml.YAMLError:
             logging.error(
                 f'Error loading plugin {ptype} {pname}: invalid config')
-            return
+            return [None, None]
 
     # Load module
     try:
@@ -70,10 +70,18 @@ def load_plugin(root, pname, ptype):
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
         vars = module.Environment.list_vars()
+        vranges = module.Environment.get_vranges()
         obses = module.Environment.list_obses()
         params = module.Environment.get_default_params()
+
+        vars_info = []
+        for i, var in enumerate(vars):
+            var_info = {}
+            var_info[var] = vranges[i]
+            vars_info.append(var_info)
+
         configs['params'] = params
-        configs['variables'] = vars
+        configs['variables'] = vars_info
         configs['observations'] = obses
         plugin = [module.Environment, configs]
 
@@ -88,10 +96,12 @@ def get_plug(root, name, ptype):
         if plug is None:  # lazy loading
             plug = load_plugin(root, name, ptype)
             BADGER_FACTORY[ptype][name] = plug
+        # Prevent accidentially modifying default configs
+        plug = [plug[0], plug[1].copy()]
     except KeyError:
         logging.error(
             f'Error loading plugin {ptype} {name}: plugin not found')
-        plug = None
+        plug = [None, None]
 
     return plug
 
@@ -126,7 +136,7 @@ def get_algo(name):
 
         logging.error(
             f'Error loading plugin algorithm {name}: plugin not found')
-        return None
+        return [None, None]
 
 
 def get_intf(name):

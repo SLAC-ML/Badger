@@ -1,5 +1,6 @@
 variables:
-  - x2
+  - q1
+  - s2
 objectives:
-  - c1
+  - l2_x_mean
 constraints:

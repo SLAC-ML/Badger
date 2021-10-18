@@ -1,5 +1,7 @@
 variables:
-  - x2
+  - q1
+  - q2
+  - q4
 objectives:
-  - c1
+  - l2
 constraints:
