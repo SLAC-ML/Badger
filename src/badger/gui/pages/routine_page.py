@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
-from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QSize, QThread
+from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QSize, QThread
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import run_routine, ystring, load_config, config_list_to_dict, normalize_routine
@@ -403,8 +403,8 @@ class BadgerRoutinePage(QWidget):
 
     def run_routine(self, routine, save):
         monitor = BadgerOptMonitor(self)
-        thread_routine = QThread()
-        routine_runner = BadgerRoutineRunner(routine, save)
+        self.thread_routine = thread_routine = QThread(self)
+        self.routine_runner = routine_runner = BadgerRoutineRunner(routine, save)
         routine_runner.moveToThread(thread_routine)
         thread_routine.started.connect(routine_runner.run)
         routine_runner.finished.connect(thread_routine.quit)

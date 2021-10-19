@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLineEdit, QCompleter
+from PyQt5.QtWidgets import QLineEdit, QCompleter
 
 
 def search_bar(word_list):

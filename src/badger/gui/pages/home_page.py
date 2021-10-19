@@ -1,7 +1,7 @@
 from datetime import datetime
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget
-from PyQt6.QtGui import QIcon
+from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
+from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget
+from PyQt5.QtGui import QIcon
 from ..components.search_bar import search_bar
 from ...db import list_routines, load_routine
 

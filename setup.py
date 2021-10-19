@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='badger-opt',
-    version='0.4',
+    version='0.41',
     description='Core of the Badger optimizer',
     url='https://github.com/SLAC-ML/Badger',
     author='Zhe Zhang',
@@ -14,7 +14,7 @@ setup(
         'numpy',
         'pyyaml',
         'coolname',
-        'PyQt6',
+        'pyqt5',
         'pyqtgraph'
     ],
     python_requires='>=3.6',

@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QObject, pyqtSignal
 
 
 class BadgerRoutineRunner(QObject):

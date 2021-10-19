@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
-from PyQt6 import QtCore
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
+from PyQt5 import QtCore
 import pyqtgraph as pg
 
 
@@ -13,7 +13,7 @@ class BadgerOptMonitor(QDialog):
 
     def init_ui(self):
         self.setWindowTitle('Opt Monitor')
-        self.resize(2560, 1280)
+        self.resize(1280, 640)
 
         vbox = QVBoxLayout(self)
 
