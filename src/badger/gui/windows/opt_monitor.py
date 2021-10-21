@@ -27,7 +27,8 @@ class BadgerOptMonitor(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         # Set up the monitor
-        monitor = pg.GraphicsLayoutWidget(show=True)
+        # Don't set show=True or there will be a blank window flashing once
+        self.monitor = monitor = pg.GraphicsLayoutWidget()
         # monitor.ci.setBorder((50, 50, 100))
         # monitor.resize(1000, 600)
         pg.setConfigOptions(antialias=True)
