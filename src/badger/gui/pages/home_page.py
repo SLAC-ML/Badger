@@ -1,7 +1,7 @@
 from datetime import datetime
-from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
-from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QLabel, QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
+from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget, QShortcut
+from PyQt5.QtGui import QIcon, QKeySequence
 from ..components.search_bar import search_bar
 from ...db import list_routines, load_routine
 
@@ -10,6 +10,7 @@ class BadgerHomePage(QWidget):
     def __init__(self, go_routine=None):
         super().__init__()
 
+        # go_routine is a function that jumps to the routine page once called
         self.go_routine = go_routine
 
         self.init_ui()
@@ -17,6 +18,7 @@ class BadgerHomePage(QWidget):
 
     def init_ui(self):
         routines, timestamps = list_routines()
+        self.routines = routines
 
         self.recent_routines = []
         self.all_routines = []
@@ -86,8 +88,15 @@ class BadgerHomePage(QWidget):
             routine, btn = item
             btn.clicked.connect(lambda x, routine=routine: self._go_routine(routine))
 
+        self.sbar.returnPressed.connect(self.check_n_go_routine)
+
+        # Assign shortcuts
+        self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
+        self.shortcut_go_search.activated.connect(self.go_search)
+
     def refresh_ui(self):
         routines, timestamps = list_routines()
+        self.routines = routines
 
         self.recent_routines = []
         self.all_routines = []
@@ -134,7 +143,29 @@ class BadgerHomePage(QWidget):
     def reconfig_logic(self):
         for item in self.recent_routines + self.all_routines:
             routine, btn = item
-            btn.clicked.connect(lambda x, routine=routine: self._go_routine(routine))
+            btn.clicked.connect(
+                lambda x, routine=routine: self._go_routine(routine))
+
+    def check_n_go_routine(self):
+        if self.go_routine is None:
+            return
+
+        routine_name = self.sbar.text()
+
+        if not routine_name:
+            self.go_routine(None)
+            return
+
+        if routine_name in self.routines:
+            routine, _ = load_routine(routine_name)
+            self.go_routine(routine)
+            return
+
+        QMessageBox.warning(
+            self, 'Warning!', f'Routine {routine_name} not found in the database!')
+
+    def go_search(self):
+        self.sbar.setFocus()
 
     def _go_routine(self, routine_name):
         if self.go_routine is None:
