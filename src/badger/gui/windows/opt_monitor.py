@@ -37,6 +37,8 @@ class BadgerOptMonitor(QMainWindow):
         plot_obj.setLabel('left', 'objectives')
         plot_obj.setLabel('bottom', 'iterations')
         plot_obj.showGrid(x=True, y=True)
+        leg_obj = plot_obj.addLegend()
+        leg_obj.setBrush((50, 50, 100, 200))
 
         monitor.nextRow()
 
@@ -45,6 +47,8 @@ class BadgerOptMonitor(QMainWindow):
         plot_var.setLabel('left', 'variables')
         plot_var.setLabel('bottom', 'iterations')
         plot_var.showGrid(x=True, y=True)
+        leg_var = plot_var.addLegend()
+        leg_var.setBrush((50, 50, 100, 200))
 
         plot_var.setXLink(plot_obj)
 
@@ -117,14 +121,16 @@ class BadgerOptMonitor(QMainWindow):
             for i in range(len(objs)):
                 color = self.colors[i % 7]
                 symbol = self.symbols[i % 7]
-                _curve = self.plot_obj.plot(pen=color, symbol=symbol)
+                _curve = self.plot_obj.plot(pen=color, symbol=symbol,
+                                            name=next(iter(self.routine['config']['objectives'][i])))
                 self.curves_obj.append(_curve)
 
         if not self.curves_var:
             for i in range(len(vars)):
                 color = self.colors[i % 7]
                 symbol = self.symbols[i % 7]
-                _curve = self.plot_var.plot(pen=color, symbol=symbol)
+                _curve = self.plot_var.plot(pen=color, symbol=symbol,
+                                            name=next(iter(self.routine['config']['variables'][i])))
                 self.curves_var.append(_curve)
 
         for i in range(len(objs)):
