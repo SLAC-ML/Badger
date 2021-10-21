@@ -20,25 +20,48 @@ class BadgerOptMonitor(QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle('Opt Monitor')
-        self.resize(1280, 640)
+        self.resize(640, 960)
 
         self.central_widget = QWidget()
         vbox = QVBoxLayout(self.central_widget)
         self.setCentralWidget(self.central_widget)
 
-        monitor = pg.GraphicsLayoutWidget()
+        # Set up the monitor
+        monitor = pg.GraphicsLayoutWidget(show=True)
+        # monitor.ci.setBorder((50, 50, 100))
         # monitor.resize(1000, 600)
         pg.setConfigOptions(antialias=True)
 
-        self.plot_obj = plot_obj = monitor.addPlot(title='Evaluation History (Y)')
+        self.plot_obj = plot_obj = monitor.addPlot(
+            title='Evaluation History (Y)')
         plot_obj.setLabel('left', 'objectives')
         plot_obj.setLabel('bottom', 'iterations')
         plot_obj.showGrid(x=True, y=True)
 
-        self.plot_var = plot_var = monitor.addPlot(title='Evaluation History (X)')
+        monitor.nextRow()
+
+        self.plot_var = plot_var = monitor.addPlot(
+            title='Evaluation History (X)')
         plot_var.setLabel('left', 'variables')
         plot_var.setLabel('bottom', 'iterations')
         plot_var.showGrid(x=True, y=True)
+
+        plot_var.setXLink(plot_obj)
+
+        self.ins_obj = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
+                                       labelOpts={
+                                           'position': 0.1,
+                                           'color': (200, 200, 100),
+                                           'fill': (200, 200, 200, 50),
+                                           'movable': True})
+        self.ins_var = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
+                                       labelOpts={
+                                           'position': 0.1,
+                                           'color': (200, 200, 100),
+                                           'fill': (200, 200, 200, 50),
+                                           'movable': True})
+        plot_obj.addItem(self.ins_obj)
+        plot_var.addItem(self.ins_var)
 
         # Action bar
         action_bar = QWidget()
@@ -63,11 +86,16 @@ class BadgerOptMonitor(QMainWindow):
 
         self.running = False
 
+        # Sync the inspector lines
+        self.ins_obj.sigDragged.connect(self.ins_obj_dragged)
+        self.ins_var.sigDragged.connect(self.ins_var_dragged)
+
         # Thread runner
         self.thread_pool = QThreadPool(self)
 
         # Create the routine runner
-        self.routine_runner = routine_runner = BadgerRoutineRunner(self.routine, self.save)
+        self.routine_runner = routine_runner = BadgerRoutineRunner(
+            self.routine, self.save)
         routine_runner.signals.finished.connect(self.routine_finished)
         routine_runner.signals.progress.connect(self.update)
 
@@ -121,14 +149,20 @@ class BadgerOptMonitor(QMainWindow):
     def stop_routine(self):
         self.sig_stop.emit()
 
+    def ins_obj_dragged(self, ins_obj):
+        self.ins_var.setValue(ins_obj.value())
+
+    def ins_var_dragged(self, ins_var):
+        self.ins_obj.setValue(ins_var.value())
+
     def closeEvent(self, event):
         if not self.running:
             return
 
         reply = QMessageBox.question(self,
-            'Window Close',
-            'Closing this window will terminate the run, proceed?',
-			QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                     'Window Close',
+                                     'Closing this window will terminate the run, proceed?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
             self.sig_stop.emit()
