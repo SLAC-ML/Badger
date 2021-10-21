@@ -1,11 +1,17 @@
+import time
 import numpy as np
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import QObject, pyqtSignal
+# from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
 
 
-class BadgerRoutineRunner(QObject):
+class BadgerRoutineSignals(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(list, list)
+
+
+class BadgerRoutineRunner(QRunnable):
+
+    signals = BadgerRoutineSignals()
 
     def __init__(self, routine, save, verbose=2):
         super().__init__()
@@ -14,6 +20,9 @@ class BadgerRoutineRunner(QObject):
         self.save = save
         self.verbose = verbose
 
+        self.is_paused = False
+        self.is_killed = False
+
     def run(self):
         try:
             self._run()
@@ -21,7 +30,7 @@ class BadgerRoutineRunner(QObject):
             print(e)
             # QMessageBox.critical(None, 'Error!', str(e))
 
-        self.finished.emit()
+        self.signals.finished.emit()
 
     def _run(self):
         save = self.save
@@ -64,11 +73,13 @@ class BadgerRoutineRunner(QObject):
             from ...logger import _get_default_logger
             from ...logger.event import Events
 
-            logger = _get_default_logger(verbose)  # log the optimization progress
+            # log the optimization progress
+            logger = _get_default_logger(verbose)
             var_names = [next(iter(d)) for d in routine['config']['variables']]
             vranges = np.array([d[next(iter(d))]
-                            for d in routine['config']['variables']])
-            obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+                                for d in routine['config']['variables']])
+            obj_names = [next(iter(d))
+                         for d in routine['config']['objectives']]
             rules = [d[next(iter(d))] for d in routine['config']['objectives']]
             pf = ParetoFront(rules)
 
@@ -76,6 +87,14 @@ class BadgerRoutineRunner(QObject):
             def evaluate(X):
                 Y = []
                 for x in X:
+                    while self.is_paused:
+                        time.sleep(0)
+                        if self.is_killed:
+                            raise Exception('Optimization run has been terminated!')
+
+                    if self.is_killed:
+                        raise Exception('Optimization run has been terminated!')
+
                     _x = denorm(x, vranges[:, 0], vranges[:, 1])
                     env.set_vars(var_names, _x)
                     obses = []
@@ -91,9 +110,13 @@ class BadgerRoutineRunner(QObject):
                     Y.append(obses)
                     obses_raw = np.array(obses_raw)
                     is_optimal = not pf.is_dominated((_x, obses_raw))
-                    solution = (_x, obses_raw, is_optimal, var_names, obj_names)
+                    solution = (_x, obses_raw, is_optimal,
+                                var_names, obj_names)
                     logger.update(Events.OPTIMIZATION_STEP, solution)
-                    self.progress.emit(list(_x), list(obses_raw))
+                    self.signals.progress.emit(list(_x), list(obses_raw))
+
+                    # take a break to let the outside signal to change the status
+                    time.sleep(0.1)
 
                 Y = np.array(Y)
 
@@ -101,6 +124,7 @@ class BadgerRoutineRunner(QObject):
 
             solution = (None, None, None, var_names, obj_names)
             print('')
+
             logger.update(Events.OPTIMIZATION_START, solution)
             try:
                 optimize(evaluate, routine['algo_params'])
@@ -108,3 +132,9 @@ class BadgerRoutineRunner(QObject):
                 logger.update(Events.OPTIMIZATION_END, solution)
                 raise e
             logger.update(Events.OPTIMIZATION_END, solution)
+
+    def ctrl_routine(self, pause):
+        self.is_paused = pause
+
+    def stop_routine(self):
+        self.is_killed = True

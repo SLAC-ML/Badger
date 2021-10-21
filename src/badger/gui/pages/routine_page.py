@@ -1,13 +1,12 @@
 from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import QSize, QThread
+from PyQt5.QtCore import QSize
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import run_routine, ystring, load_config, config_list_to_dict, normalize_routine
+from ...utils import ystring, load_config, config_list_to_dict, normalize_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
-from ..components.routine_runner import BadgerRoutineRunner
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
 
@@ -402,17 +401,9 @@ class BadgerRoutinePage(QWidget):
         dlg.exec()
 
     def run_routine(self, routine, save):
-        monitor = BadgerOptMonitor(self)
-        self.thread_routine = thread_routine = QThread(self)
-        self.routine_runner = routine_runner = BadgerRoutineRunner(routine, save)
-        routine_runner.moveToThread(thread_routine)
-        thread_routine.started.connect(routine_runner.run)
-        routine_runner.finished.connect(thread_routine.quit)
-        routine_runner.finished.connect(routine_runner.deleteLater)
-        thread_routine.finished.connect(routine_runner.deleteLater)
-        routine_runner.progress.connect(monitor.update)
-        thread_routine.start()
-        monitor.exec()
+        self.monitor = BadgerOptMonitor(None, routine, save)
+        self.monitor.show()
+        self.monitor.start()
 
     def run(self):
         try:
@@ -425,4 +416,5 @@ class BadgerRoutinePage(QWidget):
         try:
             self.run_routine(routine, save)
         except Exception as e:
+            # raise e
             QMessageBox.critical(self, 'Error!', str(e))

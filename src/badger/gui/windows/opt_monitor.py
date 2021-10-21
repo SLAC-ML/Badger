@@ -1,12 +1,20 @@
 import numpy as np
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
-from PyQt5 import QtCore
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtCore import pyqtSignal, QThreadPool
 import pyqtgraph as pg
+from ..components.routine_runner import BadgerRoutineRunner
+# from ...utils import make_sync
 
 
-class BadgerOptMonitor(QDialog):
-    def __init__(self, parent):
+class BadgerOptMonitor(QWidget):
+    sig_pause = pyqtSignal(bool)  # True: pause, False: resume
+    sig_stop = pyqtSignal()
+
+    def __init__(self, parent, routine, save):
         super().__init__(parent)
+
+        self.routine = routine
+        self.save = save
 
         self.init_ui()
         self.config_logic()
@@ -31,10 +39,18 @@ class BadgerOptMonitor(QDialog):
         plot_var.setLabel('bottom', 'iterations')
         plot_var.showGrid(x=True, y=True)
 
-        self.btn_ok = btn_ok = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        # Action bar
+        action_bar = QWidget()
+        hbox_action = QHBoxLayout(action_bar)
+        hbox_action.setContentsMargins(0, 0, 0, 0)
+        self.btn_ctrl = btn_ctrl = QPushButton('Pause')
+        self.btn_stop = btn_stop = QPushButton('Stop')
+        hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_ctrl)
+        hbox_action.addWidget(btn_stop)
 
         vbox.addWidget(monitor)
-        vbox.addWidget(btn_ok)
+        vbox.addWidget(action_bar)
 
     def config_logic(self):
         self.colors = ['b', 'g', 'r', 'c', 'm', 'y', 'w']
@@ -44,7 +60,25 @@ class BadgerOptMonitor(QDialog):
         self.curves_var = []
         self.curves_obj = []
 
-        self.btn_ok.accepted.connect(self.accept)
+        self.running = False
+
+        # Thread runner
+        self.thread_pool = QThreadPool(self)
+
+        # Create the routine runner
+        self.routine_runner = routine_runner = BadgerRoutineRunner(self.routine, self.save)
+        routine_runner.signals.finished.connect(self.routine_finished)
+        routine_runner.signals.progress.connect(self.update)
+
+        self.sig_pause.connect(routine_runner.ctrl_routine)
+        self.sig_stop.connect(routine_runner.stop_routine)
+
+        self.btn_ctrl.clicked.connect(self.ctrl_routine)
+        self.btn_stop.clicked.connect(self.stop_routine)
+
+    def start(self):
+        self.running = True  # if a routine runner is working
+        self.thread_pool.start(self.routine_runner)
 
     def update(self, vars, objs):
         self.vars.append(vars)
@@ -69,3 +103,34 @@ class BadgerOptMonitor(QDialog):
 
         for i in range(len(vars)):
             self.curves_var[i].setData(np.array(self.vars)[:, i])
+
+    def routine_finished(self):
+        self.running = False
+        self.btn_ctrl.setDisabled(True)
+        self.btn_stop.setDisabled(True)
+
+    def ctrl_routine(self):
+        if self.btn_ctrl.text() == 'Pause':
+            self.sig_pause.emit(True)
+            self.btn_ctrl.setText('Resume')
+        else:
+            self.sig_pause.emit(False)
+            self.btn_ctrl.setText('Pause')
+
+    def stop_routine(self):
+        self.sig_stop.emit()
+
+    def closeEvent(self, event):
+        if not self.running:
+            return
+
+        reply = QMessageBox.question(self,
+            'Window Close',
+            'Closing this window will terminate the run, proceed?',
+			QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            self.sig_stop.emit()
+            event.accept()
+        else:
+            event.ignore()
