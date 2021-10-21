@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtCore
 import sys
-import ctypes
+# import ctypes
 from .windows.main_window import BadgerMainWindow
 
 # Fix the scaling issue on multiple monitors w/ different scaling settings
-if sys.platform == 'win32':
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+# if sys.platform == 'win32':
+#     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
     QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -25,4 +25,9 @@ def launch_gui():
     window = BadgerMainWindow()
 
     window.show()
+
+    # timer = QtCore.QTimer()
+    # timer.timeout.connect(lambda: None)
+    # timer.start(100)
+
     sys.exit(app.exec())
