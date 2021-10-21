@@ -1,12 +1,11 @@
 import numpy as np
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
-# from ...utils import make_sync
 
 
-class BadgerOptMonitor(QWidget):
+class BadgerOptMonitor(QMainWindow):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
 
@@ -23,7 +22,9 @@ class BadgerOptMonitor(QWidget):
         self.setWindowTitle('Opt Monitor')
         self.resize(1280, 640)
 
-        vbox = QVBoxLayout(self)
+        self.central_widget = QWidget()
+        vbox = QVBoxLayout(self.central_widget)
+        self.setCentralWidget(self.central_widget)
 
         monitor = pg.GraphicsLayoutWidget()
         # monitor.resize(1000, 600)

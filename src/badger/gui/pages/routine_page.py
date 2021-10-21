@@ -401,7 +401,7 @@ class BadgerRoutinePage(QWidget):
         dlg.exec()
 
     def run_routine(self, routine, save):
-        self.monitor = BadgerOptMonitor(None, routine, save)
+        self.monitor = BadgerOptMonitor(self, routine, save)
         self.monitor.show()
         self.monitor.start()
 
