@@ -190,7 +190,8 @@ class ParetoFront:
         return False
 
 
-def run_routine(routine, skip_review=False, save=None, verbose=2):
+def run_routine(routine, skip_review=False, save=None, verbose=2,
+                before_evaluate=None, after_evaluate=None):
     # Review the routine
     if not skip_review:
         print('Please review the routine to be run:\n')
@@ -253,6 +254,10 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
         Y = []
         for x in X:
             _x = denorm(x, vranges[:, 0], vranges[:, 1])
+
+            if before_evaluate:
+                before_evaluate(_x)
+
             env.set_vars(var_names, _x)
             obses = []
             obses_raw = []
@@ -269,6 +274,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
             is_optimal = not pf.is_dominated((_x, obses_raw))
             solution = (_x, obses_raw, is_optimal, var_names, obj_names)
             logger.update(Events.OPTIMIZATION_STEP, solution)
+
+            if after_evaluate:
+                after_evaluate(_x, obses_raw)
 
         Y = np.array(Y)
 
