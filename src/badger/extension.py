@@ -1,4 +1,3 @@
-import numpy as np
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -24,7 +23,8 @@ class Extension(ABC):
     def get_algo_config(self, name: str):
         pass
 
-    # Run an optimization on the given environment
+    # Run an optimization with an array-style evaluate function
+    # and a configs dict
     @abstractmethod
-    def run(self, env, configs: dict):
+    def optimize(self, evaluate, configs: dict):
         pass
