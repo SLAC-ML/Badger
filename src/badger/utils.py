@@ -236,57 +236,58 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
     env = Environment(intf, routine['env_params'])
 
     optimize, configs_algo = get_algo(routine['algo'])
-    if not callable(optimize):  # Doing optimization through extensions
-        configs = {
-            'routine_configs': routine['config'],
-            'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']})
-        }
-        optimize.run(env, configs)
-        # print('done!')
-    else:
-        from .logger import _get_default_logger
-        from .logger.event import Events
 
-        logger = _get_default_logger(verbose)  # log the optimization progress
-        var_names = [next(iter(d)) for d in routine['config']['variables']]
-        vranges = np.array([d[next(iter(d))]
-                           for d in routine['config']['variables']])
-        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-        rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-        pf = ParetoFront(rules)
+    from .logger import _get_default_logger
+    from .logger.event import Events
 
-        # Make a normalized evaluate function
-        def evaluate(X):
-            Y = []
-            for x in X:
-                _x = denorm(x, vranges[:, 0], vranges[:, 1])
-                env.set_vars(var_names, _x)
-                obses = []
-                obses_raw = []
-                for i, obj_name in enumerate(obj_names):
-                    rule = rules[i]
-                    obs = float(env.get_obs(obj_name))
-                    if rule == 'MAXIMIZE':
-                        obses.append(-obs)
-                    else:
-                        obses.append(obs)
-                    obses_raw.append(obs)
-                Y.append(obses)
-                obses_raw = np.array(obses_raw)
-                is_optimal = not pf.is_dominated((_x, obses_raw))
-                solution = (_x, obses_raw, is_optimal, var_names, obj_names)
-                logger.update(Events.OPTIMIZATION_STEP, solution)
+    logger = _get_default_logger(verbose)  # log the optimization progress
+    var_names = [next(iter(d)) for d in routine['config']['variables']]
+    vranges = np.array([d[next(iter(d))]
+                        for d in routine['config']['variables']])
+    obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+    rules = [d[next(iter(d))] for d in routine['config']['objectives']]
+    pf = ParetoFront(rules)
 
-            Y = np.array(Y)
+    # Make a normalized evaluate function
+    def evaluate(X):
+        Y = []
+        for x in X:
+            _x = denorm(x, vranges[:, 0], vranges[:, 1])
+            env.set_vars(var_names, _x)
+            obses = []
+            obses_raw = []
+            for i, obj_name in enumerate(obj_names):
+                rule = rules[i]
+                obs = float(env.get_obs(obj_name))
+                if rule == 'MAXIMIZE':
+                    obses.append(-obs)
+                else:
+                    obses.append(obs)
+                obses_raw.append(obs)
+            Y.append(obses)
+            obses_raw = np.array(obses_raw)
+            is_optimal = not pf.is_dominated((_x, obses_raw))
+            solution = (_x, obses_raw, is_optimal, var_names, obj_names)
+            logger.update(Events.OPTIMIZATION_STEP, solution)
 
-            return Y, None, None
+        Y = np.array(Y)
 
-        solution = (None, None, None, var_names, obj_names)
-        print('')
-        logger.update(Events.OPTIMIZATION_START, solution)
-        try:
+        return Y, None, None
+
+    solution = (None, None, None, var_names, obj_names)
+    print('')
+    logger.update(Events.OPTIMIZATION_START, solution)
+    try:
+        if not callable(optimize):  # doing optimization through extensions
+            configs = {
+                'routine_configs': routine['config'],
+                'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
+                'env_configs': merge_params(configs_env, {'params': routine['env_params']}),
+            }
+            optimize.run(evaluate, configs)
+        else:
             optimize(evaluate, routine['algo_params'])
-        except Exception as e:
-            logger.update(Events.OPTIMIZATION_END, solution)
-            raise e
+    except Exception as e:
         logger.update(Events.OPTIMIZATION_END, solution)
+        raise e
+    logger.update(Events.OPTIMIZATION_END, solution)
