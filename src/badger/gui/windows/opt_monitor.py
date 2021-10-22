@@ -104,6 +104,7 @@ class BadgerOptMonitor(QMainWindow):
             self.routine, self.save)
         routine_runner.signals.finished.connect(self.routine_finished)
         routine_runner.signals.progress.connect(self.update)
+        routine_runner.signals.error.connect(self.on_error)
 
         self.sig_pause.connect(routine_runner.ctrl_routine)
         self.sig_stop.connect(routine_runner.stop_routine)
@@ -145,6 +146,9 @@ class BadgerOptMonitor(QMainWindow):
         self.running = False
         self.btn_ctrl.setDisabled(True)
         self.btn_stop.setDisabled(True)
+
+    def on_error(self, error):
+         QMessageBox.critical(self, 'Error!', str(error))
 
     def ctrl_routine(self):
         if self.btn_ctrl.text() == 'Pause':
