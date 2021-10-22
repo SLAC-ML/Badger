@@ -1,13 +1,12 @@
 import time
-import numpy as np
-# from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QRunnable
+from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
 from ...utils import run_routine
 
 
 class BadgerRoutineSignals(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(list, list)
+    error = pyqtSignal(AssertionError)
 
 
 class BadgerRoutineRunner(QRunnable):
@@ -27,14 +26,16 @@ class BadgerRoutineRunner(QRunnable):
         self.is_killed = False
 
     def run(self):
+        error = None
         try:
             run_routine(self.routine, True, self.save, self.verbose,
                         self.before_evaluate, self.after_evaluate)
         except Exception as e:
-            print(e)
-            # QMessageBox.critical(None, 'Error!', str(e))
+            error = e
 
         self.signals.finished.emit()
+        if error:
+            self.signals.error.emit(error)
 
     def before_evaluate(self, vars):
         # vars: ndarray
