@@ -242,7 +242,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
             'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']})
         }
         optimize.run(env, configs)
-        print('done!')
+        # print('done!')
     else:
         from .logger import _get_default_logger
         from .logger.event import Events
