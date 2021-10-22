@@ -187,6 +187,7 @@ class BadgerRoutinePage(QWidget):
                 vrange = routine['config']['variables'][idx][var_name]
                 item_widget.sb_lower.sb.setValue(vrange[0])
                 item_widget.sb_upper.sb.setValue(vrange[1])
+                item_widget.check_name.setChecked(True)
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
@@ -201,6 +202,7 @@ class BadgerRoutinePage(QWidget):
                 rule = routine['config']['objectives'][idx][obj_name]
                 idx_rule = 0 if rule == 'MINIMIZE' else 1
                 item_widget.cb_rule.setCurrentIndex(idx_rule)
+                item_widget.check_name.setChecked(True)
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
