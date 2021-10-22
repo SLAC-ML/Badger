@@ -274,8 +274,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
 
         return Y, None, None
 
-    solution = (None, None, None, var_names, obj_names)
+    # Start the optimization
     print('')
+    solution = (None, None, None, var_names, obj_names)
     logger.update(Events.OPTIMIZATION_START, solution)
     try:
         if not callable(optimize):  # doing optimization through extensions
@@ -284,9 +285,11 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
                 'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
                 'env_configs': merge_params(configs_env, {'params': routine['env_params']}),
             }
-            optimize.run(evaluate, configs)
+            optimize = optimize.optimize
         else:
-            optimize(evaluate, routine['algo_params'])
+            configs = routine['algo_params']
+
+        optimize(evaluate, configs)
     except Exception as e:
         logger.update(Events.OPTIMIZATION_END, solution)
         raise e
