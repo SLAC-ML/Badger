@@ -6,7 +6,7 @@ from ...utils import run_routine
 class BadgerRoutineSignals(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(list, list)
-    error = pyqtSignal(AssertionError)
+    error = pyqtSignal(Exception)
 
 
 class BadgerRoutineRunner(QRunnable):
