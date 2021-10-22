@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
-from PyQt5.QtCore import pyqtSignal, QThreadPool
+from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 
@@ -11,6 +11,7 @@ class BadgerOptMonitor(QMainWindow):
 
     def __init__(self, parent, routine, save):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.routine = routine
         self.save = save
