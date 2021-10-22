@@ -32,6 +32,9 @@ def denorm(x, lb, ub):
 
 
 def config_list_to_dict(config_list):
+    if not config_list:
+        return {}
+
     book = {}
     for config in config_list:
         for k, v in config.items():
