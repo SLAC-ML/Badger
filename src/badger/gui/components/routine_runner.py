@@ -11,10 +11,12 @@ class BadgerRoutineSignals(QObject):
 
 class BadgerRoutineRunner(QRunnable):
 
-    signals = BadgerRoutineSignals()
-
     def __init__(self, routine, save, verbose=2):
         super().__init__()
+
+        # Signals should belong to instance rather than class
+        # Since there could be multiple runners runing in parallel
+        self.signals = BadgerRoutineSignals()
 
         self.routine = routine
         self.save = save
