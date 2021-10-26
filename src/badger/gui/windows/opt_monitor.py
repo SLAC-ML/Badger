@@ -1,6 +1,7 @@
 import numpy as np
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
 from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
+from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 
@@ -73,8 +74,17 @@ class BadgerOptMonitor(QMainWindow):
         action_bar = QWidget()
         hbox_action = QHBoxLayout(action_bar)
         hbox_action.setContentsMargins(0, 0, 0, 0)
+
+        cool_font = QFont()
+        cool_font.setWeight(QFont.DemiBold)
+        # cool_font.setPixelSize(16)
+
         self.btn_ctrl = btn_ctrl = QPushButton('Pause')
+        btn_ctrl.setFixedSize(64, 64)
+        btn_ctrl.setFont(cool_font)
         self.btn_stop = btn_stop = QPushButton('Stop')
+        btn_stop.setFixedSize(128, 64)
+        btn_stop.setFont(cool_font)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
