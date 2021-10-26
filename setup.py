@@ -15,7 +15,8 @@ setup(
         'pyyaml',
         'coolname',
         'pyqt5',
-        'pyqtgraph'
+        'pyqtgraph',
+        'qdarkstyle'
     ],
     python_requires='>=3.6',
     entry_points={
