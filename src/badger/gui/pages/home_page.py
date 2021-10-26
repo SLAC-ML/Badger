@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QLabel, QMessageBox, QWidget, QVBoxLayout, QHBoxLayo
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget, QShortcut
 from PyQt5.QtGui import QIcon, QKeySequence
 from ..components.search_bar import search_bar
+from ..windows.settings_dialog import BadgerSettingsDialog
 from ...db import list_routines, load_routine
 
 
@@ -31,7 +32,7 @@ class BadgerHomePage(QWidget):
         hbox_search = QHBoxLayout(panel_search)
 
         self.sbar = sbar = search_bar(routines)
-        btn_setting = QPushButton('Settings')
+        self.btn_setting = btn_setting = QPushButton('Settings')
         hbox_search.addWidget(sbar)
         hbox_search.addWidget(btn_setting)
 
@@ -89,6 +90,7 @@ class BadgerHomePage(QWidget):
             btn.clicked.connect(lambda x, routine=routine: self._go_routine(routine))
 
         self.sbar.returnPressed.connect(self.check_n_go_routine)
+        self.btn_setting.clicked.connect(self.go_settings)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -177,3 +179,7 @@ class BadgerHomePage(QWidget):
 
         routine, _ = load_routine(routine_name)
         self.go_routine(routine)
+
+    def go_settings(self):
+        dlg = BadgerSettingsDialog(self)
+        dlg.exec()

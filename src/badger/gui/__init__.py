@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtCore
 import sys
 # import ctypes
+from qdarkstyle import load_stylesheet, LightPalette, DarkPalette
 from .windows.main_window import BadgerMainWindow
 
 # Fix the scaling issue on multiple monitors w/ different scaling settings
@@ -47,15 +48,30 @@ def on_timeout():
 def launch_gui():
     app = QApplication(sys.argv)
 
+    # Configure app settings
+    settings = QtCore.QSettings('SLAC-ML', 'Badger')
+    theme = settings.value('theme')
+    if not theme:
+        settings.setValue('theme', 'dark')
+        theme = settings.value('theme')
+    # Commit the changes to settings
+    del settings
+
+    # Set up stylesheet
+    if theme == 'dark':
+        app.setStyleSheet(load_stylesheet(palette=DarkPalette))
+    else:
+        app.setStyleSheet(load_stylesheet(palette=LightPalette))
+
     # Show the main window
     window = BadgerMainWindow()
-    window.show()
 
+    # Enable Ctrl + C quit
     signal.signal(signal.SIGINT, on_exit)
-
     # Let the interpreter run each 0.2 s
     timer = QtCore.QTimer()
     timer.timeout.connect(on_timeout)
     timer.start(200)
 
+    window.show()
     sys.exit(app.exec())
