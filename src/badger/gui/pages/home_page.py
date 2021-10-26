@@ -34,6 +34,7 @@ class BadgerHomePage(QWidget):
 
         self.sbar = sbar = search_bar(routines)
         self.btn_setting = btn_setting = QPushButton('Settings')
+        btn_setting.setFixedSize(96, 24)
         hbox_search.addWidget(sbar)
         hbox_search.addWidget(btn_setting)
 
