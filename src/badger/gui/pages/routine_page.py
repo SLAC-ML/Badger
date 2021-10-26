@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QV
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QFont
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict, normalize_routine
@@ -106,6 +107,20 @@ class BadgerRoutinePage(QWidget):
 
         vbox.addWidget(group_ext, 1)
 
+        # Misc group
+        group_misc = QGroupBox('Misc')
+        hbox_misc = QHBoxLayout(group_misc)
+        self.check_save = check_save = QCheckBox('Save as')
+        check_save.setChecked(False)
+        self.edit_save = edit_save = QLineEdit()
+        edit_save.setPlaceholderText(generate_slug(2))
+        edit_save.setDisabled(True)
+        hbox_misc.addWidget(check_save)
+        hbox_misc.addWidget(edit_save, 1)
+        hbox_misc.addStretch(2)
+
+        vbox.addWidget(group_misc)
+
         # Action bar
         action_bar = QWidget()
         hbox_action = QHBoxLayout(action_bar)
@@ -113,18 +128,21 @@ class BadgerRoutinePage(QWidget):
         self.btn_back = btn_back = QPushButton('Back')
         self.btn_review = btn_review = QPushButton('Review')
         self.btn_run = btn_run = QPushButton('Run Routine')
-        btn_run.setFixedWidth(256)
-        self.check_save = check_save = QCheckBox('Save as')
-        check_save.setChecked(False)
-        self.edit_save = edit_save = QLineEdit()
-        edit_save.setPlaceholderText(generate_slug(2))
-        edit_save.setDisabled(True)
+
+        cool_font = QFont()
+        cool_font.setWeight(QFont.DemiBold)
+        # cool_font.setPixelSize(16)
+
+        btn_back.setFixedSize(64, 64)
+        btn_back.setFont(cool_font)
+        btn_review.setFixedSize(64, 64)
+        btn_review.setFont(cool_font)
+        btn_run.setFixedSize(256, 64)
+        btn_run.setFont(cool_font)
         hbox_action.addWidget(btn_back)
         hbox_action.addWidget(btn_review)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_run)
-        hbox_action.addWidget(check_save)
-        hbox_action.addWidget(edit_save)
 
         # vbox.addSpacing(16)
         vbox.addWidget(action_bar)
