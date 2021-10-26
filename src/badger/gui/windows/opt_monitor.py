@@ -79,12 +79,16 @@ class BadgerOptMonitor(QMainWindow):
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
+        self.btn_back = btn_back = QPushButton('Close')
+        btn_back.setFixedSize(64, 64)
+        btn_back.setFont(cool_font)
         self.btn_ctrl = btn_ctrl = QPushButton('Pause')
         btn_ctrl.setFixedSize(64, 64)
         btn_ctrl.setFont(cool_font)
         self.btn_stop = btn_stop = QPushButton('Stop')
         btn_stop.setFixedSize(128, 64)
         btn_stop.setFont(cool_font)
+        hbox_action.addWidget(btn_back)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
@@ -119,6 +123,7 @@ class BadgerOptMonitor(QMainWindow):
         self.sig_pause.connect(routine_runner.ctrl_routine)
         self.sig_stop.connect(routine_runner.stop_routine)
 
+        self.btn_back.clicked.connect(self.close)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.btn_stop.clicked.connect(self.stop_routine)
 
