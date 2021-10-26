@@ -1,5 +1,5 @@
 from datetime import datetime
-from PyQt5.QtWidgets import QLabel, QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
+from PyQt5.QtWidgets import QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget, QShortcut
 from PyQt5.QtGui import QIcon, QKeySequence
 from ..components.search_bar import search_bar
@@ -59,17 +59,24 @@ class BadgerHomePage(QWidget):
         # All routines
         group_all = QGroupBox('All Routines')
         self.routine_list = routine_list = QListWidget()
+        routine_list.setAlternatingRowColors(True)
+        routine_list.setSpacing(1)
         vbox_all = QVBoxLayout(group_all)
         vbox_all.addWidget(routine_list)
 
         for i, routine in enumerate(routines):
+            # timestamp = datetime.fromisoformat(timestamps[i])
+            # time_str = timestamp.strftime('%m/%d/%Y, %H:%M:%S')
+            # item = QListWidgetItem(f'{routine}: {time_str}')
+            # routine_list.addItem(item)
+            # self.all_routines.append([routine, item])
             routine_widget = QWidget()
             routine_layout = QHBoxLayout()
             routine_widget.setLayout(routine_layout)
             timestamp = datetime.fromisoformat(timestamps[i])
             time_str = timestamp.strftime('%m/%d/%Y, %H:%M:%S')
             btn = QPushButton(f'{routine}: {time_str}')
-            btn.setMinimumHeight(24)
+            # btn.setMinimumHeight(24)
             routine_layout.addWidget(btn)
             item = QListWidgetItem(routine_list)
             item.setSizeHint(routine_widget.sizeHint())
@@ -135,7 +142,7 @@ class BadgerHomePage(QWidget):
             timestamp = datetime.fromisoformat(timestamps[i])
             time_str = timestamp.strftime('%m/%d/%Y, %H:%M:%S')
             btn = QPushButton(f'{routine}: {time_str}')
-            btn.setMinimumHeight(24)
+            # btn.setMinimumHeight(24)
             routine_layout.addWidget(btn)
             item = QListWidgetItem(self.routine_list)
             item.setSizeHint(routine_widget.sizeHint())
