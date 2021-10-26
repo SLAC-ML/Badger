@@ -30,6 +30,7 @@ class BadgerHomePage(QWidget):
         # Search bar
         panel_search = QWidget()
         hbox_search = QHBoxLayout(panel_search)
+        hbox_search.setContentsMargins(0, 0, 0, 0)
 
         self.sbar = sbar = search_bar(routines)
         self.btn_setting = btn_setting = QPushButton('Settings')

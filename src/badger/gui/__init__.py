@@ -1,6 +1,7 @@
 import signal
 import time
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QFont
 from PyQt5 import QtCore
 import sys
 # import ctypes
@@ -48,14 +49,17 @@ def on_timeout():
 def launch_gui():
     app = QApplication(sys.argv)
 
+    font = QFont()
+    font.setPixelSize(13)
+    # font.setWeight(QFont.DemiBold)
+    app.setFont(font)
+
     # Configure app settings
     settings = QtCore.QSettings('SLAC-ML', 'Badger')
     theme = settings.value('theme')
     if not theme:
         settings.setValue('theme', 'dark')
         theme = settings.value('theme')
-    # Commit the changes to settings
-    del settings
 
     # Set up stylesheet
     if theme == 'dark':
