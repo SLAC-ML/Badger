@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget
 from PyQt5.QtGui import QIcon, QKeySequence
 from ..components.search_bar import search_bar
 from ..windows.settings_dialog import BadgerSettingsDialog
-from ...db import list_routines, load_routine
+from ...db import list_routine, load_routine
 
 
 class BadgerHomePage(QWidget):
@@ -18,7 +18,7 @@ class BadgerHomePage(QWidget):
         self.config_logic()
 
     def init_ui(self):
-        routines, timestamps = list_routines()
+        routines, timestamps = list_routine()
         self.routines = routines
 
         self.recent_routines = []
@@ -106,7 +106,7 @@ class BadgerHomePage(QWidget):
         self.shortcut_go_search.activated.connect(self.go_search)
 
     def refresh_ui(self):
-        routines, timestamps = list_routines()
+        routines, timestamps = list_routine()
         self.routines = routines
 
         self.recent_routines = []

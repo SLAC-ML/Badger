@@ -60,7 +60,7 @@ def load_routine(name):
             f'Multiple routines with name {name} found in the database!')
 
 
-def list_routines():
+def list_routine():
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
