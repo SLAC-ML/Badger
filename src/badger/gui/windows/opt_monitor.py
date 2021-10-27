@@ -4,6 +4,7 @@ from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
+from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 
 
 class BadgerOptMonitor(QWidget):
@@ -82,6 +83,9 @@ class BadgerOptMonitor(QWidget):
         self.btn_back = btn_back = QPushButton('Close')
         btn_back.setFixedSize(64, 64)
         btn_back.setFont(cool_font)
+        self.btn_log = btn_log = QPushButton('Logbook')
+        btn_log.setFixedSize(64, 64)
+        btn_log.setFont(cool_font)
         self.btn_ctrl = btn_ctrl = QPushButton('Pause')
         btn_ctrl.setFixedSize(64, 64)
         btn_ctrl.setFont(cool_font)
@@ -90,6 +94,7 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setFont(cool_font)
         hbox_action.addWidget(btn_back)
         hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_log)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
 
@@ -124,6 +129,7 @@ class BadgerOptMonitor(QWidget):
         self.sig_stop.connect(routine_runner.stop_routine)
 
         self.btn_back.clicked.connect(self.close)
+        self.btn_log.clicked.connect(self.logbook)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.btn_stop.clicked.connect(self.stop_routine)
 
@@ -167,6 +173,14 @@ class BadgerOptMonitor(QWidget):
 
     def on_error(self, error):
          QMessageBox.critical(self, 'Error!', str(error))
+
+    def logbook(self):
+        try:
+            send_to_logbook(None, self.monitor)
+        except Exception as e:
+            QMessageBox.critical(self, 'Log failed!', str(e))
+
+        QMessageBox.information(self, 'Success!', f'Log saved to {BADGER_LOGBOOK_ROOT}')
 
     def ctrl_routine(self):
         if self.btn_ctrl.text() == 'Pause':
