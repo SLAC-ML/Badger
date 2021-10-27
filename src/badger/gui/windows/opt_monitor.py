@@ -1,17 +1,18 @@
 import numpy as np
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
 from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 
 
-class BadgerOptMonitor(QMainWindow):
+class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
 
     def __init__(self, parent, routine, save):
-        super().__init__(parent)
+        super().__init__()
+        self._parent = parent  # used for aligning with the parent window
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.routine = routine
@@ -23,10 +24,9 @@ class BadgerOptMonitor(QMainWindow):
     def init_ui(self):
         self.setWindowTitle('Opt Monitor')
         self.resize(640, 960)
+        self.center()
 
-        self.central_widget = QWidget()
-        vbox = QVBoxLayout(self.central_widget)
-        self.setCentralWidget(self.central_widget)
+        vbox = QVBoxLayout(self)
 
         # Set up the monitor
         # Don't set show=True or there will be a blank window flashing once
@@ -126,6 +126,9 @@ class BadgerOptMonitor(QMainWindow):
         self.btn_back.clicked.connect(self.close)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.btn_stop.clicked.connect(self.stop_routine)
+
+    def center(self):
+        pass
 
     def start(self):
         self.running = True  # if a routine runner is working
