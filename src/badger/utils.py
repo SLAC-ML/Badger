@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import numpy as np
 import yaml
 import logging
@@ -302,3 +303,29 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         logger.update(Events.OPTIMIZATION_END, solution)
         raise e
     logger.update(Events.OPTIMIZATION_END, solution)
+
+
+def ts_to_str(ts, format='lcls-log'):
+    if format == 'lcls-log':
+        return ts.strftime('%d-%b-%Y %H:%M:%S')
+    elif format == 'lcls-log-full':
+        return ts.strftime('%d-%b-%Y %H:%M:%S.%f')
+    elif format == 'lcls-fname':
+        return ts.strftime('%Y-%m-%d-%H%M%S')
+    else:  # ISO format
+        return ts.isoformat()
+
+
+def str_to_ts(timestr, format='lcls-log'):
+    if format == 'lcls-log':
+        return datetime.strptime(timestr, '%d-%b-%Y %H:%M:%S')
+    elif format == 'lcls-log-full':
+        return datetime.strptime(timestr, '%d-%b-%Y %H:%M:%S.%f')
+    elif format == 'lcls-fname':
+        return datetime.strptime(timestr, '%Y-%m-%d-%H%M%S')
+    else:  # ISO format
+        return datetime.fromisoformat(timestr)
+
+
+def curr_ts_to_str(format='lcls-log'):
+    return ts_to_str(datetime.now(), format)
