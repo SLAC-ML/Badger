@@ -5,6 +5,7 @@ from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
+from ...archive import archive_run, BADGER_RUN_ROOT
 
 
 class BadgerOptMonitor(QWidget):
@@ -170,6 +171,12 @@ class BadgerOptMonitor(QWidget):
         self.running = False
         self.btn_ctrl.setDisabled(True)
         self.btn_stop.setDisabled(True)
+        try:
+            archive_run(self.routine_runner.routine, self.routine_runner.data)
+        except Exception as e:
+            QMessageBox.critical(self, 'Archive failed!', str(e))
+
+        QMessageBox.information(self, 'Success!', f'Run data archived to {BADGER_RUN_ROOT}')
 
     def on_error(self, error):
          QMessageBox.critical(self, 'Error!', str(error))
@@ -205,7 +212,7 @@ class BadgerOptMonitor(QWidget):
 
         reply = QMessageBox.question(self,
                                      'Window Close',
-                                     'Closing this window will terminate the run, proceed?',
+                                     'Closing this window will terminate the run, and the run data would NOT be archived! Proceed?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
