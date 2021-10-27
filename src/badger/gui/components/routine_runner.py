@@ -8,6 +8,7 @@ class BadgerRoutineSignals(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(list, list)
     error = pyqtSignal(Exception)
+    info = pyqtSignal(str)
 
 
 class BadgerRoutineRunner(QRunnable):
@@ -40,6 +41,10 @@ class BadgerRoutineRunner(QRunnable):
 
         self.signals.finished.emit()
         if error:
+            if str(error) == 'Optimization run has been terminated!':
+                self.signals.info.emit(str(error))
+                return
+
             self.signals.error.emit(error)
 
     def before_evaluate(self, vars):

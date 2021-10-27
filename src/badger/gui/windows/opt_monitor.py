@@ -125,6 +125,7 @@ class BadgerOptMonitor(QWidget):
         routine_runner.signals.finished.connect(self.routine_finished)
         routine_runner.signals.progress.connect(self.update)
         routine_runner.signals.error.connect(self.on_error)
+        routine_runner.signals.info.connect(self.on_info)
 
         self.sig_pause.connect(routine_runner.ctrl_routine)
         self.sig_stop.connect(routine_runner.stop_routine)
@@ -179,7 +180,10 @@ class BadgerOptMonitor(QWidget):
         QMessageBox.information(self, 'Success!', f'Run data archived to {BADGER_RUN_ROOT}')
 
     def on_error(self, error):
-         QMessageBox.critical(self, 'Error!', str(error))
+        QMessageBox.critical(self, 'Error!', str(error))
+
+    def on_info(self, msg):
+        QMessageBox.information(self, 'Info', msg)
 
     def logbook(self):
         try:
@@ -187,7 +191,8 @@ class BadgerOptMonitor(QWidget):
         except Exception as e:
             QMessageBox.critical(self, 'Log failed!', str(e))
 
-        QMessageBox.information(self, 'Success!', f'Log saved to {BADGER_LOGBOOK_ROOT}')
+        QMessageBox.information(
+            self, 'Success!', f'Log saved to {BADGER_LOGBOOK_ROOT}')
 
     def ctrl_routine(self):
         if self.btn_ctrl.text() == 'Pause':
