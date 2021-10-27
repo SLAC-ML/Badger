@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 
 
-# Check badger database root
+# Check badger logbook root
 BADGER_LOGBOOK_ROOT = os.getenv('BADGER_LOGBOOK_ROOT')
 if BADGER_LOGBOOK_ROOT is None:
     logging.error('Please set the BADGER_LOGBOOK_ROOT env var!')
