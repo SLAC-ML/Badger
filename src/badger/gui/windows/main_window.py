@@ -1,5 +1,5 @@
 from pkg_resources import get_distribution
-from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget
+from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
 from ..pages.home_page import BadgerHomePage
 from ..pages.routine_page import BadgerRoutinePage
 
@@ -15,7 +15,7 @@ class BadgerMainWindow(QMainWindow):
         version = get_distribution('badger-opt').version
         self.setWindowTitle(f'Badger v{version}')
         # self.setWindowIcon(QIcon('badger.png'))
-        self.resize(864, 648)
+        self.resize(960, 720)
         self.center()
 
         # Add pages
@@ -32,7 +32,7 @@ class BadgerMainWindow(QMainWindow):
 
     def center(self):
         qr = self.frameGeometry()
-        cp = self.screen().availableGeometry().center()
+        cp = QDesktopWidget().availableGeometry().center()
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())

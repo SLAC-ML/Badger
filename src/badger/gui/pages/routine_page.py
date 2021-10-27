@@ -1,13 +1,13 @@
-from PyQt6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
-from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QSize, QThread
+from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QFont
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import run_routine, ystring, load_config, config_list_to_dict, normalize_routine
+from ...utils import ystring, load_config, config_list_to_dict, normalize_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
-from ..components.routine_runner import BadgerRoutineRunner
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
 
@@ -67,6 +67,8 @@ class BadgerRoutinePage(QWidget):
         hbox_action_var.setContentsMargins(0, 0, 0, 0)
         self.btn_all_var = btn_all_var = QPushButton('Check All')
         self.btn_un_all_var = btn_un_all_var = QPushButton('Uncheck All')
+        btn_all_var.setFixedSize(96, 24)
+        btn_un_all_var.setFixedSize(96, 24)
         self.check_only_var = check_only_var = QCheckBox('Checked Only')
         check_only_var.setChecked(False)
         hbox_action_var.addWidget(btn_all_var)
@@ -86,6 +88,8 @@ class BadgerRoutinePage(QWidget):
         hbox_action_obj.setContentsMargins(0, 0, 0, 0)
         self.btn_all_obj = btn_all_obj = QPushButton('Check All')
         self.btn_un_all_obj = btn_un_all_obj = QPushButton('Uncheck All')
+        btn_all_obj.setFixedSize(96, 24)
+        btn_un_all_obj.setFixedSize(96, 24)
         self.check_only_obj = check_only_obj = QCheckBox('Checked Only')
         check_only_obj.setChecked(False)
         hbox_action_obj.addWidget(btn_all_obj)
@@ -107,6 +111,20 @@ class BadgerRoutinePage(QWidget):
 
         vbox.addWidget(group_ext, 1)
 
+        # Misc group
+        group_misc = QGroupBox('Misc')
+        hbox_misc = QHBoxLayout(group_misc)
+        self.check_save = check_save = QCheckBox('Save as')
+        check_save.setChecked(False)
+        self.edit_save = edit_save = QLineEdit()
+        edit_save.setPlaceholderText(generate_slug(2))
+        edit_save.setDisabled(True)
+        hbox_misc.addWidget(check_save)
+        hbox_misc.addWidget(edit_save, 1)
+        hbox_misc.addStretch(2)
+
+        vbox.addWidget(group_misc)
+
         # Action bar
         action_bar = QWidget()
         hbox_action = QHBoxLayout(action_bar)
@@ -114,18 +132,21 @@ class BadgerRoutinePage(QWidget):
         self.btn_back = btn_back = QPushButton('Back')
         self.btn_review = btn_review = QPushButton('Review')
         self.btn_run = btn_run = QPushButton('Run Routine')
-        btn_run.setFixedWidth(256)
-        self.check_save = check_save = QCheckBox('Save as')
-        check_save.setChecked(False)
-        self.edit_save = edit_save = QLineEdit()
-        edit_save.setPlaceholderText(generate_slug(2))
-        edit_save.setDisabled(True)
+
+        cool_font = QFont()
+        cool_font.setWeight(QFont.DemiBold)
+        # cool_font.setPixelSize(16)
+
+        btn_back.setFixedSize(64, 64)
+        btn_back.setFont(cool_font)
+        btn_review.setFixedSize(64, 64)
+        btn_review.setFont(cool_font)
+        btn_run.setFixedSize(256, 64)
+        btn_run.setFont(cool_font)
         hbox_action.addWidget(btn_back)
         hbox_action.addWidget(btn_review)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_run)
-        hbox_action.addWidget(check_save)
-        hbox_action.addWidget(edit_save)
 
         # vbox.addSpacing(16)
         vbox.addWidget(action_bar)
@@ -188,6 +209,7 @@ class BadgerRoutinePage(QWidget):
                 vrange = routine['config']['variables'][idx][var_name]
                 item_widget.sb_lower.sb.setValue(vrange[0])
                 item_widget.sb_upper.sb.setValue(vrange[1])
+                item_widget.check_name.setChecked(True)
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
@@ -202,6 +224,7 @@ class BadgerRoutinePage(QWidget):
                 rule = routine['config']['objectives'][idx][obj_name]
                 idx_rule = 0 if rule == 'MINIMIZE' else 1
                 item_widget.cb_rule.setCurrentIndex(idx_rule)
+                item_widget.check_name.setChecked(True)
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
@@ -402,17 +425,9 @@ class BadgerRoutinePage(QWidget):
         dlg.exec()
 
     def run_routine(self, routine, save):
-        monitor = BadgerOptMonitor(self)
-        thread_routine = QThread()
-        routine_runner = BadgerRoutineRunner(routine, save)
-        routine_runner.moveToThread(thread_routine)
-        thread_routine.started.connect(routine_runner.run)
-        routine_runner.finished.connect(thread_routine.quit)
-        routine_runner.finished.connect(routine_runner.deleteLater)
-        thread_routine.finished.connect(routine_runner.deleteLater)
-        routine_runner.progress.connect(monitor.update)
-        thread_routine.start()
-        monitor.exec()
+        self.monitor = BadgerOptMonitor(self, routine, save)
+        self.monitor.show()
+        self.monitor.start()
 
     def run(self):
         try:
@@ -425,4 +440,5 @@ class BadgerRoutinePage(QWidget):
         try:
             self.run_routine(routine, save)
         except Exception as e:
+            # raise e
             QMessageBox.critical(self, 'Error!', str(e))

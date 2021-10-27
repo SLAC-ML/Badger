@@ -1,0 +1,13 @@
+variables:
+  - x1
+  - x2
+objectives:
+  - c1: MINIMIZE
+  - y2: MINIMIZE
+constraints:
+  - y1:
+      - GREATER_THAN
+      - 0
+  - c2:
+      - LESS_THAN
+      - 0.5

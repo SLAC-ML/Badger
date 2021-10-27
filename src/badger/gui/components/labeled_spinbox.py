@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget, QDoubleSpinBox
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QWidget, QDoubleSpinBox
 
 
 def labeled_spinbox(name, default_value):

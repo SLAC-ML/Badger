@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox, QLabel, QComboBox
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox, QLabel, QComboBox
 
 
 def objective_item(name, rule, callback=None):

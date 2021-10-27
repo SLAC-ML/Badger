@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox, QDoubleSpinBox
 from .labeled_spinbox import labeled_spinbox
 
 

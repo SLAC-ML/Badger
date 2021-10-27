@@ -32,6 +32,9 @@ def denorm(x, lb, ub):
 
 
 def config_list_to_dict(config_list):
+    if not config_list:
+        return {}
+
     book = {}
     for config in config_list:
         for k, v in config.items():
@@ -187,7 +190,8 @@ class ParetoFront:
         return False
 
 
-def run_routine(routine, skip_review=False, save=None, verbose=2):
+def run_routine(routine, skip_review=False, save=None, verbose=2,
+                before_evaluate=None, after_evaluate=None):
     # Review the routine
     if not skip_review:
         print('Please review the routine to be run:\n')
@@ -233,57 +237,68 @@ def run_routine(routine, skip_review=False, save=None, verbose=2):
     env = Environment(intf, routine['env_params'])
 
     optimize, configs_algo = get_algo(routine['algo'])
-    if not callable(optimize):  # Doing optimization through extensions
-        configs = {
-            'routine_configs': routine['config'],
-            'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']})
-        }
-        optimize.run(env, configs)
-        print('done!')
-    else:
-        from .logger import _get_default_logger
-        from .logger.event import Events
 
-        logger = _get_default_logger(verbose)  # log the optimization progress
-        var_names = [next(iter(d)) for d in routine['config']['variables']]
-        vranges = np.array([d[next(iter(d))]
-                           for d in routine['config']['variables']])
-        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-        rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-        pf = ParetoFront(rules)
+    from .logger import _get_default_logger
+    from .logger.event import Events
 
-        # Make a normalized evaluate function
-        def evaluate(X):
-            Y = []
-            for x in X:
-                _x = denorm(x, vranges[:, 0], vranges[:, 1])
-                env.set_vars(var_names, _x)
-                obses = []
-                obses_raw = []
-                for i, obj_name in enumerate(obj_names):
-                    rule = rules[i]
-                    obs = float(env.get_obs(obj_name))
-                    if rule == 'MAXIMIZE':
-                        obses.append(-obs)
-                    else:
-                        obses.append(obs)
-                    obses_raw.append(obs)
-                Y.append(obses)
-                obses_raw = np.array(obses_raw)
-                is_optimal = not pf.is_dominated((_x, obses_raw))
-                solution = (_x, obses_raw, is_optimal, var_names, obj_names)
-                logger.update(Events.OPTIMIZATION_STEP, solution)
+    logger = _get_default_logger(verbose)  # log the optimization progress
+    var_names = [next(iter(d)) for d in routine['config']['variables']]
+    vranges = np.array([d[next(iter(d))]
+                        for d in routine['config']['variables']])
+    obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+    rules = [d[next(iter(d))] for d in routine['config']['objectives']]
+    pf = ParetoFront(rules)
 
-            Y = np.array(Y)
+    # Make a normalized evaluate function
+    def evaluate(X):
+        Y = []
+        for x in X:
+            _x = denorm(x, vranges[:, 0], vranges[:, 1])
 
-            return Y, None, None
+            if before_evaluate:
+                before_evaluate(_x)
 
-        solution = (None, None, None, var_names, obj_names)
-        print('')
-        logger.update(Events.OPTIMIZATION_START, solution)
-        try:
-            optimize(evaluate, routine['algo_params'])
-        except Exception as e:
-            logger.update(Events.OPTIMIZATION_END, solution)
-            raise e
+            env.set_vars(var_names, _x)
+            obses = []
+            obses_raw = []
+            for i, obj_name in enumerate(obj_names):
+                rule = rules[i]
+                obs = float(env.get_obs(obj_name))
+                if rule == 'MAXIMIZE':
+                    obses.append(-obs)
+                else:
+                    obses.append(obs)
+                obses_raw.append(obs)
+            Y.append(obses)
+            obses_raw = np.array(obses_raw)
+            is_optimal = not pf.is_dominated((_x, obses_raw))
+            solution = (_x, obses_raw, is_optimal, var_names, obj_names)
+            logger.update(Events.OPTIMIZATION_STEP, solution)
+
+            if after_evaluate:
+                after_evaluate(_x, obses_raw)
+
+        Y = np.array(Y)
+
+        return Y, None, None
+
+    # Start the optimization
+    print('')
+    solution = (None, None, None, var_names, obj_names)
+    logger.update(Events.OPTIMIZATION_START, solution)
+    try:
+        if not callable(optimize):  # doing optimization through extensions
+            configs = {
+                'routine_configs': routine['config'],
+                'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
+                'env_configs': merge_params(configs_env, {'params': routine['env_params']}),
+            }
+            optimize = optimize.optimize
+        else:
+            configs = routine['algo_params']
+
+        optimize(evaluate, configs)
+    except Exception as e:
         logger.update(Events.OPTIMIZATION_END, solution)
+        raise e
+    logger.update(Events.OPTIMIZATION_END, solution)
