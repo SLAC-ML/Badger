@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from .utils import curr_ts_to_str, ystring
+from .utils import curr_ts_to_str, ystring, load_config
 
 
 # Check badger optimization run archive root
@@ -30,3 +30,7 @@ def archive_run(routine, data):
 
 def list_run():
     return [p for p in os.listdir(BADGER_RUN_ROOT) if os.path.splitext(p)[1] == '.yaml']
+
+
+def load_run(run_fname):
+    return load_config(os.path.join(BADGER_RUN_ROOT, run_fname))

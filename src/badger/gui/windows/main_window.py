@@ -2,6 +2,7 @@ from pkg_resources import get_distribution
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
 from ..pages.home_page import BadgerHomePage
 from ..pages.routine_page import BadgerRoutinePage
+from ..pages.run_page import BadgerRunPage
 
 
 class BadgerMainWindow(QMainWindow):
@@ -19,12 +20,14 @@ class BadgerMainWindow(QMainWindow):
         self.center()
 
         # Add pages
-        self.home_page = BadgerHomePage(self.show_routine_page)
+        self.home_page = BadgerHomePage(self.show_routine_page, self.show_run_page)
         self.routine_page = BadgerRoutinePage(self.show_home_page)
+        self.run_page = BadgerRunPage(self.show_routine_page, self.show_home_page)
 
         self.stacks = stacks = QStackedWidget()
         stacks.addWidget(self.home_page)
         stacks.addWidget(self.routine_page)
+        stacks.addWidget(self.run_page)
 
         stacks.setCurrentIndex(0)
 
@@ -48,3 +51,7 @@ class BadgerMainWindow(QMainWindow):
         self.home_page.refresh_ui()
         self.home_page.reconfig_logic()
         self.stacks.setCurrentIndex(0)
+
+    def show_run_page(self):
+        # self.routine_page.refresh_ui(routine)
+        self.stacks.setCurrentIndex(2)

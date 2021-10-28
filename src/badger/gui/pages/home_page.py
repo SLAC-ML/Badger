@@ -1,18 +1,19 @@
 from datetime import datetime
 from PyQt5.QtWidgets import QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QCompleter
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QListWidgetItem, QListWidget, QShortcut
-from PyQt5.QtGui import QIcon, QKeySequence
+from PyQt5.QtGui import QIcon, QKeySequence, QFont
 from ..components.search_bar import search_bar
 from ..windows.settings_dialog import BadgerSettingsDialog
 from ...db import list_routine, load_routine
 
 
 class BadgerHomePage(QWidget):
-    def __init__(self, go_routine=None):
+    def __init__(self, go_routine=None, go_run=None):
         super().__init__()
 
-        # go_routine is a function that jumps to the routine page once called
+        # go_xxx is a function that jumps to the corresponding page once called
         self.go_routine = go_routine
+        self.go_run = go_run
 
         self.init_ui()
         self.config_logic()
@@ -87,6 +88,23 @@ class BadgerHomePage(QWidget):
 
         vbox.addWidget(group_all)
 
+        # Action bar
+        action_bar = QWidget()
+        hbox_action = QHBoxLayout(action_bar)
+        hbox_action.setContentsMargins(0, 0, 0, 0)
+        self.btn_run = btn_run = QPushButton('History Runs')
+
+        cool_font = QFont()
+        cool_font.setWeight(QFont.DemiBold)
+        # cool_font.setPixelSize(16)
+
+        btn_run.setFixedSize(256, 64)
+        btn_run.setFont(cool_font)
+        hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_run)
+
+        vbox.addWidget(action_bar)
+
         # stylesheet = (
         #     'background-color: red;'
         # )
@@ -100,6 +118,7 @@ class BadgerHomePage(QWidget):
 
         self.sbar.returnPressed.connect(self.check_n_go_routine)
         self.btn_setting.clicked.connect(self.go_settings)
+        self.btn_run.clicked.connect(self.go_run)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
