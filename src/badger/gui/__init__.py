@@ -64,8 +64,10 @@ def launch_gui():
     # Set up stylesheet
     if theme == 'dark':
         app.setStyleSheet(load_stylesheet(palette=DarkPalette))
-    else:
+    elif theme == 'light':
         app.setStyleSheet(load_stylesheet(palette=LightPalette))
+    else:
+        app.setStyleSheet('')
 
     # Show the main window
     window = BadgerMainWindow()

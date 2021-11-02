@@ -5,6 +5,13 @@ from qdarkstyle import load_stylesheet, DarkPalette, LightPalette
 
 
 class BadgerSettingsDialog(QDialog):
+    theme_list = ['default', 'light', 'dark']
+    theme_idx_dict = {
+        'default': 0,
+        'light': 1,
+        'dark': 2,
+    }
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -31,8 +38,8 @@ class BadgerSettingsDialog(QDialog):
         theme = self.settings.value('theme')
         self.lbl_theme = lbl_theme = QLabel('Theme')
         self.cb_theme = cb_theme = QComboBox()
-        cb_theme.addItems(['light', 'dark'])
-        cb_theme.setCurrentIndex(1 if theme == 'dark' else 0)
+        cb_theme.addItems(self.theme_list)
+        cb_theme.setCurrentIndex(self.theme_idx_dict[theme])
 
         grid.addWidget(lbl_theme, 0, 0)
         grid.addWidget(cb_theme, 0, 1)
@@ -54,12 +61,14 @@ class BadgerSettingsDialog(QDialog):
 
     def select_theme(self, i):
         app = QApplication.instance()
-        if i:
+        theme = self.theme_list[i]
+        if theme == 'dark':
             app.setStyleSheet(load_stylesheet(palette=DarkPalette))
-            self.settings.setValue('theme', 'dark')
-        else:
+        elif theme == 'light':
             app.setStyleSheet(load_stylesheet(palette=LightPalette))
-            self.settings.setValue('theme', 'light')
+        else:
+            app.setStyleSheet('')
+        self.settings.setValue('theme', theme)
 
     def apply_settings(self):
         self.accept()
@@ -72,7 +81,9 @@ class BadgerSettingsDialog(QDialog):
         theme = self.settings.value('theme')
         if theme == 'dark':
             app.setStyleSheet(load_stylesheet(palette=DarkPalette))
-        else:
+        elif theme == 'light':
             app.setStyleSheet(load_stylesheet(palette=LightPalette))
+        else:
+            app.setStyleSheet('')
 
         self.reject()
