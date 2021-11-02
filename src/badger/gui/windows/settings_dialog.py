@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication, QStyledItemDelegate
 from PyQt5.QtCore import QSettings
 from qdarkstyle import load_stylesheet, DarkPalette, LightPalette
 
@@ -38,6 +38,7 @@ class BadgerSettingsDialog(QDialog):
         theme = self.settings.value('theme')
         self.lbl_theme = lbl_theme = QLabel('Theme')
         self.cb_theme = cb_theme = QComboBox()
+        cb_theme.setItemDelegate(QStyledItemDelegate())
         cb_theme.addItems(self.theme_list)
         cb_theme.setCurrentIndex(self.theme_idx_dict[theme])
 

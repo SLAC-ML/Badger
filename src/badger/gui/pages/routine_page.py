@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QStyledItemDelegate
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QFont
 from coolname import generate_slug
@@ -36,6 +36,7 @@ class BadgerRoutinePage(QWidget):
         group_algo = QGroupBox('Algorithm')
         vbox_algo = QVBoxLayout(group_algo)
         self.cb_algo = cb_algo = QComboBox()
+        cb_algo.setItemDelegate(QStyledItemDelegate())
         cb_algo.addItems(self.algos)
         cb_algo.setCurrentIndex(-1)
         vbox_algo.addWidget(cb_algo)
@@ -47,6 +48,7 @@ class BadgerRoutinePage(QWidget):
         group_env = QGroupBox('Environment')
         vbox_env = QVBoxLayout(group_env)
         self.cb_env = cb_env = QComboBox()
+        cb_env.setItemDelegate(QStyledItemDelegate())
         cb_env.addItems(self.envs)
         cb_env.setCurrentIndex(-1)
         vbox_env.addWidget(cb_env)
