@@ -4,6 +4,7 @@ from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
+# from ..utils import AURORA_PALETTE, FROST_PALETTE
 from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ...archive import archive_run, BADGER_RUN_ROOT
 
@@ -103,7 +104,7 @@ class BadgerOptMonitor(QWidget):
         vbox.addWidget(action_bar)
 
     def config_logic(self):
-        self.colors = ['b', 'g', 'r', 'c', 'm', 'y', 'w']
+        self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
         self.vars = []
         self.objs = []
@@ -148,17 +149,19 @@ class BadgerOptMonitor(QWidget):
 
         if not self.curves_obj:
             for i in range(len(objs)):
-                color = self.colors[i % 7]
-                symbol = self.symbols[i % 7]
-                _curve = self.plot_obj.plot(pen=color, symbol=symbol,
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_obj.plot(pen=pg.mkPen(color, width=5),
+                                            # symbol=symbol,
                                             name=next(iter(self.routine['config']['objectives'][i])))
                 self.curves_obj.append(_curve)
 
         if not self.curves_var:
             for i in range(len(vars)):
-                color = self.colors[i % 7]
-                symbol = self.symbols[i % 7]
-                _curve = self.plot_var.plot(pen=color, symbol=symbol,
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_var.plot(pen=pg.mkPen(color, width=5),
+                                            # symbol=symbol,
                                             name=next(iter(self.routine['config']['variables'][i])))
                 self.curves_var.append(_curve)
 
@@ -177,7 +180,8 @@ class BadgerOptMonitor(QWidget):
         except Exception as e:
             QMessageBox.critical(self, 'Archive failed!', str(e))
 
-        QMessageBox.information(self, 'Success!', f'Run data archived to {BADGER_RUN_ROOT}')
+        QMessageBox.information(
+            self, 'Success!', f'Run data archived to {BADGER_RUN_ROOT}')
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
