@@ -26,7 +26,7 @@ class BadgerOptMonitor(QWidget):
 
     def init_ui(self):
         self.setWindowTitle('Opt Monitor')
-        self.resize(640, 960)
+        self.resize(720, 960)
         self.center()
 
         vbox = QVBoxLayout(self)
@@ -88,6 +88,17 @@ class BadgerOptMonitor(QWidget):
         self.btn_log = btn_log = QPushButton('Logbook')
         btn_log.setFixedSize(64, 64)
         btn_log.setFont(cool_font)
+        self.btn_reset = btn_reset = QPushButton('Reset')
+        btn_reset.setDisabled(True)
+        btn_reset.setFixedSize(64, 64)
+        btn_reset.setFont(cool_font)
+        self.btn_opt = btn_opt = QPushButton('Optimal')
+        btn_opt.setFixedSize(64, 64)
+        btn_opt.setFont(cool_font)
+        self.btn_set = btn_set = QPushButton('Set')
+        btn_set.setDisabled(True)
+        btn_set.setFixedSize(64, 64)
+        btn_set.setFont(cool_font)
         self.btn_ctrl = btn_ctrl = QPushButton('Pause')
         btn_ctrl.setFixedSize(64, 64)
         btn_ctrl.setFont(cool_font)
@@ -97,6 +108,9 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(btn_back)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_log)
+        hbox_action.addWidget(btn_reset)
+        hbox_action.addWidget(btn_opt)
+        hbox_action.addWidget(btn_set)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
 
@@ -123,6 +137,7 @@ class BadgerOptMonitor(QWidget):
         # Create the routine runner
         self.routine_runner = routine_runner = BadgerRoutineRunner(
             self.routine, self.save)
+        routine_runner.signals.env_ready.connect(self.env_ready)
         routine_runner.signals.finished.connect(self.routine_finished)
         routine_runner.signals.progress.connect(self.update)
         routine_runner.signals.error.connect(self.on_error)
@@ -133,6 +148,9 @@ class BadgerOptMonitor(QWidget):
 
         self.btn_back.clicked.connect(self.close)
         self.btn_log.clicked.connect(self.logbook)
+        self.btn_reset.clicked.connect(self.reset_env)
+        self.btn_opt.clicked.connect(self.jump_to_optimal)
+        self.btn_set.clicked.connect(self.set_vars)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.btn_stop.clicked.connect(self.stop_routine)
 
@@ -171,10 +189,16 @@ class BadgerOptMonitor(QWidget):
         for i in range(len(vars)):
             self.curves_var[i].setData(np.array(self.vars)[:, i])
 
+    def env_ready(self, init_vars):
+        self.env = self.routine_runner.env
+        self.init_vars = init_vars
+
     def routine_finished(self):
         self.running = False
         self.btn_ctrl.setDisabled(True)
         self.btn_stop.setDisabled(True)
+        self.btn_reset.setDisabled(False)
+        self.btn_set.setDisabled(False)
         try:
             archive_run(self.routine_runner.routine, self.routine_runner.data)
         except Exception as e:
@@ -214,6 +238,20 @@ class BadgerOptMonitor(QWidget):
 
     def ins_var_dragged(self, ins_var):
         self.ins_obj.setValue(ins_var.value())
+
+    def reset_env(self):
+        var_names = [next(iter(d)) for d in self.routine['config']['variables']]
+        current_vars = self.env.get_vars(var_names)
+        self.env.set_vars(var_names, self.init_vars)
+        after_vars = self.env.get_vars(var_names)
+        QMessageBox.information(
+            self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
+
+    def jump_to_optimal(self):
+        pass
+
+    def set_vars(self):
+        print(self.env)
 
     def closeEvent(self, event):
         if not self.running:
