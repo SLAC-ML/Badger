@@ -1,10 +1,11 @@
 import os
 import numpy as np
-from PyQt5.QtWidgets import QHBoxLayout, QTabWidget, QVBoxLayout, QTableWidget, QTextEdit
+from PyQt5.QtWidgets import QHBoxLayout, QTabWidget, QVBoxLayout, QMessageBox, QTextEdit
 from PyQt5.QtWidgets import QWidget, QSplitter, QPushButton, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
+from ..windows.opt_monitor import BadgerOptMonitor
 from ...archive import list_run, load_run
 from ...utils import ystring
 
@@ -92,16 +93,24 @@ class BadgerRunPage(QWidget):
         action_bar = QWidget()
         hbox_action = QHBoxLayout(action_bar)
         hbox_action.setContentsMargins(0, 0, 0, 0)
-        self.btn_back = btn_back = QPushButton('Back')
 
         cool_font = QFont()
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
+        self.btn_back = btn_back = QPushButton('Back')
         btn_back.setFixedSize(64, 64)
         btn_back.setFont(cool_font)
+        self.btn_run = btn_run = QPushButton('Rerun')
+        btn_run.setFixedSize(64, 64)
+        btn_run.setFont(cool_font)
+        self.btn_load = btn_load = QPushButton('Load Routine')
+        btn_load.setFixedSize(128, 64)
+        btn_load.setFont(cool_font)
         hbox_action.addWidget(btn_back)
         hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_run)
+        hbox_action.addWidget(btn_load)
 
         vbox.addWidget(action_bar)
 
@@ -137,6 +146,8 @@ class BadgerRunPage(QWidget):
         self.run_tree.setCurrentItem(self.recent_item)
 
         self.btn_back.clicked.connect(self.go_home)
+        self.btn_run.clicked.connect(self.rerun_routine)
+        self.btn_load.clicked.connect(self.load_routine)
 
     def reconfig_logic(self):
         self.run_tree.setCurrentItem(self.recent_item)
@@ -144,19 +155,26 @@ class BadgerRunPage(QWidget):
     def load_run(self, current, previous):
         try:
             run_name = current.text(0)
-            run = load_run(run_name + '.yaml')
+            self.run = run = load_run(run_name + '.yaml')
             self.run_edit.setText(ystring(run))
-            self.plot_run(run)
+            self.plot_run()
         except:
+            self.run = None
             self.run_edit.setText('')
-            self.plot_run(None)
+            self.plot_run()
 
-    def plot_run(self, run):
+    def plot_run(self):
+        run = self.run
         self.plot_obj.clear()
         self.plot_var.clear()
 
         if not run:
+            self.btn_run.setDisabled(True)
+            self.btn_load.setDisabled(True)
             return
+
+        self.btn_run.setDisabled(False)
+        self.btn_load.setDisabled(False)
 
         var_names = [next(iter(d))
                      for d in run['routine']['config']['variables']]
@@ -177,3 +195,18 @@ class BadgerRunPage(QWidget):
             self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=5),
                                # symbol=symbol,
                                name=var_name)
+
+    def load_routine(self):
+        routine = self.run['routine']
+
+        self.go_routine(routine)
+
+    def rerun_routine(self):
+        routine = self.run['routine']
+        try:
+            self.monitor = BadgerOptMonitor(self, routine, False)
+            self.monitor.show()
+            self.monitor.start()
+        except Exception as e:
+            # raise e
+            QMessageBox.critical(self, 'Error!', str(e))
