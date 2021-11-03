@@ -192,7 +192,7 @@ class ParetoFront:
 
 
 def run_routine(routine, skip_review=False, save=None, verbose=2,
-                before_evaluate=None, after_evaluate=None):
+                before_evaluate=None, after_evaluate=None, env_ready=None):
     # Review the routine
     if not skip_review:
         print('Please review the routine to be run:\n')
@@ -236,6 +236,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     except Exception:
         intf = None
     env = Environment(intf, routine['env_params'])
+    if env_ready:
+        env_ready(env)
 
     optimize, configs_algo = get_algo(routine['algo'])
 
