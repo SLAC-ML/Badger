@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QTextEdit
-from PyQt5.QtWidgets import QWidget, QFrame, QSplitter, QPushButton, QListWidgetItem, QListWidget
+from PyQt5.QtWidgets import QWidget, QSplitter, QPushButton, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from ...archive import list_run, load_run
@@ -25,16 +25,28 @@ class BadgerRunPage(QWidget):
         vbox = QVBoxLayout(self)
 
         # History run list
-        self.run_list = run_list = QListWidget()
-        run_list.setAlternatingRowColors(True)
+        self.run_tree = run_tree = QTreeWidget()
+        run_tree.setColumnCount(1)
+        run_tree.setHeaderLabels(['History Run'])
         # run_list.setSpacing(1)
-        for i, run in enumerate(runs):
-            item = QListWidgetItem(os.path.splitext(run)[0])
-            run_list.addItem(item)
+        items = []
+        for year, dict_year in runs.items():
+            item_year = QTreeWidgetItem([year])
+            for month, dict_month in dict_year.items():
+                item_month = QTreeWidgetItem([month])
+                for day, list_day in dict_month.items():
+                    item_day = QTreeWidgetItem([day])
+                    for file in list_day:
+                        item_file = QTreeWidgetItem([file])
+                        item_day.addChild(item_file)
+                    item_month.addChild(item_day)
+                item_year.addChild(item_month)
+            items.append(item_year)
+        run_tree.insertTopLevelItems(0, items)
 
         splitter = QSplitter(Qt.Horizontal)
         self.run_view = run_view = QTextEdit()
-        splitter.addWidget(run_list)
+        splitter.addWidget(run_tree)
         splitter.addWidget(run_view)
         # splitter.setSizes([100, 200])
         splitter.setStretchFactor(0, 0)
@@ -62,24 +74,38 @@ class BadgerRunPage(QWidget):
     def refresh_ui(self):
         self.runs = runs = list_run()
 
-        self.run_list.clear()
-        for i, run in enumerate(runs):
-            item = QListWidgetItem(os.path.splitext(run)[0])
-            self.run_list.addItem(item)
+        self.run_tree.clear()
+
+        items = []
+        for year, dict_year in runs.items():
+            item_year = QTreeWidgetItem([year])
+            for month, dict_month in dict_year.items():
+                item_month = QTreeWidgetItem([month])
+                for day, list_day in dict_month.items():
+                    item_day = QTreeWidgetItem([day])
+                    for file in list_day:
+                        name = os.path.splitext(file)[0]
+                        item_file = QTreeWidgetItem([name])
+                        item_day.addChild(item_file)
+                    item_month.addChild(item_day)
+                item_year.addChild(item_month)
+            items.append(item_year)
+        self.run_tree.insertTopLevelItems(0, items)
 
     def config_logic(self):
-        self.run_list.currentItemChanged.connect(self.load_run)
-        self.run_list.setCurrentRow(0)
+        self.run_tree.currentItemChanged.connect(self.load_run)
+        # self.run_list.setCurrentRow(0)
 
         self.btn_back.clicked.connect(self.go_home)
 
     def reconfig_logic(self):
-        self.run_list.setCurrentRow(0)
+        pass
+        # self.run_list.setCurrentRow(0)
 
-    def load_run(self):
+    def load_run(self, current, previous):
         try:
-            run_name = self.run_list.currentItem().text()
+            run_name = current.text(0)
             run = load_run(run_name + '.yaml')
             self.run_view.setText(ystring(run))
-        except:  # current item is None due to list clear
-            pass
+        except Exception as e:
+            self.run_view.setText('')
