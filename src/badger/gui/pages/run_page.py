@@ -20,7 +20,6 @@ class BadgerRunPage(QWidget):
 
     def init_ui(self):
         self.runs = runs = list_run()
-        self.all_runs = []
 
         # Set up the layout
         vbox = QVBoxLayout(self)
@@ -60,13 +59,27 @@ class BadgerRunPage(QWidget):
 
         vbox.addWidget(action_bar)
 
+    def refresh_ui(self):
+        self.runs = runs = list_run()
+
+        self.run_list.clear()
+        for i, run in enumerate(runs):
+            item = QListWidgetItem(os.path.splitext(run)[0])
+            self.run_list.addItem(item)
+
     def config_logic(self):
         self.run_list.currentItemChanged.connect(self.load_run)
         self.run_list.setCurrentRow(0)
 
         self.btn_back.clicked.connect(self.go_home)
 
+    def reconfig_logic(self):
+        self.run_list.setCurrentRow(0)
+
     def load_run(self):
-        run_name = self.run_list.currentItem().text()
-        run = load_run(run_name + '.yaml')
-        self.run_view.setText(ystring(run))
+        try:
+            run_name = self.run_list.currentItem().text()
+            run = load_run(run_name + '.yaml')
+            self.run_view.setText(ystring(run))
+        except:  # current item is None due to list clear
+            pass
