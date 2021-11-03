@@ -5,6 +5,7 @@ from ...utils import run_routine, curr_ts_to_str
 
 
 class BadgerRoutineSignals(QObject):
+    env_ready = pyqtSignal(list)
     finished = pyqtSignal()
     progress = pyqtSignal(list, list)
     error = pyqtSignal(Exception)
@@ -21,8 +22,8 @@ class BadgerRoutineRunner(QRunnable):
         self.signals = BadgerRoutineSignals()
 
         self.routine = routine
-        var_names = [next(iter(d)) for d in routine['config']['variables']]
-        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+        self.var_names = var_names = [next(iter(d)) for d in routine['config']['variables']]
+        self.obj_names = obj_names = [next(iter(d)) for d in routine['config']['objectives']]
         self.data = pd.DataFrame(None, columns=['timestamp'] + obj_names + var_names)
         self.save = save
         self.verbose = verbose
@@ -35,7 +36,7 @@ class BadgerRoutineRunner(QRunnable):
         error = None
         try:
             run_routine(self.routine, True, self.save, self.verbose,
-                        self.before_evaluate, self.after_evaluate)
+                        self.before_evaluate, self.after_evaluate, self.env_ready)
         except Exception as e:
             error = e
 
@@ -69,6 +70,11 @@ class BadgerRoutineRunner(QRunnable):
 
         # take a break to let the outside signal to change the status
         time.sleep(0.1)
+
+    def env_ready(self, env):
+        self.env = env
+        init_vars = env.get_vars(self.var_names)
+        self.signals.env_ready.emit(init_vars)
 
     def ctrl_routine(self, pause):
         self.is_paused = pause
