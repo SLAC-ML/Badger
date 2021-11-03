@@ -26,6 +26,7 @@ class BadgerRunPage(QWidget):
 
         # History run list
         self.run_tree = run_tree = QTreeWidget()
+        self.recent_item = None
         run_tree.setColumnCount(1)
         run_tree.setHeaderLabels(['History Run'])
         # run_list.setSpacing(1)
@@ -36,8 +37,10 @@ class BadgerRunPage(QWidget):
                 item_month = QTreeWidgetItem([month])
                 for day, list_day in dict_month.items():
                     item_day = QTreeWidgetItem([day])
-                    for file in list_day:
+                    for i, file in enumerate(list_day):
                         item_file = QTreeWidgetItem([file])
+                        if not self.recent_item:
+                            self.recent_item = item_file
                         item_day.addChild(item_file)
                     item_month.addChild(item_day)
                 item_year.addChild(item_month)
@@ -75,6 +78,7 @@ class BadgerRunPage(QWidget):
         self.runs = runs = list_run()
 
         self.run_tree.clear()
+        self.recent_item = None
 
         items = []
         for year, dict_year in runs.items():
@@ -86,6 +90,8 @@ class BadgerRunPage(QWidget):
                     for file in list_day:
                         name = os.path.splitext(file)[0]
                         item_file = QTreeWidgetItem([name])
+                        if not self.recent_item:
+                            self.recent_item = item_file
                         item_day.addChild(item_file)
                     item_month.addChild(item_day)
                 item_year.addChild(item_month)
@@ -94,13 +100,12 @@ class BadgerRunPage(QWidget):
 
     def config_logic(self):
         self.run_tree.currentItemChanged.connect(self.load_run)
-        # self.run_list.setCurrentRow(0)
+        self.run_tree.setCurrentItem(self.recent_item)
 
         self.btn_back.clicked.connect(self.go_home)
 
     def reconfig_logic(self):
-        pass
-        # self.run_list.setCurrentRow(0)
+        self.run_tree.setCurrentItem(self.recent_item)
 
     def load_run(self, current, previous):
         try:
