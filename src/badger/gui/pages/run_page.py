@@ -185,14 +185,14 @@ class BadgerRunPage(QWidget):
         for i, obj_name in enumerate(obj_names):
             color = self.colors[i % len(self.colors)]
             symbol = self.symbols[i % len(self.colors)]
-            self.plot_obj.plot(np.array(data[obj_name]), pen=pg.mkPen(color, width=5),
+            self.plot_obj.plot(np.array(data[obj_name]), pen=pg.mkPen(color, width=3),
                                # symbol=symbol,
                                name=obj_name)
 
         for i, var_name in enumerate(var_names):
             color = self.colors[i % len(self.colors)]
             symbol = self.symbols[i % len(self.colors)]
-            self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=5),
+            self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=3),
                                # symbol=symbol,
                                name=var_name)
 
