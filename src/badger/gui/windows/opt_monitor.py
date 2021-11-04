@@ -273,15 +273,20 @@ class BadgerOptMonitor(QWidget):
 
     def on_mouse_click(self, event):
         # https://stackoverflow.com/a/64081483
+        coor_obj = self.plot_obj.vb.mapSceneToView(event._scenePos)
+        if self.plot_obj.viewRect().contains(coor_obj):
+            idx = int(np.round(coor_obj.x()))
 
-        mouse_point = self.plot_obj.vb.mapSceneToView(event._scenePos)
-        idx = int(np.round(mouse_point.x()))
+            self.ins_obj.setValue(idx)
+            self.ins_var.setValue(idx)
+            return
 
-        self.ins_obj.setValue(idx)
-        self.ins_var.setValue(idx)
-        # if self.plot_obj.sceneBoundingRect().contains(event._scenePos):
-        #     mouse_point = self.plot_obj.vb.mapSceneToView(event._scenePos)
-            # index = int(mouse_point.x())
+        coor_var = self.plot_var.vb.mapSceneToView(event._scenePos)
+        if self.plot_var.viewRect().contains(coor_var):
+            idx = int(np.round(coor_var.x()))
+
+            self.ins_obj.setValue(idx)
+            self.ins_var.setValue(idx)
 
     def closeEvent(self, event):
         if not self.running:
