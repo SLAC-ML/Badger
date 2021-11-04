@@ -42,6 +42,12 @@ class BadgerOptMonitor(QWidget):
         # monitor.resize(1000, 600)
         pg.setConfigOptions(antialias=True)
 
+        self.label = label = pg.LabelItem(justify='right')
+        label.setText(self._make_label())
+        monitor.addItem(label)
+
+        monitor.nextRow()
+
         self.plot_obj = plot_obj = monitor.addPlot(
             title='Evaluation History (Y)')
         plot_obj.setLabel('left', 'objectives')
@@ -70,7 +76,7 @@ class BadgerOptMonitor(QWidget):
         for i, obj_name in enumerate(self.obj_names):
             color = self.colors[i % len(self.colors)]
             symbol = self.symbols[i % len(self.colors)]
-            _curve = self.plot_obj.plot(pen=pg.mkPen(color, width=5),
+            _curve = self.plot_obj.plot(pen=pg.mkPen(color, width=3),
                                         # symbol=symbol,
                                         name=obj_name)
             self.curves_obj.append(_curve)
@@ -78,18 +84,18 @@ class BadgerOptMonitor(QWidget):
         for i, var_name in enumerate(self.var_names):
             color = self.colors[i % len(self.colors)]
             symbol = self.symbols[i % len(self.colors)]
-            _curve = self.plot_var.plot(pen=pg.mkPen(color, width=5),
+            _curve = self.plot_var.plot(pen=pg.mkPen(color, width=3),
                                         # symbol=symbol,
                                         name=var_name)
             self.curves_var.append(_curve)
 
-        self.ins_obj = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
+        self.ins_obj = pg.InfiniteLine(movable=True, angle=90, label=None,
                                        labelOpts={
                                            'position': 0.1,
                                            'color': (200, 200, 100),
                                            'fill': (200, 200, 200, 50),
                                            'movable': True})
-        self.ins_var = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
+        self.ins_var = pg.InfiniteLine(movable=True, angle=90, label=None,
                                        labelOpts={
                                            'position': 0.1,
                                            'color': (200, 200, 100),
@@ -247,10 +253,10 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.setValue(ins_var.value())
 
     def ins_drag_done(self, ins):
-        value = ins.value()
-        value = np.round(value)
+        value = np.round(ins.value())
         self.ins_obj.setValue(value)
         self.ins_var.setValue(value)
+        self.label.setText(self._make_label())
 
     def reset_env(self):
         current_vars = self.env.get_vars(self.var_names)
@@ -267,26 +273,42 @@ class BadgerOptMonitor(QWidget):
         idx = int(self.ins_obj.value())
         solution = df.loc[idx, self.var_names].to_numpy()
         self.env.set_vars(self.var_names, solution)
-        self.plot_var.setXRange(idx - 3, idx + 3)  # center around the inspector
+        # center around the inspector
+        self.plot_var.setXRange(idx - 3, idx + 3)
         # QMessageBox.information(
         #     self, 'Set Environment', f'Env vars have been set to {solution}')
+
+    def _make_label(self):
+        try:
+            df = self.routine_runner.data
+            idx = int(self.ins_obj.value())
+            vars = df.loc[idx, self.var_names].to_numpy()
+            objs = df.loc[idx, self.obj_names].to_numpy()
+            var_label = ', '.join(
+                [f'{var_name}: {vars[i]:.4f}' for i, var_name in enumerate(self.var_names)])
+            obj_label = ', '.join(
+                [f'{obj_name}: {objs[i]:.4f}' for i, obj_name in enumerate(self.obj_names)])
+        except:
+            var_label = ', '.join(
+                [f'{var_name}: {np.nan:.4f}' for i, var_name in enumerate(self.var_names)])
+            obj_label = ', '.join(
+                [f'{obj_name}: {np.nan:.4f}' for i, obj_name in enumerate(self.obj_names)])
+
+        return f"<span style='font-family: Courier; white-space: pre'>{var_label + ' | '}</span><span style='font-family: Courier; white-space: pre'>{obj_label}</span>"
 
     def on_mouse_click(self, event):
         # https://stackoverflow.com/a/64081483
         coor_obj = self.plot_obj.vb.mapSceneToView(event._scenePos)
-        if self.plot_obj.viewRect().contains(coor_obj):
+        coor_var = self.plot_var.vb.mapSceneToView(event._scenePos)
+
+        if self.plot_obj.viewRect().contains(coor_obj) or \
+                self.plot_var.viewRect().contains(coor_var):
             idx = int(np.round(coor_obj.x()))
 
             self.ins_obj.setValue(idx)
             self.ins_var.setValue(idx)
-            return
 
-        coor_var = self.plot_var.vb.mapSceneToView(event._scenePos)
-        if self.plot_var.viewRect().contains(coor_var):
-            idx = int(np.round(coor_var.x()))
-
-            self.ins_obj.setValue(idx)
-            self.ins_var.setValue(idx)
+            self.label.setText(self._make_label())
 
     def closeEvent(self, event):
         if not self.running:
