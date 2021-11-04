@@ -19,8 +19,10 @@ class BadgerOptMonitor(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.routine = routine
-        self.obj_names = [next(iter(d)) for d in self.routine['config']['objectives']]
-        self.var_names = [next(iter(d)) for d in self.routine['config']['variables']]
+        self.obj_names = [next(iter(d))
+                          for d in self.routine['config']['objectives']]
+        self.var_names = [next(iter(d))
+                          for d in self.routine['config']['variables']]
         self.save = save
 
         self.init_ui()
@@ -259,7 +261,13 @@ class BadgerOptMonitor(QWidget):
         pass
 
     def set_vars(self):
-        print(self.env)
+        df = self.routine_runner.data
+        idx = int(self.ins_obj.value())
+        solution = df.loc[idx, self.var_names].to_numpy()
+        self.env.set_vars(self.var_names, solution)
+        self.plot_var.setXRange(idx - 3, idx + 3)  # center around the inspector
+        # QMessageBox.information(
+        #     self, 'Set Environment', f'Env vars have been set to {solution}')
 
     def closeEvent(self, event):
         if not self.running:
