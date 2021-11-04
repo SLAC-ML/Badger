@@ -19,6 +19,8 @@ class BadgerOptMonitor(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.routine = routine
+        self.obj_names = [next(iter(d)) for d in self.routine['config']['objectives']]
+        self.var_names = [next(iter(d)) for d in self.routine['config']['variables']]
         self.save = save
 
         self.init_ui()
@@ -57,6 +59,27 @@ class BadgerOptMonitor(QWidget):
         leg_var.setBrush((50, 50, 100, 200))
 
         plot_var.setXLink(plot_obj)
+
+        self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
+        self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
+        self.curves_var = []
+        self.curves_obj = []
+
+        for i, obj_name in enumerate(self.obj_names):
+            color = self.colors[i % len(self.colors)]
+            symbol = self.symbols[i % len(self.colors)]
+            _curve = self.plot_obj.plot(pen=pg.mkPen(color, width=5),
+                                        # symbol=symbol,
+                                        name=obj_name)
+            self.curves_obj.append(_curve)
+
+        for i, var_name in enumerate(self.var_names):
+            color = self.colors[i % len(self.colors)]
+            symbol = self.symbols[i % len(self.colors)]
+            _curve = self.plot_var.plot(pen=pg.mkPen(color, width=5),
+                                        # symbol=symbol,
+                                        name=var_name)
+            self.curves_var.append(_curve)
 
         self.ins_obj = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
                                        labelOpts={
@@ -118,18 +141,16 @@ class BadgerOptMonitor(QWidget):
         vbox.addWidget(action_bar)
 
     def config_logic(self):
-        self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
-        self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
         self.vars = []
         self.objs = []
-        self.curves_var = []
-        self.curves_obj = []
 
         self.running = False
 
         # Sync the inspector lines
         self.ins_obj.sigDragged.connect(self.ins_obj_dragged)
+        self.ins_obj.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.ins_var.sigDragged.connect(self.ins_var_dragged)
+        self.ins_var.sigPositionChangeFinished.connect(self.ins_drag_done)
 
         # Thread runner
         self.thread_pool = QThreadPool(self)
@@ -165,28 +186,10 @@ class BadgerOptMonitor(QWidget):
         self.vars.append(vars)
         self.objs.append(objs)
 
-        if not self.curves_obj:
-            for i in range(len(objs)):
-                color = self.colors[i % len(self.colors)]
-                symbol = self.symbols[i % len(self.colors)]
-                _curve = self.plot_obj.plot(pen=pg.mkPen(color, width=5),
-                                            # symbol=symbol,
-                                            name=next(iter(self.routine['config']['objectives'][i])))
-                self.curves_obj.append(_curve)
-
-        if not self.curves_var:
-            for i in range(len(vars)):
-                color = self.colors[i % len(self.colors)]
-                symbol = self.symbols[i % len(self.colors)]
-                _curve = self.plot_var.plot(pen=pg.mkPen(color, width=5),
-                                            # symbol=symbol,
-                                            name=next(iter(self.routine['config']['variables'][i])))
-                self.curves_var.append(_curve)
-
-        for i in range(len(objs)):
+        for i in range(len(self.obj_names)):
             self.curves_obj[i].setData(np.array(self.objs)[:, i])
 
-        for i in range(len(vars)):
+        for i in range(len(self.var_names)):
             self.curves_var[i].setData(np.array(self.vars)[:, i])
 
     def env_ready(self, init_vars):
@@ -239,11 +242,16 @@ class BadgerOptMonitor(QWidget):
     def ins_var_dragged(self, ins_var):
         self.ins_obj.setValue(ins_var.value())
 
+    def ins_drag_done(self, ins):
+        value = ins.value()
+        value = np.round(value)
+        self.ins_obj.setValue(value)
+        self.ins_var.setValue(value)
+
     def reset_env(self):
-        var_names = [next(iter(d)) for d in self.routine['config']['variables']]
-        current_vars = self.env.get_vars(var_names)
-        self.env.set_vars(var_names, self.init_vars)
-        after_vars = self.env.get_vars(var_names)
+        current_vars = self.env.get_vars(self.var_names)
+        self.env.set_vars(self.var_names, self.init_vars)
+        after_vars = self.env.get_vars(self.var_names)
         QMessageBox.information(
             self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
 
