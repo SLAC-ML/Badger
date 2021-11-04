@@ -28,8 +28,10 @@ def archive_run(routine, data):
     first_level = tokens[0]
     second_level = f'{tokens[0]}-{tokens[1]}'
     third_level = f'{tokens[0]}-{tokens[1]}-{tokens[2]}'
+    path = os.path.join(BADGER_RUN_ROOT, first_level, second_level, third_level)
+    os.makedirs(path, exist_ok=True)
     fname = f'BadgerOpt-{suffix}.yaml'
-    with open(os.path.join(BADGER_RUN_ROOT, first_level, second_level, third_level, fname), 'w') as f:
+    with open(os.path.join(path, fname), 'w') as f:
         f.write(ystring(run))
 
 
