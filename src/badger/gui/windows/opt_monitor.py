@@ -153,6 +153,8 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.ins_var.sigDragged.connect(self.ins_var_dragged)
         self.ins_var.sigPositionChangeFinished.connect(self.ins_drag_done)
+        self.plot_obj.scene().sigMouseClicked.connect(self.on_mouse_click)
+        # sigMouseReleased.connect(self.on_mouse_click)
 
         # Thread runner
         self.thread_pool = QThreadPool(self)
@@ -268,6 +270,18 @@ class BadgerOptMonitor(QWidget):
         self.plot_var.setXRange(idx - 3, idx + 3)  # center around the inspector
         # QMessageBox.information(
         #     self, 'Set Environment', f'Env vars have been set to {solution}')
+
+    def on_mouse_click(self, event):
+        # https://stackoverflow.com/a/64081483
+
+        mouse_point = self.plot_obj.vb.mapSceneToView(event._scenePos)
+        idx = int(np.round(mouse_point.x()))
+
+        self.ins_obj.setValue(idx)
+        self.ins_var.setValue(idx)
+        # if self.plot_obj.sceneBoundingRect().contains(event._scenePos):
+        #     mouse_point = self.plot_obj.vb.mapSceneToView(event._scenePos)
+            # index = int(mouse_point.x())
 
     def closeEvent(self, event):
         if not self.running:
