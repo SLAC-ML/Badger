@@ -1,5 +1,6 @@
 from pkg_resources import get_distribution
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
+# from PyQt5.QtWidgets import QMenuBar, QMenu
 from ..pages.home_page import BadgerHomePage
 from ..pages.routine_page import BadgerRoutinePage
 from ..pages.run_page import BadgerRunPage
@@ -15,9 +16,13 @@ class BadgerMainWindow(QMainWindow):
     def init_ui(self):
         version = get_distribution('badger-opt').version
         self.setWindowTitle(f'Badger v{version}')
-        # self.setWindowIcon(QIcon('badger.png'))
         self.resize(960, 720)
         self.center()
+
+        # Add menu bar
+        # menu_bar = self.menuBar()
+        # edit_menu = menu_bar.addMenu('Edit')
+        # edit_menu.addAction('New')
 
         # Add pages
         self.home_page = BadgerHomePage(self.show_routine_page, self.show_run_page)

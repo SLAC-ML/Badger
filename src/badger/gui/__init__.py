@@ -1,7 +1,8 @@
+from pkg_resources import resource_filename
 import signal
 import time
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5 import QtCore
 import sys
 # import ctypes
@@ -48,6 +49,11 @@ def on_timeout():
 
 def launch_gui():
     app = QApplication(sys.argv)
+
+    # Set app metainfo
+    app.setApplicationName('Badger')
+    icon_path = resource_filename(__name__, 'images/icon.png')
+    app.setWindowIcon(QIcon(icon_path))
 
     font = QFont()
     font.setPixelSize(13)
