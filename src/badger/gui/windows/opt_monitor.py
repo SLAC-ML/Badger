@@ -266,7 +266,11 @@ class BadgerOptMonitor(QWidget):
             self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
 
     def jump_to_optimal(self):
-        pass
+        pf = self.routine_runner.pf
+        idx = pf.pareto_set[0][0]
+        self.ins_obj.setValue(idx)
+        self.ins_var.setValue(idx)
+        self.label.setText(self._make_label())
 
     def set_vars(self):
         df = self.routine_runner.data
