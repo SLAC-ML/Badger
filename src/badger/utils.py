@@ -192,7 +192,8 @@ class ParetoFront:
 
 
 def run_routine(routine, skip_review=False, save=None, verbose=2,
-                before_evaluate=None, after_evaluate=None, env_ready=None):
+                before_evaluate=None, after_evaluate=None,
+                env_ready=None, pf_ready=None):
     # Review the routine
     if not skip_review:
         print('Please review the routine to be run:\n')
@@ -251,7 +252,10 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     obj_names = [next(iter(d)) for d in routine['config']['objectives']]
     rules = [d[next(iter(d))] for d in routine['config']['objectives']]
     pf = ParetoFront(rules)
+    if pf_ready:
+        pf_ready(pf)
 
+    info = {'count': -1}
     # Make a normalized evaluate function
     def evaluate(X):
         Y = []
@@ -274,7 +278,11 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 obses_raw.append(obs)
             Y.append(obses)
             obses_raw = np.array(obses_raw)
-            is_optimal = not pf.is_dominated((_x, obses_raw))
+
+            info['count'] += 1
+            _idx_x = np.insert(_x, 0, info['count'])  # keep the idx info
+
+            is_optimal = not pf.is_dominated((_idx_x, obses_raw))
             solution = (_x, obses_raw, is_optimal, var_names, obj_names)
             logger.update(Events.OPTIMIZATION_STEP, solution)
 
