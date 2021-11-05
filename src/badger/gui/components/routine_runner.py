@@ -36,7 +36,8 @@ class BadgerRoutineRunner(QRunnable):
         error = None
         try:
             run_routine(self.routine, True, self.save, self.verbose,
-                        self.before_evaluate, self.after_evaluate, self.env_ready)
+                        self.before_evaluate, self.after_evaluate,
+                        self.env_ready, self.pf_ready)
         except Exception as e:
             error = e
 
@@ -75,6 +76,9 @@ class BadgerRoutineRunner(QRunnable):
         self.env = env
         init_vars = env.get_vars(self.var_names)
         self.signals.env_ready.emit(init_vars)
+
+    def pf_ready(self, pf):
+        self.pf = pf
 
     def ctrl_routine(self, pause):
         self.is_paused = pause
