@@ -242,8 +242,12 @@ class BadgerRoutinePage(QWidget):
             return
 
         name = self.algos[i]
-        _, configs = get_algo(name)
-        self.edit_algo.setPlainText(ystring(configs['params']))
+        try:
+            _, configs = get_algo(name)
+            self.edit_algo.setPlainText(ystring(configs['params']))
+        except Exception as e:
+            self.cb_algo.setCurrentIndex(-1)
+            return QMessageBox.critical(self, 'Error!', str(e))
 
     def select_env(self, i):
         if i == -1:
@@ -257,7 +261,12 @@ class BadgerRoutinePage(QWidget):
             return
 
         name = self.envs[i]
-        _, configs = get_env(name)
+        try:
+            _, configs = get_env(name)
+        except Exception as e:
+            self.cb_env.setCurrentIndex(-1)
+            return QMessageBox.critical(self, 'Error!', str(e))
+
         self.edit_env.setPlainText(ystring(configs['params']))
 
         self.list_var.clear()

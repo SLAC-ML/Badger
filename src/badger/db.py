@@ -9,8 +9,7 @@ import sqlite3
 # Check badger database root
 BADGER_DB_ROOT = os.getenv('BADGER_DB_ROOT')
 if BADGER_DB_ROOT is None:
-    logging.error('Please set the BADGER_DB_ROOT env var!')
-    sys.exit()
+    raise Exception('Please set the BADGER_DB_ROOT env var!')
 elif not os.path.exists(BADGER_DB_ROOT):
     os.makedirs(BADGER_DB_ROOT)
     logging.info(

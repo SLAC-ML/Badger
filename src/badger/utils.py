@@ -230,12 +230,15 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     from .factory import get_algo, get_intf, get_env
 
     Environment, configs_env = get_env(routine['env'])
-    try:
-        intf_name = configs_env['interface'][0]
-        Interface, _ = get_intf(intf_name)
-        intf = Interface()
-    except Exception:
-        intf = None
+
+    # Configure interface
+    # TODO: figure out the correct logic
+    # It seems that the interface should be given rather than
+    # initialized here
+    intf_name = configs_env['interface'][0]
+    Interface, _ = get_intf(intf_name)
+    intf = Interface()
+
     env = Environment(intf, routine['env_params'])
     if env_ready:
         env_ready(env)

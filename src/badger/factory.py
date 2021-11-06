@@ -7,12 +7,10 @@ import logging
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = os.getenv('BADGER_PLUGIN_ROOT')
 if BADGER_PLUGIN_ROOT is None:
-    logging.error('Please set the BADGER_PLUGIN_ROOT env var!')
-    sys.exit()
+    raise Exception('Please set the BADGER_PLUGIN_ROOT env var!')
 elif not os.path.exists(BADGER_PLUGIN_ROOT):
-    logging.error(
+    raise Exception(
         f'The badger plugin root {BADGER_PLUGIN_ROOT} does not exist!')
-    sys.exit()
 else:
     module_file = os.path.join(BADGER_PLUGIN_ROOT, '__init__.py')
     if not os.path.exists(module_file):
@@ -50,17 +48,17 @@ def load_plugin(root, pname, ptype):
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            logging.error(
+            raise Exception(
                 f'Error loading plugin {ptype} {pname}: invalid config')
-            return [None, None]
 
     # Load module
     try:
         module = importlib.import_module(f'{ptype}s.{pname}')
     except ImportError as e:
-        logging.error(
+        _e = Exception(
             f'{ptype} {pname} is not available due to missing dependencies: {e}')
-        return [None, configs]
+        _e.configs = configs  # attach information to the exception
+        raise _e
 
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
@@ -99,9 +97,8 @@ def get_plug(root, name, ptype):
         # Prevent accidentially modifying default configs
         plug = [plug[0], plug[1].copy()]
     except KeyError:
-        logging.error(
+        raise Exception(
             f'Error loading plugin {ptype} {name}: plugin not found')
-        plug = [None, None]
 
     return plug
 
@@ -130,13 +127,17 @@ def get_algo(name):
     if name in BADGER_FACTORY['algorithm'].keys():
         return get_plug(BADGER_PLUGIN_ROOT, name, 'algorithm')
     else:
-        for ext in BADGER_EXTENSIONS.values():
-            if name in ext.list_algo():
-                return [ext, ext.get_algo_config(name)]
+        for ext_name in BADGER_EXTENSIONS.keys():
+            ext = BADGER_EXTENSIONS[ext_name]
+            try:
+                if name in ext.list_algo():
+                    return [ext, ext.get_algo_config(name)]
+            except ImportError as e:
+                logging.warn(
+                    f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
-        logging.error(
+        raise Exception(
             f'Error loading plugin algorithm {name}: plugin not found')
-        return [None, None]
 
 
 def get_intf(name):
@@ -150,8 +151,13 @@ def get_env(name):
 def list_algo():
     algos = []
     algos += BADGER_FACTORY['algorithm']
-    for ext in BADGER_EXTENSIONS.values():
-        algos += ext.list_algo()
+    for ext_name in BADGER_EXTENSIONS.keys():
+        ext = BADGER_EXTENSIONS[ext_name]
+        try:
+            algos += ext.list_algo()
+        except ImportError as e:
+            logging.warn(
+                f'Failed to list algorithms from ext {ext_name}: {str(e)}')
     return sorted(algos)
 
 

@@ -1,3 +1,4 @@
+import logging
 from ..factory import list_env, get_env
 from ..utils import range_to_str, yprint
 
@@ -7,9 +8,18 @@ def show_env(args):
         yprint(list_env())
         return
 
-    env, configs = get_env(args.env_name)
-    if env is None:
-        return
+    try:
+        _, configs = get_env(args.env_name)
+    except Exception as e:
+        logging.error(e)
+        try:
+            # The exception could carry the configs information
+            configs = e.configs
+        except:
+            return
 
-    configs['variables'] = range_to_str(configs['variables'])
-    yprint(configs)
+    try:
+        configs['variables'] = range_to_str(configs['variables'])
+        yprint(configs)
+    except:
+        pass

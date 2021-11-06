@@ -1,5 +1,6 @@
+import logging
 from ..factory import list_algo, get_algo
-from ..utils import config_list_to_dict, yprint
+from ..utils import yprint
 
 
 def show_algo(args):
@@ -7,7 +8,14 @@ def show_algo(args):
         yprint(list_algo())
         return
 
-    algo, configs = get_algo(args.algo_name)
-    if algo is None:
-        return
-    yprint(configs)
+    try:
+        _, configs = get_algo(args.algo_name)
+        yprint(configs)
+    except Exception as e:
+        logging.error(e)
+        try:
+            # The exception could carry the configs information
+            configs = e.configs
+            yprint(configs)
+        except:
+            pass

@@ -1,5 +1,6 @@
+import logging
 from ..factory import list_intf, get_intf
-from ..utils import config_list_to_dict, yprint
+from ..utils import yprint
 
 
 def show_intf(args):
@@ -7,7 +8,14 @@ def show_intf(args):
         yprint(list_intf())
         return
 
-    intf, configs = get_intf(args.intf_name)
-    if intf is None:
-        return
-    yprint(configs)
+    try:
+        _, configs = get_intf(args.intf_name)
+        yprint(configs)
+    except Exception as e:
+        logging.error(e)
+        try:
+            # The exception could carry the configs information
+            configs = e.configs
+            yprint(configs)
+        except:
+            pass

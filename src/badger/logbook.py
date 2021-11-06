@@ -7,8 +7,7 @@ import logging
 # Check badger logbook root
 BADGER_LOGBOOK_ROOT = os.getenv('BADGER_LOGBOOK_ROOT')
 if BADGER_LOGBOOK_ROOT is None:
-    logging.error('Please set the BADGER_LOGBOOK_ROOT env var!')
-    sys.exit()
+    raise Exception('Please set the BADGER_LOGBOOK_ROOT env var!')
 elif not os.path.exists(BADGER_LOGBOOK_ROOT):
     os.makedirs(BADGER_LOGBOOK_ROOT)
     logging.info(

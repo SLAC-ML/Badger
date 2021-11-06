@@ -7,8 +7,7 @@ from .utils import curr_ts_to_str, ystring, load_config
 # Check badger optimization run archive root
 BADGER_RUN_ROOT = os.getenv('BADGER_RUN_ROOT')
 if BADGER_RUN_ROOT is None:
-    logging.error('Please set the BADGER_RUN_ROOT env var!')
-    sys.exit()
+    raise Exception('Please set the BADGER_RUN_ROOT env var!')
 elif not os.path.exists(BADGER_RUN_ROOT):
     os.makedirs(BADGER_RUN_ROOT)
     logging.info(
