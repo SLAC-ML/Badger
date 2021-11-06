@@ -14,7 +14,6 @@ setup(
         'badger': ['gui/images/*.png']
     },
     install_requires=[
-        'numpy',
         'pandas',
         'pyyaml',
         'coolname',
