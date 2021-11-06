@@ -15,6 +15,7 @@ setup(
     },
     install_requires=[
         'numpy',
+        'pandas',
         'pyyaml',
         'coolname',
         'pyqt5',
