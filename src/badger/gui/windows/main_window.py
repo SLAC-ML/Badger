@@ -1,5 +1,5 @@
 from pkg_resources import get_distribution
-from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStackedWidget, QDesktopWidget
 # from PyQt5.QtWidgets import QMenuBar, QMenu
 from ..pages.home_page import BadgerHomePage
 from ..pages.routine_page import BadgerRoutinePage
@@ -49,7 +49,11 @@ class BadgerMainWindow(QMainWindow):
         pass
 
     def show_routine_page(self, routine=None):
-        self.routine_page.refresh_ui(routine)
+        try:
+            self.routine_page.refresh_ui(routine)
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error!', str(e))
+
         self.stacks.setCurrentIndex(1)
 
     def show_home_page(self):
@@ -58,6 +62,10 @@ class BadgerMainWindow(QMainWindow):
         self.stacks.setCurrentIndex(0)
 
     def show_run_page(self):
-        self.run_page.refresh_ui()
-        self.run_page.reconfig_logic()
+        try:
+            self.run_page.refresh_ui()
+            self.run_page.reconfig_logic()
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error!', str(e))
+
         self.stacks.setCurrentIndex(2)
