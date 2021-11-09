@@ -13,9 +13,8 @@ def config_settings(args):
         return
 
     try:
-        dname = BADGER_PATH_DICT[key]['display name']
         print('')
-        return _config_path_var(key, dname)
+        return _config_path_var(key)
     except IndexError:
         pass
     except KeyboardInterrupt:
@@ -24,8 +23,12 @@ def config_settings(args):
     logger.error(f'{key} is not a valid Badger config key!')
 
 
-def _config_path_var(var_name, display_name):
-    print(f'=== Configure {var_name} ===')
+def _config_path_var(var_name):
+    display_name = BADGER_PATH_DICT[var_name]['display name']
+    desc = BADGER_PATH_DICT[var_name]['description']
+
+    print(f'=== Configure {display_name} ===')
+    print(f'*** {desc} ***\n')
     while True:
         res = input(
             f'Please type in the path to the Badger {display_name} folder (S to skip, R to reset): \n')

@@ -16,8 +16,9 @@ def check_n_config_paths():
             good = False
             dname = BADGER_PATH_DICT[pname]['display name']
             print(f'\n{dname} needs to be configured!\n')
+
             try:
-                _config_path_var(pname, dname)
+                _config_path_var(pname)
             except KeyboardInterrupt:
                 pass
 
