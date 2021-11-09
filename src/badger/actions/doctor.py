@@ -5,7 +5,7 @@ from .config import _config_path_var
 def self_check(args):
     good = check_n_config_paths()
     if good:
-        print('Everything is fine!')
+        print('Badger is healthy!')
 
 
 def check_n_config_paths():
