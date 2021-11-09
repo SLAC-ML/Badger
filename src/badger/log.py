@@ -18,7 +18,7 @@ LOG_CONFIG_DEFAULT = {
         }
     },
     'root': {
-        'level': 'DEBUG',
+        'level': 'WARNING',
         'handlers': [
             'console'
         ]
