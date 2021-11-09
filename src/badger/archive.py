@@ -1,6 +1,6 @@
 import os
-import sys
 import logging
+logger = logging.getLogger(__name__)
 from .utils import curr_ts_to_str, ystring, load_config
 
 
@@ -10,7 +10,7 @@ if BADGER_RUN_ROOT is None:
     raise Exception('Please set the BADGER_RUN_ROOT env var!')
 elif not os.path.exists(BADGER_RUN_ROOT):
     os.makedirs(BADGER_RUN_ROOT)
-    logging.info(
+    logger.info(
         f'Badger run root {BADGER_RUN_ROOT} created')
 
 

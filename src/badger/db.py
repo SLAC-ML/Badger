@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import datetime
 import logging
+logger = logging.getLogger(__name__)
 import yaml
 import sqlite3
 
@@ -12,7 +13,7 @@ if BADGER_DB_ROOT is None:
     raise Exception('Please set the BADGER_DB_ROOT env var!')
 elif not os.path.exists(BADGER_DB_ROOT):
     os.makedirs(BADGER_DB_ROOT)
-    logging.info(
+    logger.info(
         f'Badger database root {BADGER_DB_ROOT} created')
 
 
@@ -52,7 +53,7 @@ def load_routine(name):
     if len(records) == 1:
         return yaml.safe_load(records[0][1]), records[0][2]
     elif len(records) == 0:
-        logging.warn(f'Routine {name} not found in the database!')
+        logger.warn(f'Routine {name} not found in the database!')
         return None, None
     else:
         raise Exception(

@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger(__name__)
 from coolname import generate_slug
 from ..factory import get_algo, get_env
 from ..utils import load_config, merge_params, normalize_routine
@@ -18,7 +19,7 @@ def run_routine(args):
         params_env = load_config(args.env_params)
         params_algo = load_config(args.algo_params)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return
     params_env = merge_params(configs_env['params'], params_env)
     params_algo = merge_params(configs_algo['params'], params_algo)
@@ -32,7 +33,7 @@ def run_routine(args):
         except KeyError:
             configs_routine['constraints'] = None
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return
 
     # Compose the routine
@@ -52,10 +53,10 @@ def run_routine(args):
     try:
         routine = normalize_routine(routine)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return
 
     try:
         run(routine, args.yes, args.save, args.verbose)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)

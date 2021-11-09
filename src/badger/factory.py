@@ -3,6 +3,7 @@ import os
 import importlib
 import yaml
 import logging
+logger = logging.getLogger(__name__)
 
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = os.getenv('BADGER_PLUGIN_ROOT')
@@ -117,7 +118,7 @@ def scan_extensions(root):
             extensions[ename] = ext
         except ImportError:
             pass
-            # logging.warn(
+            # logger.warn(
             #     f'Extension {ename} is not available due to missing dependencies')
 
     return extensions
@@ -133,7 +134,7 @@ def get_algo(name):
                 if name in ext.list_algo():
                     return [ext, ext.get_algo_config(name)]
             except ImportError as e:
-                logging.warn(
+                logger.warn(
                     f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
         raise Exception(
@@ -156,7 +157,7 @@ def list_algo():
         try:
             algos += ext.list_algo()
         except ImportError as e:
-            logging.warn(
+            logger.warn(
                 f'Failed to list algorithms from ext {ext_name}: {str(e)}')
     return sorted(algos)
 

@@ -1,7 +1,7 @@
 import os
-import sys
 from datetime import datetime
 import logging
+logger = logging.getLogger(__name__)
 
 
 # Check badger logbook root
@@ -10,7 +10,7 @@ if BADGER_LOGBOOK_ROOT is None:
     raise Exception('Please set the BADGER_LOGBOOK_ROOT env var!')
 elif not os.path.exists(BADGER_LOGBOOK_ROOT):
     os.makedirs(BADGER_LOGBOOK_ROOT)
-    logging.info(
+    logger.info(
         f'Badger logbook root {BADGER_LOGBOOK_ROOT} created')
 
 
@@ -101,7 +101,7 @@ def screenshot(widget, filename):
     img = Image.open(filename)
     if img.mode in ('RGBA', 'LA'):
         # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html?highlight=eps#eps
-        # logging.warn(f'Current figure mode "{img.mode}" cannot be directly saved to .ps and will be converted to "RGB" mode')
+        # logger.warn(f'Current figure mode "{img.mode}" cannot be directly saved to .ps and will be converted to "RGB" mode')
         img = img.convert('RGB')
     # img = img.scaled(400, 600)
     name = os.path.splitext(filename)[0]

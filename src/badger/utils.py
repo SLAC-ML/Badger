@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import yaml
 import logging
+logger = logging.getLogger(__name__)
 
 
 # https://stackoverflow.com/a/39681672/4263605
@@ -126,13 +127,13 @@ def normalize_routine(routine):
                 continue
 
             if vrange_vocs[0] < vrange_default[0]:
-                logging.warn(
+                logger.warn(
                     f'variable {var_name}: lower limit {vrange_vocs[0]} exceeds the bound, set to the lower bound {vrange_default[0]}')
                 lb = vrange_default[0]
             else:
                 lb = vrange_vocs[0]
             if vrange_vocs[1] > vrange_default[1]:
-                logging.warn(
+                logger.warn(
                     f'variable {var_name}: upper limit {vrange_vocs[1]} exceeds the bound, set to the upper bound {vrange_default[1]}')
                 ub = vrange_default[1]
             else:
@@ -260,6 +261,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
     info = {'count': -1}
     # Make a normalized evaluate function
+
     def evaluate(X):
         Y = []
         for x in X:

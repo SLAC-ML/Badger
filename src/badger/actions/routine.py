@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger(__name__)
 import sqlite3
 from ..db import load_routine, list_routine
 from ..utils import range_to_str, yprint, run_routine
@@ -31,4 +32,4 @@ def show_routine(args):
     try:
         run_routine(routine, args.yes, None, args.verbose)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
