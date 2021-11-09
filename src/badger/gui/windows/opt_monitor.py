@@ -6,7 +6,7 @@ import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 # from ..utils import AURORA_PALETTE, FROST_PALETTE
 from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
-from ...archive import archive_run, BADGER_RUN_ROOT
+from ...archive import archive_run, BADGER_ARCHIVE_ROOT
 
 
 class BadgerOptMonitor(QWidget):
@@ -218,7 +218,7 @@ class BadgerOptMonitor(QWidget):
             QMessageBox.critical(self, 'Archive failed!', str(e))
 
         QMessageBox.information(
-            self, 'Success!', f'Run data archived to {BADGER_RUN_ROOT}')
+            self, 'Success!', f'Run data archived to {BADGER_ARCHIVE_ROOT}')
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))

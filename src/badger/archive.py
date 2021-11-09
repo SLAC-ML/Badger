@@ -6,13 +6,13 @@ from .settings import read_value
 
 
 # Check badger optimization run archive root
-BADGER_RUN_ROOT = read_value('BADGER_RUN_ROOT')
-if BADGER_RUN_ROOT is None:
-    raise Exception('Please set the BADGER_RUN_ROOT env var!')
-elif not os.path.exists(BADGER_RUN_ROOT):
-    os.makedirs(BADGER_RUN_ROOT)
+BADGER_ARCHIVE_ROOT = read_value('BADGER_ARCHIVE_ROOT')
+if BADGER_ARCHIVE_ROOT is None:
+    raise Exception('Please set the BADGER_ARCHIVE_ROOT env var!')
+elif not os.path.exists(BADGER_ARCHIVE_ROOT):
+    os.makedirs(BADGER_ARCHIVE_ROOT)
     logger.info(
-        f'Badger run root {BADGER_RUN_ROOT} created')
+        f'Badger run root {BADGER_ARCHIVE_ROOT} created')
 
 
 def archive_run(routine, data):
@@ -28,7 +28,7 @@ def archive_run(routine, data):
     first_level = tokens[0]
     second_level = f'{tokens[0]}-{tokens[1]}'
     third_level = f'{tokens[0]}-{tokens[1]}-{tokens[2]}'
-    path = os.path.join(BADGER_RUN_ROOT, first_level, second_level, third_level)
+    path = os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level)
     os.makedirs(path, exist_ok=True)
     fname = f'BadgerOpt-{suffix}.yaml'
     with open(os.path.join(path, fname), 'w') as f:
@@ -38,10 +38,10 @@ def archive_run(routine, data):
 def list_run():
     runs = {}
     # Get years, latest first
-    years = sorted([p for p in os.listdir(BADGER_RUN_ROOT)
-                   if os.path.isdir(os.path.join(BADGER_RUN_ROOT, p))], reverse=True)
+    years = sorted([p for p in os.listdir(BADGER_ARCHIVE_ROOT)
+                   if os.path.isdir(os.path.join(BADGER_ARCHIVE_ROOT, p))], reverse=True)
     for year in years:
-        path_year = os.path.join(BADGER_RUN_ROOT, year)
+        path_year = os.path.join(BADGER_ARCHIVE_ROOT, year)
         months = sorted([p for p in os.listdir(path_year) if os.path.isdir(
             os.path.join(path_year, p))], reverse=True)
         runs[year] = {}
@@ -67,4 +67,4 @@ def load_run(run_fname):
     second_level = f'{tokens[1]}-{tokens[2]}'
     third_level = f'{tokens[1]}-{tokens[2]}-{tokens[3]}'
 
-    return load_config(os.path.join(BADGER_RUN_ROOT, first_level, second_level, third_level, run_fname))
+    return load_config(os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level, run_fname))

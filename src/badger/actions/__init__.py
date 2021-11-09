@@ -13,9 +13,9 @@ try:
 except:
     BADGER_LOGBOOK_ROOT = None
 try:
-    from ..archive import BADGER_RUN_ROOT
+    from ..archive import BADGER_ARCHIVE_ROOT
 except:
-    BADGER_RUN_ROOT = None
+    BADGER_ARCHIVE_ROOT = None
 from ..utils import yprint
 from .doctor import check_n_config_paths
 
@@ -32,7 +32,7 @@ def show_info(args):
             'plugin root': BADGER_PLUGIN_ROOT,
             'database root': BADGER_DB_ROOT,
             'logbook root': BADGER_LOGBOOK_ROOT,
-            'archive root': BADGER_RUN_ROOT,
+            'archive root': BADGER_ARCHIVE_ROOT,
         }
 
         if BADGER_EXTENSIONS:

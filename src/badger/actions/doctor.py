@@ -62,9 +62,9 @@ def check_n_config_paths():
         print('\nlogbook root needs to be configured!\n')
         _config_path_var('BADGER_LOGBOOK_ROOT', 'logbook root')
 
-    if not read_value('BADGER_RUN_ROOT'):
+    if not read_value('BADGER_ARCHIVE_ROOT'):
         good = False
         print('\narchive root needs to be configured!\n')
-        _config_path_var('BADGER_RUN_ROOT', 'archive root')
+        _config_path_var('BADGER_ARCHIVE_ROOT', 'archive root')
 
     return good
