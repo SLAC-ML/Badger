@@ -1,10 +1,15 @@
 import logging
 logger = logging.getLogger(__name__)
-from ..factory import list_env, get_env
 from ..utils import range_to_str, yprint
 
 
 def show_env(args):
+    try:
+        from ..factory import list_env, get_env
+    except Exception as e:
+        logger.error(e)
+        return
+
     if args.env_name is None:
         yprint(list_env())
         return

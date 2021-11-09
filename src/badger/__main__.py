@@ -1,5 +1,7 @@
 import argparse
 
+from .log import config_log
+config_log()  # has to happen here to make sure the config taking effect
 from .actions import show_info
 from .actions.doctor import self_check
 from .actions.routine import show_routine

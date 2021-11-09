@@ -1,10 +1,15 @@
 import logging
 logger = logging.getLogger(__name__)
-from ..factory import list_intf, get_intf
 from ..utils import yprint
 
 
 def show_intf(args):
+    try:
+        from ..factory import list_intf, get_intf
+    except Exception as e:
+        logger.error(e)
+        return
+
     if args.intf_name is None:
         yprint(list_intf())
         return

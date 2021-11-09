@@ -1,10 +1,15 @@
 import logging
 logger = logging.getLogger(__name__)
-from ..factory import list_algo, get_algo
 from ..utils import yprint
 
 
 def show_algo(args):
+    try:
+        from ..factory import list_algo, get_algo
+    except Exception as e:
+        logger.error(e)
+        return
+
     if args.algo_name is None:
         yprint(list_algo())
         return

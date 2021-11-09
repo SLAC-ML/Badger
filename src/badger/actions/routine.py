@@ -1,11 +1,16 @@
 import logging
 logger = logging.getLogger(__name__)
-import sqlite3
-from ..db import load_routine, list_routine
 from ..utils import range_to_str, yprint, run_routine
 
 
 def show_routine(args):
+    import sqlite3
+    try:
+        from ..db import load_routine, list_routine
+    except Exception as e:
+        logger.error(e)
+        return
+
     # List routines
     if args.routine_name is None:
         try:

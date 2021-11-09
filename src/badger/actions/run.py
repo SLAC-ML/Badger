@@ -1,13 +1,18 @@
 import logging
 logger = logging.getLogger(__name__)
 from coolname import generate_slug
-from ..factory import get_algo, get_env
 from ..utils import load_config, merge_params, normalize_routine
 from ..utils import config_list_to_dict
 from ..utils import run_routine as run
 
 
 def run_routine(args):
+    try:
+        from ..factory import get_algo, get_env
+    except Exception as e:
+        logger.error(e)
+        return
+
     try:
         # Get env params
         _, configs_env = get_env(args.env)

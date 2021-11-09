@@ -1,8 +1,21 @@
 from pkg_resources import get_distribution
-from ..factory import BADGER_PLUGIN_ROOT, BADGER_EXTENSIONS
-from ..db import BADGER_DB_ROOT
-from ..logbook import BADGER_LOGBOOK_ROOT
-from ..archive import BADGER_RUN_ROOT
+try:
+    from ..factory import BADGER_PLUGIN_ROOT, BADGER_EXTENSIONS
+except:
+    BADGER_PLUGIN_ROOT = None
+    BADGER_EXTENSIONS = None
+try:
+    from ..db import BADGER_DB_ROOT
+except:
+    BADGER_DB_ROOT = None
+try:
+    from ..logbook import BADGER_LOGBOOK_ROOT
+except:
+    BADGER_LOGBOOK_ROOT = None
+try:
+    from ..archive import BADGER_RUN_ROOT
+except:
+    BADGER_RUN_ROOT = None
 from ..utils import yprint
 
 
@@ -21,9 +34,10 @@ def show_info(args):
             'run root': BADGER_RUN_ROOT,
         }
 
-        extensions = list(BADGER_EXTENSIONS.keys())
-        if extensions:
-            info['extensions'] = extensions
+        if BADGER_EXTENSIONS:
+            extensions = list(BADGER_EXTENSIONS.keys())
+            if extensions:
+                info['extensions'] = extensions
 
         yprint(info)
         # print(f'Badger the optimizer')
