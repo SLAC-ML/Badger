@@ -9,6 +9,7 @@ from .actions.algo import show_algo
 from .actions.env import show_env
 from .actions.intf import show_intf
 from .actions.run import run_routine
+from .actions.config import config_settings
 
 
 def main():
@@ -72,6 +73,11 @@ def main():
                             default=2, const=2, nargs='?',
                             help='verbose level of optimization progress')
     parser_run.set_defaults(func=run_routine)
+
+    # Parser for the 'config' command
+    parser_config = subparsers.add_parser('config', help='Badger configurations')
+    parser_config.add_argument('key', nargs='?', type=str, default=None)
+    parser_config.set_defaults(func=config_settings)
 
     args = parser.parse_args()
     args.func(args)
