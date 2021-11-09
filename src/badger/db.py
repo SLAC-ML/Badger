@@ -1,14 +1,14 @@
 import os
-import sys
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
 import yaml
 import sqlite3
+from .settings import read_value
 
 
 # Check badger database root
-BADGER_DB_ROOT = os.getenv('BADGER_DB_ROOT')
+BADGER_DB_ROOT = read_value('BADGER_DB_ROOT')
 if BADGER_DB_ROOT is None:
     raise Exception('Please set the BADGER_DB_ROOT env var!')
 elif not os.path.exists(BADGER_DB_ROOT):

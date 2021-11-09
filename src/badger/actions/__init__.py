@@ -17,6 +17,7 @@ try:
 except:
     BADGER_RUN_ROOT = None
 from ..utils import yprint
+from .doctor import check_n_config_paths
 
 
 def show_info(args):
@@ -31,7 +32,7 @@ def show_info(args):
             'plugin root': BADGER_PLUGIN_ROOT,
             'database root': BADGER_DB_ROOT,
             'logbook root': BADGER_LOGBOOK_ROOT,
-            'run root': BADGER_RUN_ROOT,
+            'archive root': BADGER_RUN_ROOT,
         }
 
         if BADGER_EXTENSIONS:
@@ -40,6 +41,8 @@ def show_info(args):
                 info['extensions'] = extensions
 
         yprint(info)
+
+        check_n_config_paths()
         # print(f'Badger the optimizer')
         # print('====================')
         # print(f'version      : {version}')

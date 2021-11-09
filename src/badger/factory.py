@@ -4,9 +4,11 @@ import importlib
 import yaml
 import logging
 logger = logging.getLogger(__name__)
+from .settings import read_value
+
 
 # Check badger plugin root
-BADGER_PLUGIN_ROOT = os.getenv('BADGER_PLUGIN_ROOT')
+BADGER_PLUGIN_ROOT = read_value('BADGER_PLUGIN_ROOT')
 if BADGER_PLUGIN_ROOT is None:
     raise Exception('Please set the BADGER_PLUGIN_ROOT env var!')
 elif not os.path.exists(BADGER_PLUGIN_ROOT):

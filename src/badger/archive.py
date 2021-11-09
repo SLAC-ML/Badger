@@ -2,10 +2,11 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 from .utils import curr_ts_to_str, ystring, load_config
+from .settings import read_value
 
 
 # Check badger optimization run archive root
-BADGER_RUN_ROOT = os.getenv('BADGER_RUN_ROOT')
+BADGER_RUN_ROOT = read_value('BADGER_RUN_ROOT')
 if BADGER_RUN_ROOT is None:
     raise Exception('Please set the BADGER_RUN_ROOT env var!')
 elif not os.path.exists(BADGER_RUN_ROOT):

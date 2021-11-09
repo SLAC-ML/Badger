@@ -2,10 +2,11 @@ import os
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
+from .settings import read_value
 
 
 # Check badger logbook root
-BADGER_LOGBOOK_ROOT = os.getenv('BADGER_LOGBOOK_ROOT')
+BADGER_LOGBOOK_ROOT = read_value('BADGER_LOGBOOK_ROOT')
 if BADGER_LOGBOOK_ROOT is None:
     raise Exception('Please set the BADGER_LOGBOOK_ROOT env var!')
 elif not os.path.exists(BADGER_LOGBOOK_ROOT):
