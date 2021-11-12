@@ -1,10 +1,10 @@
+from .settings import read_value
 import sys
 import os
 import importlib
 import yaml
 import logging
 logger = logging.getLogger(__name__)
-from .settings import read_value
 
 
 # Check badger plugin root
@@ -29,8 +29,12 @@ def scan_plugins(root):
 
         proot = os.path.join(root, f'{ptype}s')
 
-        plugins = [fname for fname in os.listdir(proot)
-                   if os.path.exists(os.path.join(proot, fname, '__init__.py'))]
+        try:
+            plugins = [fname for fname in os.listdir(proot)
+                       if os.path.exists(os.path.join(proot, fname, '__init__.py'))]
+        except:
+            plugins = []
+
         for pname in plugins:
             # TODO: Also load the configs here
             # So that list plugins can access the metadata of the plugins
@@ -111,8 +115,12 @@ def scan_extensions(root):
 
     eroot = os.path.join(root, 'extensions')
 
-    enames = [fname for fname in os.listdir(eroot)
-              if os.path.exists(os.path.join(eroot, fname, '__init__.py'))]
+    try:
+        enames = [fname for fname in os.listdir(eroot)
+                  if os.path.exists(os.path.join(eroot, fname, '__init__.py'))]
+    except:
+        enames = []
+
     for ename in enames:
         try:
             module = importlib.import_module(f'extensions.{ename}')
