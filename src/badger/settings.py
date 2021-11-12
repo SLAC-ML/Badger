@@ -36,7 +36,7 @@ def read_value(key):
     return settings.value(key)
 
 
-def set_value(key, value):
+def write_value(key, value):
     settings = QSettings('SLAC-ML', 'Badger')
 
     settings.setValue(key, value)

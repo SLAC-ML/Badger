@@ -1,4 +1,4 @@
-from ..settings import list_settings, read_value, set_value, BADGER_PATH_DICT
+from ..settings import list_settings, read_value, write_value, BADGER_PATH_DICT
 import os
 import logging
 logger = logging.getLogger(__name__)
@@ -69,8 +69,8 @@ def _config_path_var(var_name):
                 print(f'Invalid choice: {_res}')
 
     if res == 'R':
-        set_value(var_name, None)
+        write_value(var_name, None)
         print(f'You reset the Badger {display_name} folder setting')
     elif res != 'S':
-        set_value(var_name, res)
+        write_value(var_name, res)
         print(f'You set the Badger {display_name} folder to {res}')
