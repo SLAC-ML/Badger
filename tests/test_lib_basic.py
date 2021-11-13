@@ -35,7 +35,7 @@ def test_intf_api():
     assert configs['version'] == '0.1'
 
 
-def test_run(request):
+def test_run(mock_config_root):
     from coolname import generate_slug
     from badger.log import config_log
     config_log()
@@ -48,7 +48,7 @@ def test_run(request):
     algo_params = '{dimension: 2, max_iter: 10}'
     env = 'silly'
     env_params = None
-    config = os.path.join(request.fspath.dirname, 'configs', 'test.yaml')
+    config = os.path.join(mock_config_root, 'test.yaml')
     save = False
     yes = True
     verbose = 2

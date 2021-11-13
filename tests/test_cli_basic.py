@@ -23,10 +23,10 @@ def test_cli_main(testdir):
     assert outlines[1] == f'version: {version}'
 
 
-def test_cli_run(testdir, request):
+def test_cli_run(testdir, mock_config_root):
     args = ['badger', 'run', '-a', 'silly', '-ap',
             '{dimension: 2, max_iter: 10}',  '-e', 'silly', '-c',
-            os.path.join(request.fspath.dirname, 'configs', 'test.yaml'), '-y']
+            os.path.join(mock_config_root, 'test.yaml'), '-y']
     result = testdir.run(*args)
 
     assert result.ret == 0
