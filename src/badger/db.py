@@ -46,14 +46,18 @@ def load_routine(name):
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    cur.execute('select * from routine where name=:name', {'name': name})
+    try:
+        cur.execute('select * from routine where name=:name', {'name': name})
+    except sqlite3.OperationalError:
+        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
+        cur.execute('select * from routine where name=:name', {'name': name})
     records = cur.fetchall()
     con.close()
 
     if len(records) == 1:
         return yaml.safe_load(records[0][1]), records[0][2]
     elif len(records) == 0:
-        logger.warn(f'Routine {name} not found in the database!')
+        # logger.warn(f'Routine {name} not found in the database!')
         return None, None
     else:
         raise Exception(
@@ -65,7 +69,11 @@ def list_routine():
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    cur.execute('select name, savedAt from routine')
+    try:
+        cur.execute('select name, savedAt from routine')
+    except sqlite3.OperationalError:
+        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
+        cur.execute('select name, savedAt from routine')
     records = cur.fetchall()
     names = [record[0] for record in records]
     timestamps = [record[1] for record in records]
