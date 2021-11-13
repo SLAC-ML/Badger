@@ -1,0 +1,5 @@
+variables:
+  - q1
+  - q2
+objectives:
+  - l2

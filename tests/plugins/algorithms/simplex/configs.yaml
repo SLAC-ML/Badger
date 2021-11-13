@@ -1,0 +1,11 @@
+---
+name: simplex
+version: "0.1"
+dependencies:
+  - scipy>0.18
+params:
+  dimension: 2
+  x0: [0, 0]
+  isteps:
+  xtol: 1.0e-05
+  max_iter: 100
