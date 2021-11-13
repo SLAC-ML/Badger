@@ -4,7 +4,6 @@ from ..utils import range_to_str, yprint, run_routine
 
 
 def show_routine(args):
-    import sqlite3
     try:
         from ..db import load_routine, list_routine
     except Exception as e:
@@ -13,18 +12,20 @@ def show_routine(args):
 
     # List routines
     if args.routine_name is None:
-        try:
-            yprint(list_routine()[0])
-        except sqlite3.OperationalError:
+        routines = list_routine()[0]
+        if routines:
+            yprint(routines)
+        else:
             print('No routine has been saved yet')
         return
 
     try:
         routine, _ = load_routine(args.routine_name)
         if routine is None:
+            print(f'Routine {args.routine_name} not found')
             return
-    except sqlite3.OperationalError:
-        print(f'Routine {args.routine_name} not found')
+    except Exception as e:
+        print(e)
         return
 
     # Print the routine
