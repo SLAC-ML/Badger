@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
+import versioneer
 
 setup(
     name='badger-opt',
-    version='0.5.0',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='Core of the Badger optimizer',
     url='https://github.com/SLAC-ML/Badger',
     author='Zhe Zhang',
