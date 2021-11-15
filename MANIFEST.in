@@ -1,2 +1,5 @@
 include versioneer.py
 include src/badger/_version.py
+graft tests
+prune tests/**/__pycache__
+recursive-exclude tests **/.DS_Store
