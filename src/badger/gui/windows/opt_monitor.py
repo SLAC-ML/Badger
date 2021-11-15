@@ -228,7 +228,9 @@ class BadgerOptMonitor(QWidget):
 
     def logbook(self):
         try:
-            send_to_logbook(None, self.monitor)
+            routine = self.routine_runner.routine
+            data = self.routine_runner.data
+            send_to_logbook(routine, data, self.monitor)
         except Exception as e:
             QMessageBox.critical(self, 'Log failed!', str(e))
 

@@ -15,7 +15,7 @@ elif not os.path.exists(BADGER_LOGBOOK_ROOT):
         f'Badger logbook root {BADGER_LOGBOOK_ROOT} created')
 
 
-def send_to_logbook(run, widget=None):
+def send_to_logbook(routine, data, widget=None):
     from xml.etree import ElementTree
     from re import sub
 
