@@ -12,9 +12,7 @@ setup(
     license='GPL',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    package_data={
-        'badger': ['gui/images/*.png']
-    },
+    include_package_data=True,
     install_requires=[
         'pandas',
         'pyyaml',
