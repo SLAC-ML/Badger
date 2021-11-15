@@ -24,6 +24,12 @@ setup(
         'qdarkstyle',
         'pillow'
     ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-qt'
+        ]
+    },
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
