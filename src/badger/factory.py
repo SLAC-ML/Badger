@@ -80,10 +80,11 @@ def load_plugin(root, pname, ptype):
         # Get vranges by creating an env instance
         try:
             intf_name = configs['interface'][0]
-            Interface, configs_intf = get_intf(intf_name)
-            intf = Interface(configs_intf)
+            Interface, _ = get_intf(intf_name)
+            intf = Interface()
+        except KeyError:
+            intf = None
         except Exception as e:
-            # TODO: raise exception here if not due to null interface property
             logger.warn(e)
             intf = None
         env = module.Environment(intf, configs)

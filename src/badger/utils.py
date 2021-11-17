@@ -240,8 +240,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         intf_name = configs_env['interface'][0]
         Interface, _ = get_intf(intf_name)
         intf = Interface()
+    except KeyError:
+        intf = None
     except Exception as e:
-        # TODO: raise exception here if not due to null interface property
         logger.warn(e)
         intf = None
 
