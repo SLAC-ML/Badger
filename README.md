@@ -4,71 +4,23 @@
 
 ### Install the Badger core
 
-Clone this repo and `cd` to the project root, then install badger in dev mode:
+Using `pip`: `pip install badger-opt`
 
-```bash
-pip install -e .
-```
+Or using `conda`: `conda install -c conda-forge badger-opt`
 
-### Set up the Badger plugins
+### Get the Badger plugins
 
 Clone the [badger plugins repo](https://github.com/SLAC-ML/Badger-Plugins) to some directory on your computer.
 
-Then you'll need to set `BADGER_PLUGIN_ROOT` environment variable in the session where you'll run the badger CLI:
+### Set up Badger
 
-If you're using bash-like shell, run this:
-
-```bash
-export BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
-```
-
-Else if you're using powershell:
-
-```powershell
-$Env:BADGER_PLUGIN_ROOT = PATH_TO_THE_BADGER_PLUGINS
-```
-
-Or you're on Windows cmd:
-
-```cmd
-set BADGER_PLUGIN_ROOT=PATH_TO_THE_BADGER_PLUGINS
-```
-
-Where `PATH_TO_THE_BADGER_PLUGINS` is the path to the cloned badger plugins repo on your computer.
-
-### Set up the database directory
-
-Badger saves the optimization-related information (routines, history data, etc) in a database. You'll need to set `BADGER_DB_ROOT` environment variable to tell Badger where to create/look for the database.
-
-If you're using bash-like shell, run this:
+Once `badger-opt` is installed and you have the badger plugins cloned, run the following command:
 
 ```bash
-export BADGER_DB_ROOT=PATH_TO_THE_DATABASE
+badger
 ```
 
-Else if you're using powershell:
-
-```powershell
-$Env:BADGER_DB_ROOT = PATH_TO_THE_DATABASE
-```
-
-Or you're on Windows cmd:
-
-```cmd
-set BADGER_DB_ROOT=PATH_TO_THE_DATABASE
-```
-
-Where `PATH_TO_THE_DATABASE` is the directory where you'd like Badger to create or look for the database.
-
-That's it!
-
-### Uninstall Badger
-
-To uninstall badger, run the following command under the project root:
-
-```bash
-python setup.py develop -u
-```
+Follow the instructions and configure several paths that are needed by Badger.
 
 ## Usage
 
@@ -149,12 +101,12 @@ environments:
   - naive
 params: null
 variables:
-  - q1
-  - q2
-  - q3
-  - q4
-  - s1
-  - s2
+  - q1: 0 -> 1
+  - q2: 0 -> 1
+  - q3: 0 -> 1
+  - q4: 0 -> 1
+  - s1: 0 -> 1
+  - s2: 0 -> 1
 observations:
   - l2
   - mean
@@ -163,7 +115,7 @@ observations:
 
 There are several important properties here:
 
-- `variables`: The tunable variables provided by this environment. You could choose a subset of the variables as the desicion variables for the optimization in the routine config
+- `variables`: The tunable variables provided by this environment. You could choose a subset of the variables as the desicion variables for the optimization in the routine config. The allowed ranges (in this case, 0 to 1) are shown behind the corresponding variable names
 - `observations`: The measurements provided by this environment. You could choose some observations as the objectives, and some other observations as the constraints in the routine config
 
 ### Run an optimization
@@ -176,10 +128,10 @@ The `-ap` and `-ep` optional arguments, and the `-c` argument accept either a `.
 
 ```yaml
 variables:
-  - x1
+  - x1: [-1, 0.5]
   - x2
 objectives:
-  - c1: MINIMIZE
+  - c1
   - y2: MINIMIZE
 constraints:
   - y1:
@@ -190,7 +142,7 @@ constraints:
       - 0.5
 ```
 
-The `variables`, `objectives`, and `constraints` properties are required. The value of the `constraints` property could be set to `null` if there are no constraints for your optimization problem. The names listed in `variables` should come from `variables` of the env specified by the `-e` argument, while the names listed in `objectives` and `constraints` should come from `observations` of that env.
+The `variables` and `objectives` properties are required, while the `constraints` property is optional. Just omit the `constraints` property if there are no constraints for your optimization problem. The names listed in `variables` should come from `variables` of the env specified by the `-e` argument, while the names listed in `objectives` and `constraints` should come from `observations` of that env.
 
 Several example routine configs can be found in the `examples` folder.
 
@@ -214,13 +166,23 @@ In order to run the following commands, you'll need to [set up xopt](https://git
 badger run -a cnsga -ap "max_generations: 10" -e TNK -c examples/cnsga_tnk.yaml
 ```
 
-You may encounter an error when running the one below, even with xopt installed. This is caused by the outdated xopt on conda. To resolve this, you'll need to clone the xopt repo and `pip install -e .` to install the latest version of xopt.
+## Development
+
+### Install the Badger core in editable mode
+
+Clone this repo and `cd` to the project root, then install badger in dev mode:
 
 ```bash
-badger run -a bayesian_exploration -ap "n_steps: 5" -e TNK -c examples/bayesian_tnk.yaml
+pip install -e .
 ```
 
-## Development
+#### Uninstall Badger
+
+To uninstall badger, run the following command under the project root:
+
+```bash
+python setup.py develop -u
+```
 
 ### Develop algorithm plugins for Badger
 
@@ -240,7 +202,7 @@ Here `X`, `Y` are the decision vectors and the objectives, respectively. `I` is 
 
 To see an example of a Badger algorithm plugin, please have a look at the algorithms in the [official Badger algo registry](https://github.com/SLAC-ML/Badger-Plugins/tree/master/algorithms).
 
-For now, you could simply create a folder named after your algorithm under the `$BADGER_PLUGIN_ROOT/algorithms` directory, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your algorithm folder.
+For now, you could simply create a folder named after your algorithm under the `$BADGER_PLUGIN_ROOT/algorithms` directory, where `$BADGER_PLUGIN_ROOT` is the value for key `BADGER_PLUGIN_ROOT` when you run `badger config`, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your algorithm folder.
 
 You can then `badger algo` to see if your algorithm is there.
 
@@ -250,6 +212,6 @@ Before developing new environments for Badger, please have a look at the [availa
 
 The existing envs could boost up your new env development process since Badger supports **nested environments**, which means that you could use environments in other environment, to reuse the observations/variables in the existing environments. To see an example of a nested environment, please check out the code of `silly`, `naive`, and `dumb` envs in the official Badger env registry. Note `dumb = silly + naive`.
 
-For now, you could simply create a folder named after your env under the `$BADGER_PLUGIN_ROOT/environments` directory, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your env folder.
+For now, you could simply create a folder named after your env under the `$BADGER_PLUGIN_ROOT/environments` directory, where `$BADGER_PLUGIN_ROOT` is the value for key `BADGER_PLUGIN_ROOT` when you run `badger config`, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your env folder.
 
 You can then `badger env` to see if your environment is there.
