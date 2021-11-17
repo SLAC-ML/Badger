@@ -75,9 +75,19 @@ def load_plugin(root, pname, ptype):
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
         vars = module.Environment.list_vars()
-        vranges = module.Environment.get_vranges()
         obses = module.Environment.list_obses()
         params = module.Environment.get_default_params()
+        # Get vranges by creating an env instance
+        try:
+            intf_name = configs['interface'][0]
+            Interface, configs_intf = get_intf(intf_name)
+            intf = Interface(configs_intf)
+        except Exception as e:
+            # TODO: raise exception here if not due to null interface property
+            logger.warn(e)
+            intf = None
+        env = module.Environment(intf, configs)
+        vranges = env.get_vranges()
 
         vars_info = []
         for i, var in enumerate(vars):
