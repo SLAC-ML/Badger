@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout, QCheckBox
 from .labeled_spinbox import labeled_spinbox
 
 
@@ -12,8 +12,8 @@ def variable_item(name, vrange, callback=None):
     widget_range = QWidget()
     hbox = QHBoxLayout(widget_range)
     hbox.setContentsMargins(0, 0, 0, 0)
-    widget.sb_lower = sb_lower = labeled_spinbox('min', vrange[0])
-    widget.sb_upper = sb_upper = labeled_spinbox('max', vrange[1])
+    widget.sb_lower = sb_lower = labeled_spinbox('min', vrange[0], vrange[0], vrange[1])
+    widget.sb_upper = sb_upper = labeled_spinbox('max', vrange[1], vrange[0], vrange[1])
     hbox.addWidget(sb_lower, 1)
     hbox.addSpacing(16)
     hbox.addWidget(sb_upper, 1)
