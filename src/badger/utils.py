@@ -236,9 +236,14 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     # TODO: figure out the correct logic
     # It seems that the interface should be given rather than
     # initialized here
-    intf_name = configs_env['interface'][0]
-    Interface, _ = get_intf(intf_name)
-    intf = Interface()
+    try:
+        intf_name = configs_env['interface'][0]
+        Interface, _ = get_intf(intf_name)
+        intf = Interface()
+    except Exception as e:
+        # TODO: raise exception here if not due to null interface property
+        logger.warn(e)
+        intf = None
 
     env = Environment(intf, routine['env_params'])
     if env_ready:
@@ -249,7 +254,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     from .logger import _get_default_logger
     from .logger.event import Events
 
-    logger = _get_default_logger(verbose)  # log the optimization progress
+    opt_logger = _get_default_logger(verbose)  # log the optimization progress
     var_names = [next(iter(d)) for d in routine['config']['variables']]
     vranges = np.array([d[next(iter(d))]
                         for d in routine['config']['variables']])
@@ -289,7 +294,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
             is_optimal = not pf.is_dominated((_idx_x, obses_raw))
             solution = (_x, obses_raw, is_optimal, var_names, obj_names)
-            logger.update(Events.OPTIMIZATION_STEP, solution)
+            opt_logger.update(Events.OPTIMIZATION_STEP, solution)
 
             if after_evaluate:
                 after_evaluate(_x, obses_raw)
@@ -301,7 +306,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     # Start the optimization
     print('')
     solution = (None, None, None, var_names, obj_names)
-    logger.update(Events.OPTIMIZATION_START, solution)
+    opt_logger.update(Events.OPTIMIZATION_START, solution)
     try:
         if not callable(optimize):  # doing optimization through extensions
             configs = {
@@ -315,9 +320,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
         optimize(evaluate, configs)
     except Exception as e:
-        logger.update(Events.OPTIMIZATION_END, solution)
+        opt_logger.update(Events.OPTIMIZATION_END, solution)
         raise e
-    logger.update(Events.OPTIMIZATION_END, solution)
+    opt_logger.update(Events.OPTIMIZATION_END, solution)
 
 
 def ts_to_str(ts, format='lcls-log'):
