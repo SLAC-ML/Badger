@@ -158,7 +158,7 @@ badger run -a silly -e TNK -c examples/silly_tnk.yaml
 
 #### Run without confirmation
 
-Badger will let you to confirm the routine before running it. You could skip the confirmation by adding the `-y` option:
+Badger will let you confirm the routine before running it. You could skip the confirmation by adding the `-y` option:
 
 ```bash
 badger run -a silly -e TNK -c examples/silly_tnk.yaml -y
