@@ -323,6 +323,14 @@ badger config KEY
 
 Where `KEY` is one of the keys in the configuration list.
 
+### Launch the Badger GUI
+
+Badger supports a GUI mode. You can launch the GUI by:
+
+```
+badger -g
+```
+
 ## Development
 
 ### Install the Badger core in editable mode
