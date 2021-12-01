@@ -249,6 +249,13 @@ class BadgerRoutinePage(QWidget):
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
+        if routine['config']['constraints'] is not None:
+            for i in range(len(routine['config']['constraints'])):
+                name = next(iter(routine['config']['constraints'][i]))
+                relation, thres = routine['config']['constraints'][i][name]
+                relation = ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO'].index(relation)
+                self.add_constraint(name, relation, thres)
+
         # Config the save settings
         name = routine['name']
         self.edit_save.setPlaceholderText(generate_slug(2))
@@ -393,13 +400,15 @@ class BadgerRoutinePage(QWidget):
         else:
             self.edit_save.setDisabled(True)
 
-    def add_constraint(self):
+    def add_constraint(self, name=None, relation=0, threshold=0):
         if self.configs is None:
             return
 
         options = self.configs['observations']
         item = QListWidgetItem(self.list_con)
-        con_item = constraint_item(options, lambda: self.list_con.takeItem(self.list_con.row(item)))
+        con_item = constraint_item(options,
+            lambda: self.list_con.takeItem(self.list_con.row(item)),
+            name, relation, threshold)
         item.setSizeHint(con_item.sizeHint())
         self.list_con.addItem(item)
         self.list_con.setItemWidget(item, con_item)

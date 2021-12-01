@@ -2,7 +2,8 @@ from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QDoubleSpinBox, Q
 from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate
 
 
-def constraint_item(options, remove_item, decimals=4):
+def constraint_item(options, remove_item, name=None, relation=0, threshold=0, decimals=4):
+    # relation: 0 for >, 1 for <, 2 for =
     widget = QWidget()
     hbox = QHBoxLayout(widget)
     # hbox.setContentsMargins(0, 0, 0, 0)
@@ -10,19 +11,23 @@ def constraint_item(options, remove_item, decimals=4):
     widget.cb_obs = cb_obs = QComboBox()
     cb_obs.setItemDelegate(QStyledItemDelegate())
     cb_obs.addItems(options)
-    cb_obs.setCurrentIndex(0)
+    try:
+        idx = options.index(name)
+    except:
+        idx = 0
+    cb_obs.setCurrentIndex(idx)
 
     widget.cb_rel = cb_rel = QComboBox()
     cb_rel.setItemDelegate(QStyledItemDelegate())
     cb_rel.addItems(['>', '<', '='])
     cb_rel.setFixedWidth(64)
-    cb_rel.setCurrentIndex(0)
+    cb_rel.setCurrentIndex(relation)
 
     widget.sb = sb = QDoubleSpinBox()
     sb.setDecimals(decimals)
-    lb = -1e3
-    ub = 1e3
-    default_value = 0
+    default_value = threshold
+    lb = default_value - 1e3
+    ub = default_value + 1e3
     sb.setRange(lb, ub)
     sb.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
     sb.setValue(default_value)
