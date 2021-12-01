@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..windows.opt_monitor import BadgerOptMonitor
-from ...archive import list_run, load_run
+from ...archive import list_run, load_run, delete_run
 from ...utils import ystring
 
 
@@ -101,6 +101,9 @@ class BadgerRunPage(QWidget):
         self.btn_back = btn_back = QPushButton('Back')
         btn_back.setFixedSize(64, 64)
         btn_back.setFont(cool_font)
+        self.btn_del = btn_del = QPushButton('Delete')
+        btn_del.setFixedSize(64, 64)
+        btn_del.setFont(cool_font)
         self.btn_run = btn_run = QPushButton('Rerun')
         btn_run.setFixedSize(64, 64)
         btn_run.setFont(cool_font)
@@ -109,6 +112,7 @@ class BadgerRunPage(QWidget):
         btn_load.setFont(cool_font)
         hbox_action.addWidget(btn_back)
         hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_del)
         hbox_action.addWidget(btn_run)
         hbox_action.addWidget(btn_load)
 
@@ -146,6 +150,7 @@ class BadgerRunPage(QWidget):
         self.run_tree.setCurrentItem(self.recent_item)
 
         self.btn_back.clicked.connect(self.go_home)
+        self.btn_del.clicked.connect(self.delete_run)
         self.btn_run.clicked.connect(self.rerun_routine)
         self.btn_load.clicked.connect(self.load_routine)
 
@@ -153,12 +158,16 @@ class BadgerRunPage(QWidget):
         self.run_tree.setCurrentItem(self.recent_item)
 
     def load_run(self, current, previous):
+        # self.current_item = current
+        self.previous_item = previous
+
         try:
-            run_name = current.text(0)
+            self.run_name = run_name = current.text(0)
             self.run = run = load_run(run_name + '.yaml')
             self.run_edit.setText(ystring(run))
             self.plot_run()
         except:
+            self.run_name = None
             self.run = None
             self.run_edit.setText('')
             self.plot_run()
@@ -169,10 +178,12 @@ class BadgerRunPage(QWidget):
         self.plot_var.clear()
 
         if not run:
+            self.btn_del.setDisabled(True)
             self.btn_run.setDisabled(True)
             self.btn_load.setDisabled(True)
             return
 
+        self.btn_del.setDisabled(False)
         self.btn_run.setDisabled(False)
         self.btn_load.setDisabled(False)
 
@@ -195,6 +206,22 @@ class BadgerRunPage(QWidget):
             self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=3),
                                # symbol=symbol,
                                name=var_name)
+
+    def delete_run(self):
+        reply = QMessageBox.question(self,
+                                     'Delete Run',
+                                     f'Are you sure you want to delete this run data?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
+        if self.run_name is None:
+            return
+
+        delete_run(self.run_name + '.yaml')
+        self.run_tree.setCurrentItem(self.previous_item)
+        root = self.run_tree.invisibleRootItem()
+        (self.previous_item.parent() or root).removeChild(self.previous_item)
 
     def load_routine(self):
         routine = self.run['routine']
