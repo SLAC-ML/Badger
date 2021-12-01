@@ -261,6 +261,13 @@ class BadgerOptMonitor(QWidget):
         self.label.setText(self._make_label())
 
     def reset_env(self):
+        reply = QMessageBox.question(self,
+                                     'Reset Environment',
+                                     f'Are you sure you want to reset the env vars back to {self.init_vars}?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         current_vars = self.env.get_vars(self.var_names)
         self.env.set_vars(self.var_names, self.init_vars)
         after_vars = self.env.get_vars(self.var_names)
@@ -278,6 +285,14 @@ class BadgerOptMonitor(QWidget):
         df = self.routine_runner.data
         idx = int(self.ins_obj.value())
         solution = df.loc[idx, self.var_names].to_numpy()
+
+        reply = QMessageBox.question(self,
+                                     'Apply Solution',
+                                     f'Are you sure you want to apply the current solution at {solution} to env?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         self.env.set_vars(self.var_names, solution)
         # center around the inspector
         self.plot_var.setXRange(idx - 3, idx + 3)
