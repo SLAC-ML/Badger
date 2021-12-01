@@ -6,6 +6,7 @@ from ..utils import range_to_str, yprint, run_routine
 def show_routine(args):
     try:
         from ..db import load_routine, list_routine
+        from .run import run_n_archive
     except Exception as e:
         logger.error(e)
         return
@@ -34,8 +35,4 @@ def show_routine(args):
         yprint(routine)
         return
 
-    # Run the routine
-    try:
-        run_routine(routine, args.yes, None, args.verbose)
-    except Exception as e:
-        logger.error(e)
+    run_n_archive(routine, args.yes, False, args.verbose)
