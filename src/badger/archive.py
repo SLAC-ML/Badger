@@ -68,3 +68,12 @@ def load_run(run_fname):
     third_level = f'{tokens[1]}-{tokens[2]}-{tokens[3]}'
 
     return load_config(os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level, run_fname))
+
+
+def delete_run(run_fname):
+    tokens = run_fname.split('-')
+    first_level = tokens[1]
+    second_level = f'{tokens[1]}-{tokens[2]}'
+    third_level = f'{tokens[1]}-{tokens[2]}-{tokens[3]}'
+
+    return os.remove(os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level, run_fname))
