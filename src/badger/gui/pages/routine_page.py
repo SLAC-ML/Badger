@@ -8,6 +8,7 @@ from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict, normalize_routine
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
+from ..components.constraint_item import constraint_item
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
 
@@ -106,6 +107,14 @@ class BadgerRoutinePage(QWidget):
 
         group_con = QGroupBox('Constraints')
         vbox_con = QVBoxLayout(group_con)
+        action_con = QWidget()
+        hbox_action_con = QHBoxLayout(action_con)
+        hbox_action_con.setContentsMargins(0, 0, 0, 0)
+        self.btn_add_con = btn_add_con = QPushButton('Add')
+        btn_add_con.setFixedSize(96, 24)
+        hbox_action_con.addWidget(btn_add_con)
+        hbox_action_con.addStretch()
+        vbox_con.addWidget(action_con)
         self.list_con = list_con = QListWidget()
         self.dict_con = {}
         vbox_con.addWidget(list_con)
@@ -163,6 +172,7 @@ class BadgerRoutinePage(QWidget):
         self.btn_un_all_obj.clicked.connect(self.uncheck_all_obj)
         self.check_only_var.stateChanged.connect(self.toggle_check_only_var)
         self.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
+        self.btn_add_con.clicked.connect(self.add_constraint)
         self.check_save.stateChanged.connect(self.toggle_save)
         self.btn_review.clicked.connect(self.review)
         self.btn_run.clicked.connect(self.run)
@@ -170,6 +180,8 @@ class BadgerRoutinePage(QWidget):
     def refresh_ui(self, routine):
         self.algos = list_algo()
         self.envs = list_env()
+        # Clean up the constraints list
+        self.list_con.clear()
 
         if routine is None:
             # Reset the algo and env configs
@@ -256,14 +268,15 @@ class BadgerRoutinePage(QWidget):
             self.dict_var.clear()
             self.list_obj.clear()
             self.dict_obj.clear()
-            self.list_con.clear()
-            self.dict_con.clear()
+            self.configs = None
             return
 
         name = self.envs[i]
         try:
             _, configs = get_env(name)
+            self.configs = configs
         except Exception as e:
+            self.configs = None
             self.cb_env.setCurrentIndex(-1)
             return QMessageBox.critical(self, 'Error!', str(e))
 
@@ -288,6 +301,8 @@ class BadgerRoutinePage(QWidget):
             self.list_obj.addItem(item)
             self.list_obj.setItemWidget(item, obj_item)
             self.dict_obj[obj] = item
+
+        self.list_con.clear()
 
     def check_all_var(self):
         for i in range(self.list_var.count()):
@@ -370,6 +385,18 @@ class BadgerRoutinePage(QWidget):
             self.edit_save.setDisabled(False)
         else:
             self.edit_save.setDisabled(True)
+
+    def add_constraint(self):
+        if self.configs is None:
+            return
+
+        options = self.configs['observations']
+        item = QListWidgetItem(self.list_con)
+        con_item = constraint_item(options, lambda: self.list_con.takeItem(self.list_con.row(item)))
+        item.setSizeHint(con_item.sizeHint())
+        self.list_con.addItem(item)
+        self.list_con.setItemWidget(item, con_item)
+        # self.dict_con[''] = item
 
     def _compose_routine(self):
         # Compose the routine
