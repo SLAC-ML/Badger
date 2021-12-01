@@ -13,6 +13,13 @@ from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
 
 
+CONS_RELATION_DICT = {
+    '>': 'GREATER_THAN',
+    '<': 'LESS_THAN',
+    '=': 'EQUAL_TO',
+}
+
+
 class BadgerRoutinePage(QWidget):
     def __init__(self, go_home=None):
         super().__init__()
@@ -429,10 +436,21 @@ class BadgerRoutinePage(QWidget):
                 _dict[obj_name] = rule
                 objectives.append(_dict)
 
+        constraints = []
+        for i in range(self.list_con.count()):
+            item = self.list_con.item(i)
+            item_widget = self.list_con.itemWidget(item)
+            con_name = item_widget.cb_obs.currentText()
+            relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
+            value = item_widget.sb.value()
+            _dict = {}
+            _dict[con_name] = [relation, value]
+            constraints.append(_dict)
+
         configs = {
             'variables': variables,
             'objectives': objectives,
-            'constraints': None,
+            'constraints': constraints,
         }
 
         routine = {
