@@ -18,13 +18,18 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
     var_names = [next(iter(d)) for d in routine['config']['variables']]
     obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+    if routine['config']['constraints']:
+        con_names = [next(iter(d)) for d in routine['config']['constraints']]
+    else:
+        con_names = []
     # Make data a list to avoid global var def
-    data = [pd.DataFrame(None, columns=['timestamp'] + obj_names + var_names)]
+    data = [pd.DataFrame(None, columns=['timestamp'] + obj_names + con_names + var_names)]
 
-    def after_evaluate(vars, obses):
+    def after_evaluate(vars, obses, cons):
         # vars: ndarray
         # obses: ndarray
-        solution = [curr_ts_to_str(fmt)] + list(obses) + list(vars)
+        # cons: ndarray
+        solution = [curr_ts_to_str(fmt)] + list(obses) + list(cons) + list(vars)
         data[0] = data[0].append(pd.Series(solution, index=data[0].columns), ignore_index=True)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)

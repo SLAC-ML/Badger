@@ -24,7 +24,11 @@ class BadgerRoutineRunner(QRunnable):
         self.routine = routine
         self.var_names = var_names = [next(iter(d)) for d in routine['config']['variables']]
         self.obj_names = obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-        self.data = pd.DataFrame(None, columns=['timestamp'] + obj_names + var_names)
+        if routine['config']['constraints']:
+            self.con_names = con_names = [next(iter(d)) for d in routine['config']['constraints']]
+        else:
+            self.con_names = con_names = []
+        self.data = pd.DataFrame(None, columns=['timestamp'] + obj_names + con_names + var_names)
         self.save = save
         self.verbose = verbose
         self.use_full_ts = use_full_ts
@@ -59,14 +63,14 @@ class BadgerRoutineRunner(QRunnable):
         if self.is_killed:
             raise Exception('Optimization run has been terminated!')
 
-    def after_evaluate(self, vars, obses):
+    def after_evaluate(self, vars, obses, cons):
         # vars: ndarray
         # obses: ndarray
         self.signals.progress.emit(list(vars), list(obses))
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        solution = [curr_ts_to_str(fmt)] + list(obses) + list(vars)
+        solution = [curr_ts_to_str(fmt)] + list(obses) + list(cons) + list(vars)
         self.data = self.data.append(pd.Series(solution, index=self.data.columns), ignore_index=True)
 
         # take a break to let the outside signal to change the status

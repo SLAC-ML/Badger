@@ -270,12 +270,20 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     pf = ParetoFront(rules)
     if pf_ready:
         pf_ready(pf)
+    if routine['config']['constraints']:
+        con_names = [next(iter(d)) for d in routine['config']['constraints']]
+        thresholds = [d[next(iter(d))] for d in routine['config']['constraints']]
+    else:
+        con_names = []
+        thresholds = []
 
     info = {'count': -1}
     # Make a normalized evaluate function
 
     def evaluate(X):
         Y = []
+        I = []
+        E = []
         for x in X:
             _x = denorm(x, vranges[:, 0], vranges[:, 1])
 
@@ -283,6 +291,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 before_evaluate(_x)
 
             env.set_vars(var_names, _x)
+
+            # Deal with objectives
             obses = []
             obses_raw = []
             for i, obj_name in enumerate(obj_names):
@@ -296,23 +306,52 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             Y.append(obses)
             obses_raw = np.array(obses_raw)
 
+            # Deal with constraints
+            # TODO: Check overlapping between objs and cons
+            cons_i = []
+            cons_e = []
+            cons_raw = []
+            for i, con_name in enumerate(con_names):
+                relation, thres = thresholds[i]
+                con = float(env.get_obs(con_name))
+                if relation == 'GREATER_THAN':
+                    cons_i.append(con - thres)
+                elif relation == 'LESS_THAN':
+                    cons_i.append(thres - con)
+                else:
+                    cons_e.append(con - thres)
+                cons_raw.append(con)
+            if cons_i:
+                I.append(cons_i)
+            if cons_e:
+                E.append(cons_e)
+            cons_raw = np.array(cons_raw)
+
             info['count'] += 1
             _idx_x = np.insert(_x, 0, info['count'])  # keep the idx info
 
             is_optimal = not pf.is_dominated((_idx_x, obses_raw))
-            solution = (_x, obses_raw, is_optimal, var_names, obj_names)
+            solution = (_x, obses_raw, cons_raw, is_optimal, var_names, obj_names, con_names)
             opt_logger.update(Events.OPTIMIZATION_STEP, solution)
 
             if after_evaluate:
-                after_evaluate(_x, obses_raw)
+                after_evaluate(_x, obses_raw, cons_raw)
 
         Y = np.array(Y)
+        if I:
+            I = np.array(I)
+        else:
+            I = None
+        if E:
+            E = np.array(E)
+        else:
+            E = None
 
-        return Y, None, None
+        return Y, I, E
 
     # Start the optimization
     print('')
-    solution = (None, None, None, var_names, obj_names)
+    solution = (None, None, None, None, var_names, obj_names, con_names)
     opt_logger.update(Events.OPTIMIZATION_START, solution)
     try:
         if not callable(optimize):  # doing optimization through extensions

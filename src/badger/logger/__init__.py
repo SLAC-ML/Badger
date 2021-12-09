@@ -58,14 +58,17 @@ class ScreenLogger(_Tracker):
         return s
 
     def _step(self, solution, colour=Colours.black):
-        # solution: (x: 1d array, y: 1d array, is_optimal: bool,
-        #            vars: str list, obses: str list)
+        # solution: (x: 1d array, y: 1d array, c: 1d array, is_optimal: bool,
+        #            vars: str list, obses: str list, cons: str list)
         cells = []
 
         cells.append(self._format_number(self._iterations + 1))
 
         for o in solution[1]:
             cells.append(self._format_number(o))
+
+        for c in solution[2]:
+            cells.append(self._format_number(c))
 
         for v in solution[0]:
             cells.append(self._format_number(v))
@@ -76,10 +79,13 @@ class ScreenLogger(_Tracker):
         cells = []
         cells.append(self._format_key("iter"))
 
-        for obs in solution[4]:
+        for obs in solution[5]:
             cells.append(self._format_key(obs))
 
-        for var in solution[3]:
+        for con in solution[6]:
+            cells.append(self._format_key(con))
+
+        for var in solution[4]:
             cells.append(self._format_key(var))
 
         line = "| " + " | ".join(cells) + " |"
@@ -87,7 +93,7 @@ class ScreenLogger(_Tracker):
         return line + "\n" + ("-" * self._header_length)
 
     def _is_new_max(self, solution):
-        return solution[2]
+        return solution[3]
 
     def update(self, event, solution):
         if event == Events.OPTIMIZATION_START:
@@ -122,7 +128,8 @@ class JSONLogger(_Tracker):
             data = {
                 'x': solution[0],
                 'y': solution[1],
-                'is_optimal': solution[2]
+                'c': solution[2],
+                'is_optimal': solution[3]
             }
 
             now, time_elapsed, time_delta = self._time_metrics()
