@@ -1,0 +1,19 @@
+name: badger
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - scikit-learn=0.23.2
+  - xopt
+  - bayesian-optimization
+  - pyepics
+  - pyqt
+  - pyqtgraph
+  - coolname
+  - qdarkstyle
+  - pillow
+  - badger-opt
+  - pytest
+  - pytest-qt
+prefix: /usr/local/anaconda3/envs/badger
