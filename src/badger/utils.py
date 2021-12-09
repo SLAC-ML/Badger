@@ -154,7 +154,13 @@ def normalize_routine(routine):
             if obj[obj_name] is None:
                 obj[obj_name] = 'MINIMIZE'
 
-    # TODO: Normalize the constraints
+    # Normalize the constraints
+    try:
+        _ = config['constraints']
+        if not _:  # empty list
+            config['constraints'] = None
+    except KeyError:
+        config['constraints'] = None
 
     # Remove the additional info
     del routine['env_vranges']

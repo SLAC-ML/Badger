@@ -67,11 +67,6 @@ def test_run(mock_config_root):
 
     # Load routine configs
     configs_routine = load_config(config)
-    # Normalize the routine configs properties
-    try:
-        _ = configs_routine['constraints']
-    except KeyError:
-        configs_routine['constraints'] = None
 
     # Compose the routine
     routine = {

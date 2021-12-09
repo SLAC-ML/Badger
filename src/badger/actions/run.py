@@ -63,11 +63,6 @@ def run_routine(args):
     # Load routine configs
     try:
         configs_routine = load_config(args.config)
-        # Normalize the routine configs properties
-        try:
-            _ = configs_routine['constraints']
-        except KeyError:
-            configs_routine['constraints'] = None
     except Exception as e:
         logger.error(e)
         return
