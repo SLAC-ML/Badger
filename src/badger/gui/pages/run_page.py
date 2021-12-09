@@ -66,6 +66,7 @@ class BadgerRunPage(QWidget):
         leg_obj.setBrush((50, 50, 100, 200))
 
         run_view.nextRow()
+        run_view.nextRow()
 
         self.plot_var = plot_var = run_view.addPlot(
             title='Evaluation History (X)')
@@ -175,12 +176,23 @@ class BadgerRunPage(QWidget):
     def plot_run(self):
         run = self.run
         self.plot_obj.clear()
+        try:
+            self.plot_con.clear()
+        except:
+            pass
         self.plot_var.clear()
 
         if not run:
             self.btn_del.setDisabled(True)
             self.btn_run.setDisabled(True)
             self.btn_load.setDisabled(True)
+
+            try:
+                self.run_view.removeItem(self.plot_con)
+                del self.plot_con
+            except:
+                pass
+
             return
 
         self.btn_del.setDisabled(False)
@@ -191,6 +203,11 @@ class BadgerRunPage(QWidget):
                      for d in run['routine']['config']['variables']]
         obj_names = [next(iter(d))
                      for d in run['routine']['config']['objectives']]
+        try:
+            con_names = [next(iter(d))
+                         for d in run['routine']['config']['constraints']]
+        except:
+            con_names = []
         data = run['data']
 
         for i, obj_name in enumerate(obj_names):
@@ -199,6 +216,36 @@ class BadgerRunPage(QWidget):
             self.plot_obj.plot(np.array(data[obj_name]), pen=pg.mkPen(color, width=3),
                                # symbol=symbol,
                                name=obj_name)
+
+        if con_names:
+            try:
+                self.plot_con
+            except:
+                self.plot_con = plot_con = self.run_view.addPlot(
+                    row=1, col=0, title='Evaluation History (C)')
+                plot_con.setLabel('left', 'constraints')
+                plot_con.setLabel('bottom', 'iterations')
+                plot_con.showGrid(x=True, y=True)
+                leg_con = plot_con.addLegend()
+                leg_con.setBrush((50, 50, 100, 200))
+
+                plot_con.setXLink(self.plot_obj)
+
+            for i, con_name in enumerate(con_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                try:
+                    self.plot_con.plot(np.array(data[con_name]), pen=pg.mkPen(color, width=3),
+                                       # symbol=symbol,
+                                       name=con_name)
+                except:  # Mal-format data
+                    pass
+        else:
+            try:
+                self.run_view.removeItem(self.plot_con)
+                del self.plot_con
+            except:
+                pass
 
         for i, var_name in enumerate(var_names):
             color = self.colors[i % len(self.colors)]
