@@ -23,6 +23,11 @@ class BadgerOptMonitor(QWidget):
                           for d in self.routine['config']['objectives']]
         self.var_names = [next(iter(d))
                           for d in self.routine['config']['variables']]
+        if self.routine['config']['constraints']:
+            self.con_names = [next(iter(d))
+                              for d in self.routine['config']['constraints']]
+        else:
+            self.con_names = []
         self.save = save
 
         self.init_ui()
@@ -58,6 +63,17 @@ class BadgerOptMonitor(QWidget):
 
         monitor.nextRow()
 
+        if self.con_names:
+            self.plot_con = plot_con = monitor.addPlot(
+                title='Evaluation History (C)')
+            plot_con.setLabel('left', 'constraints')
+            plot_con.setLabel('bottom', 'iterations')
+            plot_con.showGrid(x=True, y=True)
+            leg_con = plot_con.addLegend()
+            leg_con.setBrush((50, 50, 100, 200))
+
+            monitor.nextRow()
+
         self.plot_var = plot_var = monitor.addPlot(
             title='Evaluation History (X)')
         plot_var.setLabel('left', 'variables')
@@ -66,12 +82,15 @@ class BadgerOptMonitor(QWidget):
         leg_var = plot_var.addLegend()
         leg_var.setBrush((50, 50, 100, 200))
 
+        if self.con_names:
+            plot_con.setXLink(plot_obj)
         plot_var.setXLink(plot_obj)
 
         self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
         self.curves_var = []
         self.curves_obj = []
+        self.curves_con = []
 
         for i, obj_name in enumerate(self.obj_names):
             color = self.colors[i % len(self.colors)]
@@ -89,12 +108,28 @@ class BadgerOptMonitor(QWidget):
                                         name=var_name)
             self.curves_var.append(_curve)
 
+        if self.con_names:
+            for i, con_name in enumerate(self.con_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_con.plot(pen=pg.mkPen(color, width=3),
+                                            # symbol=symbol,
+                                            name=con_name)
+                self.curves_con.append(_curve)
+
         self.ins_obj = pg.InfiniteLine(movable=True, angle=90, label=None,
                                        labelOpts={
                                            'position': 0.1,
                                            'color': (200, 200, 100),
                                            'fill': (200, 200, 200, 50),
                                            'movable': True})
+        if self.con_names:
+            self.ins_con = pg.InfiniteLine(movable=True, angle=90, label=None,
+                                           labelOpts={
+                                               'position': 0.1,
+                                               'color': (200, 200, 100),
+                                               'fill': (200, 200, 200, 50),
+                                               'movable': True})
         self.ins_var = pg.InfiniteLine(movable=True, angle=90, label=None,
                                        labelOpts={
                                            'position': 0.1,
@@ -102,6 +137,8 @@ class BadgerOptMonitor(QWidget):
                                            'fill': (200, 200, 200, 50),
                                            'movable': True})
         plot_obj.addItem(self.ins_obj)
+        if self.con_names:
+            plot_con.addItem(self.ins_con)
         plot_var.addItem(self.ins_var)
 
         # Action bar
@@ -151,12 +188,16 @@ class BadgerOptMonitor(QWidget):
     def config_logic(self):
         self.vars = []
         self.objs = []
+        self.cons = []
 
         self.running = False
 
         # Sync the inspector lines
         self.ins_obj.sigDragged.connect(self.ins_obj_dragged)
         self.ins_obj.sigPositionChangeFinished.connect(self.ins_drag_done)
+        if self.con_names:
+            self.ins_con.sigDragged.connect(self.ins_con_dragged)
+            self.ins_con.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.ins_var.sigDragged.connect(self.ins_var_dragged)
         self.ins_var.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.plot_obj.scene().sigMouseClicked.connect(self.on_mouse_click)
@@ -192,12 +233,17 @@ class BadgerOptMonitor(QWidget):
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
 
-    def update(self, vars, objs):
+    def update(self, vars, objs, cons):
         self.vars.append(vars)
         self.objs.append(objs)
+        self.cons.append(cons)
 
         for i in range(len(self.obj_names)):
             self.curves_obj[i].setData(np.array(self.objs)[:, i])
+
+        if self.con_names:
+            for i in range(len(self.con_names)):
+                self.curves_con[i].setData(np.array(self.cons)[:, i])
 
         for i in range(len(self.var_names)):
             self.curves_var[i].setData(np.array(self.vars)[:, i])
@@ -250,13 +296,23 @@ class BadgerOptMonitor(QWidget):
 
     def ins_obj_dragged(self, ins_obj):
         self.ins_var.setValue(ins_obj.value())
+        if self.con_names:
+            self.ins_con.setValue(ins_obj.value())
+
+    def ins_con_dragged(self, ins_con):
+        self.ins_var.setValue(ins_con.value())
+        self.ins_obj.setValue(ins_con.value())
 
     def ins_var_dragged(self, ins_var):
         self.ins_obj.setValue(ins_var.value())
+        if self.con_names:
+            self.ins_con.setValue(ins_var.value())
 
     def ins_drag_done(self, ins):
         value = np.round(ins.value())
         self.ins_obj.setValue(value)
+        if self.con_names:
+            self.ins_con.setValue(value)
         self.ins_var.setValue(value)
         self.label.setText(self._make_label())
 
@@ -278,6 +334,8 @@ class BadgerOptMonitor(QWidget):
         pf = self.routine_runner.pf
         idx = pf.pareto_set[0][0]
         self.ins_obj.setValue(idx)
+        if self.con_names:
+            self.ins_con.setValue(idx)
         self.ins_var.setValue(idx)
         self.label.setText(self._make_label())
 
@@ -305,28 +363,41 @@ class BadgerOptMonitor(QWidget):
             idx = int(self.ins_obj.value())
             vars = df.loc[idx, self.var_names].to_numpy()
             objs = df.loc[idx, self.obj_names].to_numpy()
+            cons = df.loc[idx, self.con_names].to_numpy()
             var_label = ', '.join(
                 [f'{var_name}: {vars[i]:.4f}' for i, var_name in enumerate(self.var_names)])
+            con_label = ', '.join(
+                [f'{con_name}: {cons[i]:.4f}' for i, con_name in enumerate(self.con_names)])
             obj_label = ', '.join(
                 [f'{obj_name}: {objs[i]:.4f}' for i, obj_name in enumerate(self.obj_names)])
         except:
             var_label = ', '.join(
                 [f'{var_name}: {np.nan:.4f}' for i, var_name in enumerate(self.var_names)])
+            con_label = ', '.join(
+                [f'{con_name}: {np.nan:.4f}' for i, con_name in enumerate(self.con_names)])
             obj_label = ', '.join(
                 [f'{obj_name}: {np.nan:.4f}' for i, obj_name in enumerate(self.obj_names)])
 
-        return f"<span style='font-family: Courier; white-space: pre'>{var_label + ' | '}</span><span style='font-family: Courier; white-space: pre'>{obj_label}</span>"
+        return f"<span style='font-family: Courier; white-space: pre'>{var_label + ' | '}</span><span style='font-family: Courier; white-space: pre'>{obj_label + ' | '}</span><span style='font-family: Courier; white-space: pre'>{con_label}</span>"
 
     def on_mouse_click(self, event):
         # https://stackoverflow.com/a/64081483
         coor_obj = self.plot_obj.vb.mapSceneToView(event._scenePos)
+        if self.con_names:
+            coor_con = self.plot_con.vb.mapSceneToView(event._scenePos)
         coor_var = self.plot_var.vb.mapSceneToView(event._scenePos)
 
-        if self.plot_obj.viewRect().contains(coor_obj) or \
-                self.plot_var.viewRect().contains(coor_var):
+        flag = self.plot_obj.viewRect().contains(coor_obj) or \
+            self.plot_var.viewRect().contains(coor_var)
+        if self.con_names:
+            flag = flag or self.plot_con.viewRect().contains(coor_con)
+
+        if flag:
             idx = int(np.round(coor_obj.x()))
 
             self.ins_obj.setValue(idx)
+            if self.con_names:
+                self.ins_con.setValue(idx)
             self.ins_var.setValue(idx)
 
             self.label.setText(self._make_label())

@@ -7,7 +7,7 @@ from ...utils import run_routine, curr_ts_to_str
 class BadgerRoutineSignals(QObject):
     env_ready = pyqtSignal(list)
     finished = pyqtSignal()
-    progress = pyqtSignal(list, list)
+    progress = pyqtSignal(list, list, list)
     error = pyqtSignal(Exception)
     info = pyqtSignal(str)
 
@@ -66,7 +66,7 @@ class BadgerRoutineRunner(QRunnable):
     def after_evaluate(self, vars, obses, cons):
         # vars: ndarray
         # obses: ndarray
-        self.signals.progress.emit(list(vars), list(obses))
+        self.signals.progress.emit(list(vars), list(obses), list(cons))
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
