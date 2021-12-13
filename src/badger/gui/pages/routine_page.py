@@ -119,6 +119,7 @@ class BadgerRoutinePage(QWidget):
         hbox_action_con.setContentsMargins(0, 0, 0, 0)
         self.btn_add_con = btn_add_con = QPushButton('Add')
         btn_add_con.setFixedSize(96, 24)
+        btn_add_con.setDisabled(True)
         hbox_action_con.addWidget(btn_add_con)
         hbox_action_con.addStretch()
         vbox_con.addWidget(action_con)
@@ -283,15 +284,18 @@ class BadgerRoutinePage(QWidget):
             self.list_obj.clear()
             self.dict_obj.clear()
             self.configs = None
+            self.btn_add_con.setDisabled(True)
             return
 
         name = self.envs[i]
         try:
             _, configs = get_env(name)
             self.configs = configs
+            self.btn_add_con.setDisabled(False)
         except Exception as e:
             self.configs = None
             self.cb_env.setCurrentIndex(-1)
+            self.btn_add_con.setDisabled(True)
             return QMessageBox.critical(self, 'Error!', str(e))
 
         self.edit_env.setPlainText(ystring(configs['params']))
