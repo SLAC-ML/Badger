@@ -312,7 +312,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             cons_e = []
             cons_raw = []
             for i, con_name in enumerate(con_names):
-                relation, thres = thresholds[i]
+                relation, thres = thresholds[i][:2]
                 con = float(env.get_obs(con_name))
                 if relation == 'GREATER_THAN':
                     cons_i.append(con - thres)

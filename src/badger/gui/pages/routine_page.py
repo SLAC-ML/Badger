@@ -253,7 +253,7 @@ class BadgerRoutinePage(QWidget):
         if routine['config']['constraints'] is not None:
             for i in range(len(routine['config']['constraints'])):
                 name = next(iter(routine['config']['constraints'][i]))
-                relation, thres = routine['config']['constraints'][i][name]
+                relation, thres = routine['config']['constraints'][i][name][:2]
                 relation = ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO'].index(relation)
                 self.add_constraint(name, relation, thres)
 
@@ -453,11 +453,14 @@ class BadgerRoutinePage(QWidget):
         for i in range(self.list_con.count()):
             item = self.list_con.item(i)
             item_widget = self.list_con.itemWidget(item)
+            critical = item_widget.check_crit.isChecked()
             con_name = item_widget.cb_obs.currentText()
             relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
             value = item_widget.sb.value()
             _dict = {}
             _dict[con_name] = [relation, value]
+            if critical:
+                _dict[con_name].append('CRITICAL')
             constraints.append(_dict)
 
         configs = {

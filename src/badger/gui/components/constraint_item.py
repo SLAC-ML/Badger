@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QDoubleSpinBox, QAbstractSpinBox
-from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate
+from PyQt5.QtCore import QPropertyAnimation, QSize
 
 
 def constraint_item(options, remove_item, name=None, relation=0, threshold=0, decimals=4):
@@ -32,14 +33,28 @@ def constraint_item(options, remove_item, name=None, relation=0, threshold=0, de
     sb.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
     sb.setValue(default_value)
 
+    widget.check_crit = check_crit = QCheckBox('Critical')
+    check_crit.setChecked(False)
+
     widget.btn_del = btn_del = QPushButton('Remove')
     btn_del.setFixedSize(72, 24)
+    btn_del.hide()
 
+    hbox.addWidget(check_crit)
     hbox.addWidget(cb_obs, 1)
     hbox.addWidget(cb_rel)
     hbox.addWidget(sb, 1)
     hbox.addWidget(btn_del)
 
     btn_del.clicked.connect(remove_item)
+
+    def show_button(event):
+        btn_del.show()
+
+    def hide_button(event):
+        btn_del.hide()
+
+    widget.enterEvent = show_button
+    widget.leaveEvent = hide_button
 
     return widget
