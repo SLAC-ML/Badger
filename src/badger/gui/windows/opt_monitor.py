@@ -233,6 +233,30 @@ class BadgerOptMonitor(QWidget):
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
 
+    def is_critical(self, cons):
+        if not self.con_names:
+            return False, None
+
+        constraints = self.routine['config']['constraints']
+        for i, con_dict in enumerate(constraints):
+            name = self.con_names[i]
+            if len(con_dict[name]) != 3:
+                continue
+
+            value = cons[i]
+            relation, thres = con_dict[name][:2]
+            if relation == 'GREATER_THAN':
+                if value <= thres:
+                    return True, f'{name} (current value: {value:.4f}) is less than {thres}!'
+            elif relation == 'LESS_THAN':
+                if value >= thres:
+                    return True, f'{name} (current value: {value:.4f}) is greater than {thres}!'
+            else:
+                if value != thres:
+                    return True, f'{name} (current value: {value:.4f}) is not equal to {thres}!'
+
+        return False, None
+
     def update(self, vars, objs, cons):
         self.vars.append(vars)
         self.objs.append(objs)
@@ -247,6 +271,21 @@ class BadgerOptMonitor(QWidget):
 
         for i in range(len(self.var_names)):
             self.curves_var[i].setData(np.array(self.vars)[:, i])
+
+        # Check critical condition
+        critical, msg = self.is_critical(cons)
+        if not critical:
+            return
+
+        self.sig_pause.emit(True)
+        self.btn_ctrl.setText('Resume')
+
+        reply = QMessageBox.warning(self,
+                                    'Run Paused',
+                                    f'Critical constraint was violated: {msg}\nTerminate the run?',
+                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.sig_stop.emit()
 
     def env_ready(self, init_vars):
         self.env = self.routine_runner.env

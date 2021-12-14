@@ -66,6 +66,7 @@ class BadgerRoutineRunner(QRunnable):
     def after_evaluate(self, vars, obses, cons):
         # vars: ndarray
         # obses: ndarray
+        # cons: ndarray
         self.signals.progress.emit(list(vars), list(obses), list(cons))
 
         # Append solution to data
