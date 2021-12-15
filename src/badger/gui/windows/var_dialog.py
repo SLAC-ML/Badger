@@ -1,21 +1,14 @@
 from PyQt5.QtWidgets import QDialog, QWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout
 from PyQt5.QtWidgets import QGroupBox, QMessageBox
 from ..components.labeled_lineedit import labeled_lineedit
-from ...factory import get_intf
+from ...utils import instantiate_env
 
 
 class BadgerVariableDialog(QDialog):
-    def __init__(self, parent, env_class, env_params, intf_name, callback):
+    def __init__(self, parent, env_class, configs, callback):
         super().__init__(parent)
 
-        if intf_name is not None:
-            Interface, _ = get_intf(intf_name)
-            intf = Interface()
-        else:
-            intf = None
-
-        env = env_class(intf, env_params)
-        self.env = env
+        self.env = instantiate_env(env_class, configs)
         self.callback = callback
 
         self.init_ui()

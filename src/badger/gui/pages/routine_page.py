@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QFont
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import ystring, load_config, config_list_to_dict, normalize_routine
+from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, instantiate_env
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
 from ..components.constraint_item import constraint_item
@@ -193,6 +193,8 @@ class BadgerRoutinePage(QWidget):
         self.btn_run.clicked.connect(self.run)
 
     def refresh_ui(self, routine):
+        self.routine = routine  # save routine for future reference
+
         self.algos = list_algo()
         self.envs = list_env()
         # Clean up the constraints list
@@ -300,6 +302,7 @@ class BadgerRoutinePage(QWidget):
             self.env = None
             self.btn_add_con.setDisabled(True)
             self.btn_add_var.setDisabled(True)
+            self.routine = None
             return
 
         name = self.envs[i]
@@ -315,13 +318,27 @@ class BadgerRoutinePage(QWidget):
             self.cb_env.setCurrentIndex(-1)
             self.btn_add_con.setDisabled(True)
             self.btn_add_var.setDisabled(True)
+            self.routine = None
             return QMessageBox.critical(self, 'Error!', str(e))
 
         self.edit_env.setPlainText(ystring(configs['params']))
 
         self.list_var.clear()
-        # TODO: Add temp vars from vocs
-        for var in configs['variables']:
+        vars_env = configs['variables']
+        vars_combine = [*vars_env]
+        if self.routine:  # check for the temp variables in vocs
+            vars_vocs = self.routine['config']['variables']
+            var_names_vocs = [next(iter(var)) for var in vars_vocs]
+            var_names_env = [next(iter(var)) for var in vars_env]
+            env_instance = instantiate_env(env, configs)
+            for name in var_names_vocs:
+                if name in var_names_env:
+                    continue
+
+                _var = {}
+                _var[name] = env_instance._get_vrange(name)
+                vars_combine.append(_var)
+        for var in vars_combine:
             name = next(iter(var))
             vrange = var[name]
             item = QListWidgetItem(self.list_var)
@@ -341,6 +358,7 @@ class BadgerRoutinePage(QWidget):
             self.dict_obj[obj] = item
 
         self.list_con.clear()
+        self.routine = None
 
     def check_all_var(self):
         for i in range(self.list_var.count()):
@@ -361,8 +379,12 @@ class BadgerRoutinePage(QWidget):
             intf_name = self.configs['interface'][0]
         except KeyError:
             intf_name = None
-        dlg = BadgerVariableDialog(self, self.env, env_params, intf_name,
-                                   self.add_var_to_list)
+        configs = {
+            'params': env_params,
+            'interface': [intf_name]
+        }
+
+        dlg = BadgerVariableDialog(self, self.env, configs, self.add_var_to_list)
         dlg.exec()
 
     def add_var_to_list(self, name, min, max):
