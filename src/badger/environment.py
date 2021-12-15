@@ -159,6 +159,14 @@ class Environment(ABC):
 
         return values
 
+    # Unsafe version of get_obses
+    def _get_obses(self, obses: List[str]) -> list:
+        values = []
+        for obs in obses:
+            values.append(self._get_obs(obs))
+
+        return values
+
     def get_obses_dict(self) -> dict:
         obses = self.list_obses()
         book = {}
