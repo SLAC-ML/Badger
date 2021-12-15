@@ -395,3 +395,21 @@ def str_to_ts(timestr, format='lcls-log'):
 
 def curr_ts_to_str(format='lcls-log'):
     return ts_to_str(datetime.now(), format)
+
+def instantiate_env(env_class, configs):
+    from .factory import get_intf  # have to put here to avoid circular dependencies
+
+    try:
+        intf_name = configs['interface'][0]
+    except KeyError:
+        intf_name = None
+
+    if intf_name is not None:
+        Interface, _ = get_intf(intf_name)
+        intf = Interface()
+    else:
+        intf = None
+
+    env = env_class(intf, configs['params'])
+
+    return env
