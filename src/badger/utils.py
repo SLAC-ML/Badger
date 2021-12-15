@@ -277,7 +277,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             if before_evaluate:
                 before_evaluate(_x)
 
-            env.set_vars(var_names, _x)
+            # Use unsafe version to support temp vars
+            # We have to trust the users...
+            env._set_vars(var_names, _x)
 
             # Deal with objectives
             obses = []
