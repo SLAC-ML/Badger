@@ -155,7 +155,7 @@ class Environment(ABC):
     def get_obses(self, obses: List[str]) -> list:
         values = []
         for obs in obses:
-            values.append(self._get_obs(obs))
+            values.append(self.get_obs(obs))
 
         return values
 
@@ -163,6 +163,6 @@ class Environment(ABC):
         obses = self.list_obses()
         book = {}
         for obs in obses:
-            book[obs] = self.get_obs(obs)
+            book[obs] = self._get_obs(obs)
 
         return book
