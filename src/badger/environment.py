@@ -112,6 +112,14 @@ class Environment(ABC):
 
         return values
 
+    # Unsafe version of get_vars
+    def _get_vars(self, vars: List[str]) -> list:
+        values = []
+        for var in vars:
+            values.append(self._get_var(var))
+
+        return values
+
     def get_vars_dict(self) -> dict:
         vars = self.list_vars()
         book = {}
@@ -127,9 +135,22 @@ class Environment(ABC):
         for idx, var in enumerate(vars):
             self.set_var(var, values[idx])
 
+    # Unsafe version of set_vars
+    def _set_vars(self, vars: List[str], values: list):
+        assert len(vars) == len(
+            values), 'Variables and values number mismatch!'
+
+        for idx, var in enumerate(vars):
+            self._set_var(var, values[idx])
+
     def set_vars_dict(self, book: dict):
         for var, val in book.items():
             self.set_var(var, val)
+
+    # Unsafe version of set_vars_dict
+    def _set_vars_dict(self, book: dict):
+        for var, val in book.items():
+            self._set_var(var, val)
 
     def get_obses(self, obses: List[str]) -> list:
         values = []
