@@ -11,6 +11,7 @@ from ..components.objective_item import objective_item
 from ..components.constraint_item import constraint_item
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
+from ..windows.var_dialog import BadgerVariableDialog
 
 
 CONS_RELATION_DICT = {
@@ -28,6 +29,7 @@ class BadgerRoutinePage(QWidget):
 
         self.algos = list_algo()
         self.envs = list_env()
+        self.env = None
 
         self.init_ui()
         self.config_logic()
@@ -79,10 +81,14 @@ class BadgerRoutinePage(QWidget):
         self.btn_un_all_var = btn_un_all_var = QPushButton('Uncheck All')
         btn_all_var.setFixedSize(96, 24)
         btn_un_all_var.setFixedSize(96, 24)
+        self.btn_add_var = btn_add_var = QPushButton('Add')
+        btn_add_var.setFixedSize(96, 24)
+        btn_add_var.setDisabled(True)
         self.check_only_var = check_only_var = QCheckBox('Checked Only')
         check_only_var.setChecked(False)
         hbox_action_var.addWidget(btn_all_var)
         hbox_action_var.addWidget(btn_un_all_var)
+        hbox_action_var.addWidget(btn_add_var)
         hbox_action_var.addStretch()
         hbox_action_var.addWidget(check_only_var)
         vbox_var.addWidget(action_var)
@@ -176,6 +182,7 @@ class BadgerRoutinePage(QWidget):
         self.cb_env.currentIndexChanged.connect(self.select_env)
         self.btn_all_var.clicked.connect(self.check_all_var)
         self.btn_un_all_var.clicked.connect(self.uncheck_all_var)
+        self.btn_add_var.clicked.connect(self.add_var)
         self.btn_all_obj.clicked.connect(self.check_all_obj)
         self.btn_un_all_obj.clicked.connect(self.uncheck_all_obj)
         self.check_only_var.stateChanged.connect(self.toggle_check_only_var)
@@ -289,18 +296,24 @@ class BadgerRoutinePage(QWidget):
             self.list_obj.clear()
             self.dict_obj.clear()
             self.configs = None
+            self.env = None
             self.btn_add_con.setDisabled(True)
+            self.btn_add_var.setDisabled(True)
             return
 
         name = self.envs[i]
         try:
-            _, configs = get_env(name)
+            env, configs = get_env(name)
             self.configs = configs
+            self.env = env
             self.btn_add_con.setDisabled(False)
+            self.btn_add_var.setDisabled(False)
         except Exception as e:
             self.configs = None
+            self.env = None
             self.cb_env.setCurrentIndex(-1)
             self.btn_add_con.setDisabled(True)
+            self.btn_add_var.setDisabled(True)
             return QMessageBox.critical(self, 'Error!', str(e))
 
         self.edit_env.setPlainText(ystring(configs['params']))
@@ -338,6 +351,16 @@ class BadgerRoutinePage(QWidget):
             item = self.list_var.item(i)
             item_widget = self.list_var.itemWidget(item)
             item_widget.check_name.setChecked(False)
+
+    def add_var(self):
+        # TODO: Use a cached env
+        env_params = load_config(self.edit_env.toPlainText())
+        try:
+            intf_name = self.configs['interface'][0]
+        except KeyError:
+            intf_name = None
+        dlg = BadgerVariableDialog(self, self.env, env_params, intf_name)
+        dlg.exec()
 
     def check_all_obj(self):
         for i in range(self.list_obj.count()):
