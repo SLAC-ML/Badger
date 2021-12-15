@@ -266,7 +266,8 @@ class BadgerRoutinePage(QWidget):
                     critical = True
                 except:
                     critical = False
-                relation = ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO'].index(relation)
+                relation = ['GREATER_THAN', 'LESS_THAN',
+                            'EQUAL_TO'].index(relation)
                 self.add_constraint(name, relation, thres, critical)
 
         # Config the save settings
@@ -319,6 +320,7 @@ class BadgerRoutinePage(QWidget):
         self.edit_env.setPlainText(ystring(configs['params']))
 
         self.list_var.clear()
+        # TODO: Add temp vars from vocs
         for var in configs['variables']:
             name = next(iter(var))
             vrange = var[name]
@@ -359,8 +361,31 @@ class BadgerRoutinePage(QWidget):
             intf_name = self.configs['interface'][0]
         except KeyError:
             intf_name = None
-        dlg = BadgerVariableDialog(self, self.env, env_params, intf_name)
+        dlg = BadgerVariableDialog(self, self.env, env_params, intf_name,
+                                   self.add_var_to_list)
         dlg.exec()
+
+    def add_var_to_list(self, name, min, max):
+        # Check if already in the list
+        ok = False
+        try:
+            self.dict_var[name]
+        except:
+            ok = True
+
+        if not ok:
+            QMessageBox.warning(self, 'Variable already exists!', f'Variable {name} already exists!')
+            return 1
+
+        item = QListWidgetItem(self.list_var)
+        var_item = variable_item(name, [min, max], self.toggle_var)
+        var_item.check_name.setChecked(True)
+        item.setSizeHint(var_item.sizeHint())
+        self.list_var.addItem(item)
+        self.list_var.setItemWidget(item, var_item)
+        self.dict_var[name] = item
+
+        return 0
 
     def check_all_obj(self):
         for i in range(self.list_obj.count()):
@@ -439,8 +464,9 @@ class BadgerRoutinePage(QWidget):
         options = self.configs['observations']
         item = QListWidgetItem(self.list_con)
         con_item = constraint_item(options,
-            lambda: self.list_con.takeItem(self.list_con.row(item)),
-            name, relation, threshold, critical)
+                                   lambda: self.list_con.takeItem(
+                                       self.list_con.row(item)),
+                                   name, relation, threshold, critical)
         item.setSizeHint(con_item.sizeHint())
         self.list_con.addItem(item)
         self.list_con.setItemWidget(item, con_item)

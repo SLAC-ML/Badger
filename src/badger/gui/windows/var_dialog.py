@@ -5,7 +5,7 @@ from ...factory import get_intf
 
 
 class BadgerVariableDialog(QDialog):
-    def __init__(self, parent, env_class, env_params, intf_name):
+    def __init__(self, parent, env_class, env_params, intf_name, callback):
         super().__init__(parent)
 
         if intf_name is not None:
@@ -16,6 +16,7 @@ class BadgerVariableDialog(QDialog):
 
         env = env_class(intf, env_params)
         self.env = env
+        self.callback = callback
 
         self.init_ui()
         self.config_logic()
@@ -71,6 +72,7 @@ class BadgerVariableDialog(QDialog):
         self.edit_name.textChanged.connect(self.var_changed)
         self.btn_cancel.clicked.connect(self.close)
         self.btn_check.clicked.connect(self.check_var)
+        self.btn_add.clicked.connect(self.add_var)
 
     def var_changed(self, text):
         self.btn_add.setDisabled(True)
@@ -98,3 +100,12 @@ class BadgerVariableDialog(QDialog):
             QMessageBox.critical(self, 'Error!', f'Variable {name} cannot be found!')
 
             self.btn_add.setDisabled(True)
+
+    def add_var(self):
+        name = self.edit_name.text()
+        min = float(self.edit_min.edit.text())
+        max = float(self.edit_max.edit.text())
+
+        code = self.callback(name, min, max)
+        if code == 0:
+            self.close()
