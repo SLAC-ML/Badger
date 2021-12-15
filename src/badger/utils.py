@@ -234,25 +234,12 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 f'Routine {routine["name"]} already existed in the database! Please choose another name.')
 
     # Set up and run the optimization
-    from .factory import get_algo, get_intf, get_env
+    from .factory import get_algo, get_env
 
+    # Instantiate the environment
     Environment, configs_env = get_env(routine['env'])
-
-    # Configure interface
-    # TODO: figure out the correct logic
-    # It seems that the interface should be given rather than
-    # initialized here
-    try:
-        intf_name = configs_env['interface'][0]
-        Interface, _ = get_intf(intf_name)
-        intf = Interface()
-    except KeyError:
-        intf = None
-    except Exception as e:
-        logger.warn(e)
-        intf = None
-
-    env = Environment(intf, routine['env_params'])
+    _configs_env = merge_params(configs_env, {'params': routine['env_params']})
+    env = instantiate_env(Environment, _configs_env)
     if env_ready:
         env_ready(env)
 
@@ -358,7 +345,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             configs = {
                 'routine_configs': routine['config'],
                 'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
-                'env_configs': merge_params(configs_env, {'params': routine['env_params']}),
+                'env_configs': _configs_env,
             }
             optimize = optimize.optimize
         else:
@@ -399,9 +386,16 @@ def curr_ts_to_str(format='lcls-log'):
 def instantiate_env(env_class, configs):
     from .factory import get_intf  # have to put here to avoid circular dependencies
 
+    # Configure interface
+    # TODO: figure out the correct logic
+    # It seems that the interface should be given rather than
+    # initialized here
     try:
         intf_name = configs['interface'][0]
     except KeyError:
+        intf_name = None
+    except Exception as e:
+        logger.warn(e)
         intf_name = None
 
     if intf_name is not None:
