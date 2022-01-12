@@ -268,18 +268,36 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     # Make a normalized evaluate function
 
     def evaluate(X):
-        Y = []
-        I = []
-        E = []
+        Y = []  # objectives
+        I = []  # inequality constraints
+        E = []  # equality constraints
+        Xo = []  # normalized readback of variables
+
+        # Set X to current state if X is None
+        CURRENT = False  # flag that prevents from setting current vars again
+        if X is None:
+            _x = np.array(env._get_vars(var_names))
+            x = norm(_x, vranges[:, 0], vranges[:, 1])
+            X = x.reshape(1, -1)
+            CURRENT = True
+
         for x in X:
             _x = denorm(x, vranges[:, 0], vranges[:, 1])
 
-            if before_evaluate:
-                before_evaluate(_x)
-
             # Use unsafe version to support temp vars
             # We have to trust the users...
-            env._set_vars(var_names, _x)
+            if not CURRENT:
+                env._set_vars(var_names, _x)
+                _xo = np.array(env._get_vars(var_names))
+                xo = norm(_xo, vranges[:, 0], vranges[:, 1])
+            else:
+                _xo = _x
+                xo = x
+            Xo.append(xo)
+
+            # Return the readback rather than the values to be set
+            if before_evaluate:
+                before_evaluate(_xo)
 
             # Deal with objectives
             obses = []
@@ -317,14 +335,14 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             cons_raw = np.array(cons_raw)
 
             info['count'] += 1
-            _idx_x = np.insert(_x, 0, info['count'])  # keep the idx info
+            _idx_x = np.insert(_xo, 0, info['count'])  # keep the idx info
 
             is_optimal = not pf.is_dominated((_idx_x, obses_raw))
-            solution = (_x, obses_raw, cons_raw, is_optimal, var_names, obj_names, con_names)
+            solution = (_xo, obses_raw, cons_raw, is_optimal, var_names, obj_names, con_names)
             opt_logger.update(Events.OPTIMIZATION_STEP, solution)
 
             if after_evaluate:
-                after_evaluate(_x, obses_raw, cons_raw)
+                after_evaluate(_xo, obses_raw, cons_raw)
 
         Y = np.array(Y)
         if I:
@@ -335,8 +353,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             E = np.array(E)
         else:
             E = None
+        Xo = np.array(Xo)
 
-        return Y, I, E
+        return Y, I, E, Xo
 
     # Start the optimization
     print('')
