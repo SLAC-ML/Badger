@@ -273,26 +273,23 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         E = []  # equality constraints
         Xo = []  # normalized readback of variables
 
-        # Set X to current state if X is None
-        CURRENT = False  # flag that prevents from setting current vars again
+        # Return current state if X is None
+        # Do not do the evaluation due to possible high cost
         if X is None:
             _x = np.array(env._get_vars(var_names))
             x = norm(_x, vranges[:, 0], vranges[:, 1])
             X = x.reshape(1, -1)
-            CURRENT = True
+            return None, None, None, X
 
         for x in X:
             _x = denorm(x, vranges[:, 0], vranges[:, 1])
 
             # Use unsafe version to support temp vars
             # We have to trust the users...
-            if not CURRENT:
-                env._set_vars(var_names, _x)
-                _xo = np.array(env._get_vars(var_names))
-                xo = norm(_xo, vranges[:, 0], vranges[:, 1])
-            else:
-                _xo = _x
-                xo = x
+            env._set_vars(var_names, _x)
+
+            _xo = np.array(env._get_vars(var_names))
+            xo = norm(_xo, vranges[:, 0], vranges[:, 1])
             Xo.append(xo)
 
             # Return the readback rather than the values to be set
