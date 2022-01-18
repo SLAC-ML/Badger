@@ -1,4 +1,5 @@
 import numpy as np
+import multiprocessing as mp
 from abc import ABC, abstractmethod
 from typing import List
 from .interface import Interface
@@ -112,11 +113,33 @@ class Environment(ABC):
 
         return values
 
+    def get_vars_async(self, vars: List[str]) -> list:
+        values = []
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self.get_var, args=(var)) for var in vars]
+        pool.close()
+        pool.join()
+        for result in results:
+            values.append(result.get())
+
+        return values
+
     # Unsafe version of get_vars
     def _get_vars(self, vars: List[str]) -> list:
         values = []
         for var in vars:
             values.append(self._get_var(var))
+
+        return values
+
+    def _get_vars_async(self, vars: List[str]) -> list:
+        values = []
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._get_var, args=(var)) for var in vars]
+        pool.close()
+        pool.join()
+        for result in results:
+            values.append(result.get())
 
         return values
 
@@ -128,12 +151,34 @@ class Environment(ABC):
 
         return book
 
+    def get_vars_dict_async(self) -> dict:
+        vars = self.list_vars()
+        book = {}
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._get_var, args=(var)) for var in vars]
+        pool.close()
+        pool.join()
+        for idx, result in enumerate(results):
+            book[vars[idx]] = result.get()
+
+        return book
+
     def set_vars(self, vars: List[str], values: list):
         assert len(vars) == len(
             values), 'Variables and values number mismatch!'
 
         for idx, var in enumerate(vars):
             self.set_var(var, values[idx])
+
+    def set_vars_async(self, vars: List[str], values: list):
+        assert len(vars) == len(
+            values), 'Variables and values number mismatch!'
+
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self.set_var, args=(var, values[idx]))
+                   for idx, var in enumerate(vars)]
+        pool.close()
+        pool.join()
 
     # Unsafe version of set_vars
     def _set_vars(self, vars: List[str], values: list):
@@ -143,19 +188,54 @@ class Environment(ABC):
         for idx, var in enumerate(vars):
             self._set_var(var, values[idx])
 
+    def _set_vars_async(self, vars: List[str], values: list):
+        assert len(vars) == len(
+            values), 'Variables and values number mismatch!'
+
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._set_var, args=(var, values[idx]))
+                   for idx, var in enumerate(vars)]
+        pool.close()
+        pool.join()
+
     def set_vars_dict(self, book: dict):
         for var, val in book.items():
             self.set_var(var, val)
+
+    def set_vars_dict_async(self, book: dict):
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self.set_var, args=(var, val))
+                   for var, val in book.items()]
+        pool.close()
+        pool.join()
 
     # Unsafe version of set_vars_dict
     def _set_vars_dict(self, book: dict):
         for var, val in book.items():
             self._set_var(var, val)
 
+    def _set_vars_dict_async(self, book: dict):
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._set_var, args=(var, val))
+                   for var, val in book.items()]
+        pool.close()
+        pool.join()
+
     def get_obses(self, obses: List[str]) -> list:
         values = []
         for obs in obses:
             values.append(self.get_obs(obs))
+
+        return values
+
+    def get_obses_async(self, obses: List[str]) -> list:
+        values = []
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self.get_obs, args=(obs)) for obs in obses]
+        pool.close()
+        pool.join()
+        for result in results:
+            values.append(result.get())
 
         return values
 
@@ -167,10 +247,33 @@ class Environment(ABC):
 
         return values
 
+    def _get_obses_async(self, obses: List[str]) -> list:
+        values = []
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._get_obs, args=(obs)) for obs in obses]
+        pool.close()
+        pool.join()
+        for result in results:
+            values.append(result.get())
+
+        return values
+
     def get_obses_dict(self) -> dict:
         obses = self.list_obses()
         book = {}
         for obs in obses:
             book[obs] = self._get_obs(obs)
+
+        return book
+
+    def get_obses_dict_async(self) -> dict:
+        obses = self.list_obses()
+        book = {}
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(self._get_obs, args=(obs)) for obs in obses]
+        pool.close()
+        pool.join()
+        for idx, result in enumerate(results):
+            book[obses[idx]] = result.get()
 
         return book
