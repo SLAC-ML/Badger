@@ -116,7 +116,7 @@ class Environment(ABC):
     def get_vars_async(self, vars: List[str]) -> list:
         values = []
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self.get_var, args=(var)) for var in vars]
+        results = [pool.apply_async(self.get_var, args=(var,)) for var in vars]
         pool.close()
         pool.join()
         for result in results:
@@ -135,7 +135,7 @@ class Environment(ABC):
     def _get_vars_async(self, vars: List[str]) -> list:
         values = []
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self._get_var, args=(var)) for var in vars]
+        results = [pool.apply_async(self._get_var, args=(var,)) for var in vars]
         pool.close()
         pool.join()
         for result in results:
@@ -155,7 +155,7 @@ class Environment(ABC):
         vars = self.list_vars()
         book = {}
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self._get_var, args=(var)) for var in vars]
+        results = [pool.apply_async(self._get_var, args=(var,)) for var in vars]
         pool.close()
         pool.join()
         for idx, result in enumerate(results):
@@ -231,7 +231,7 @@ class Environment(ABC):
     def get_obses_async(self, obses: List[str]) -> list:
         values = []
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self.get_obs, args=(obs)) for obs in obses]
+        results = [pool.apply_async(self.get_obs, args=(obs,)) for obs in obses]
         pool.close()
         pool.join()
         for result in results:
@@ -250,7 +250,7 @@ class Environment(ABC):
     def _get_obses_async(self, obses: List[str]) -> list:
         values = []
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self._get_obs, args=(obs)) for obs in obses]
+        results = [pool.apply_async(self._get_obs, args=(obs,)) for obs in obses]
         pool.close()
         pool.join()
         for result in results:
@@ -270,7 +270,7 @@ class Environment(ABC):
         obses = self.list_obses()
         book = {}
         pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(self._get_obs, args=(obs)) for obs in obses]
+        results = [pool.apply_async(self._get_obs, args=(obs,)) for obs in obses]
         pool.close()
         pool.join()
         for idx, result in enumerate(results):
