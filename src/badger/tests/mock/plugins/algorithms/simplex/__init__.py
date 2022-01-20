@@ -11,10 +11,10 @@ def optimize(evaluate, params):
     assert len(x0) == D, 'Dimension does not match!'
 
     if isteps is None or len(isteps) != D:
-        logging.warn("Initial simplex is None")
+        logging.warning("Initial simplex is None")
         isim = None
     elif np.count_nonzero(isteps) != D:
-        logging.warn("There is zero step. Initial simplex is None")
+        logging.warning("There is zero step. Initial simplex is None")
         isim = None
     else:
         isim = np.zeros((D + 1, D))
@@ -27,7 +27,7 @@ def optimize(evaluate, params):
     logging.debug(f'ISIM = {isim}')
 
     def _evaluate(x):
-        y, _, _ = evaluate(np.array(x).reshape(1, -1))
+        y, _, _, _ = evaluate(np.array(x).reshape(1, -1))
         y = y[0]
 
         return y

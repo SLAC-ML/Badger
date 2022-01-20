@@ -8,7 +8,7 @@ def optimize(evaluate, params):
 
     for i in range(max_iter):
         x = np.random.rand(D).reshape(1, -1)
-        y, _, _ = evaluate(x)
+        y, _, _, _ = evaluate(x)
         if not i:
             pf = ParetoFront(['MINIMIZE'] * y.shape[1])
 
