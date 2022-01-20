@@ -85,7 +85,7 @@ def load_plugin(root, pname, ptype):
         except KeyError:
             intf = None
         except Exception as e:
-            logger.warn(e)
+            logger.warning(e)
             intf = None
         env = module.Environment(intf, configs)
         vranges = env.get_vranges()
@@ -139,7 +139,7 @@ def scan_extensions(root):
             extensions[ename] = ext
         except ImportError:
             pass
-            # logger.warn(
+            # logger.warning(
             #     f'Extension {ename} is not available due to missing dependencies')
 
     return extensions
@@ -155,7 +155,7 @@ def get_algo(name):
                 if name in ext.list_algo():
                     return [ext, ext.get_algo_config(name)]
             except ImportError as e:
-                logger.warn(
+                logger.warning(
                     f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
         raise Exception(
@@ -178,7 +178,7 @@ def list_algo():
         try:
             algos += ext.list_algo()
         except ImportError as e:
-            logger.warn(
+            logger.warning(
                 f'Failed to list algorithms from ext {ext_name}: {str(e)}')
     return sorted(algos)
 

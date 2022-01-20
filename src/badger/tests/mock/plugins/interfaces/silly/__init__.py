@@ -34,14 +34,14 @@ class Interface(interface.Interface):
         try:
             value = self.states[channel]
         except KeyError:
-            logging.warn(f'Channel {channel} doesn\'t exist!')
+            logging.warning(f'Channel {channel} doesn\'t exist!')
             value = None
 
         return value
 
     def set_value(self, channel: str, value):
         if channel not in self.channels:
-            logging.warn(f'Channel {channel} doesn\'t exist!')
+            logging.warning(f'Channel {channel} doesn\'t exist!')
             return
 
         try:
@@ -50,4 +50,4 @@ class Interface(interface.Interface):
                               for channel in self.channels[:-1]])
             self.states['norm'] = np.sqrt(np.sum(values ** 2))
         except KeyError:
-            logging.warn(f'Channel {channel} doesn\'t exist!')
+            logging.warning(f'Channel {channel} doesn\'t exist!')

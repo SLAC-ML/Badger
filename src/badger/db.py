@@ -57,7 +57,7 @@ def load_routine(name):
     if len(records) == 1:
         return yaml.safe_load(records[0][1]), records[0][2]
     elif len(records) == 0:
-        # logger.warn(f'Routine {name} not found in the database!')
+        # logger.warning(f'Routine {name} not found in the database!')
         return None, None
     else:
         raise Exception(

@@ -132,13 +132,13 @@ def normalize_routine(routine):
                 continue
 
             if vrange_vocs[0] < vrange_default[0]:
-                logger.warn(
+                logger.warning(
                     f'variable {var_name}: lower limit {vrange_vocs[0]} exceeds the bound, set to the lower bound {vrange_default[0]}')
                 lb = vrange_default[0]
             else:
                 lb = vrange_vocs[0]
             if vrange_vocs[1] > vrange_default[1]:
-                logger.warn(
+                logger.warning(
                     f'variable {var_name}: upper limit {vrange_vocs[1]} exceeds the bound, set to the upper bound {vrange_default[1]}')
                 ub = vrange_default[1]
             else:
@@ -436,7 +436,7 @@ def is_sync_mode(configs):
     except KeyError:
         is_sync = False
     except Exception as e:
-        logger.warn(e)
+        logger.warning(e)
         is_sync = False
 
     return is_sync
@@ -450,7 +450,7 @@ def register_intf(configs):
     except KeyError:
         intf_name = None
     except Exception as e:
-        logger.warn(e)
+        logger.warning(e)
         intf_name = None
 
     if intf_name is not None:
@@ -470,7 +470,7 @@ def instantiate_env(env_class, configs, manager=None):
     except KeyError:
         intf_name = None
     except Exception as e:
-        logger.warn(e)
+        logger.warning(e)
         intf_name = None
 
     if intf_name is not None:
