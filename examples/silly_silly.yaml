@@ -1,0 +1,20 @@
+variables:
+  - q1
+  - q2: [-1, 0.5]
+  - q4: [0, 1]
+objectives:
+  - l2
+constraints:
+  - l1:
+      - GREATER_THAN
+      - 0.1
+pipeline:
+  - q1:
+      - <1> l2
+  - q2(0.5):
+      - <5> c1
+  - q3(10):
+      - <5> c1
+  - c1:
+      - c2
+      - <10> o1
