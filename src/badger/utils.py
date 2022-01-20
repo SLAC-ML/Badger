@@ -2,8 +2,13 @@ import os
 from datetime import datetime
 import numpy as np
 import yaml
+from multiprocessing.managers import BaseManager
 import logging
 logger = logging.getLogger(__name__)
+
+
+class BadgerManager(BaseManager):
+    pass
 
 
 # https://stackoverflow.com/a/39681672/4263605
@@ -238,142 +243,165 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
     # Instantiate the environment
     Environment, configs_env = get_env(routine['env'])
-    _configs_env = merge_params(configs_env, {'params': routine['env_params']})
-    env = instantiate_env(Environment, _configs_env)
-    if env_ready:
-        env_ready(env)
+    _configs_env = merge_params(
+        configs_env, {'params': routine['env_params']})
+    parallel = not is_sync_mode(_configs_env)  # if run in sync mode
 
-    optimize, configs_algo = get_algo(routine['algo'])
+    if parallel:  # register the interface for multiprocessing
+        register_intf(_configs_env)
 
-    from .logger import _get_default_logger
-    from .logger.event import Events
+    with BadgerManager() as manager:
+        if not parallel:
+            manager = None
 
-    opt_logger = _get_default_logger(verbose)  # log the optimization progress
-    var_names = [next(iter(d)) for d in routine['config']['variables']]
-    vranges = np.array([d[next(iter(d))]
-                        for d in routine['config']['variables']])
-    obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-    rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-    pf = ParetoFront(rules)
-    if pf_ready:
-        pf_ready(pf)
-    if routine['config']['constraints']:
-        con_names = [next(iter(d)) for d in routine['config']['constraints']]
-        thresholds = [d[next(iter(d))] for d in routine['config']['constraints']]
-    else:
-        con_names = []
-        thresholds = []
+        env = instantiate_env(Environment, _configs_env, manager)
+        if env_ready:
+            env_ready(env)
 
-    info = {'count': -1}
-    # Make a normalized evaluate function
+        optimize, configs_algo = get_algo(routine['algo'])
 
-    def evaluate(X):
-        Y = []  # objectives
-        I = []  # inequality constraints
-        E = []  # equality constraints
-        Xo = []  # normalized readback of variables
+        from .logger import _get_default_logger
+        from .logger.event import Events
 
-        # Return current state if X is None
-        # Do not do the evaluation due to possible high cost
-        if X is None:
-            _x = np.array(env._get_vars(var_names))
-            x = norm(_x, vranges[:, 0], vranges[:, 1])
-            X = x.reshape(1, -1)
-            return None, None, None, X
+        # log the optimization progress
+        opt_logger = _get_default_logger(verbose)
+        var_names = [next(iter(d)) for d in routine['config']['variables']]
+        vranges = np.array([d[next(iter(d))]
+                            for d in routine['config']['variables']])
+        obj_names = [next(iter(d)) for d in routine['config']['objectives']]
+        rules = [d[next(iter(d))] for d in routine['config']['objectives']]
+        pf = ParetoFront(rules)
+        if pf_ready:
+            pf_ready(pf)
+        if routine['config']['constraints']:
+            con_names = [next(iter(d))
+                         for d in routine['config']['constraints']]
+            thresholds = [d[next(iter(d))]
+                          for d in routine['config']['constraints']]
+        else:
+            con_names = []
+            thresholds = []
 
-        for x in X:
-            _x = denorm(x, vranges[:, 0], vranges[:, 1])
+        info = {'count': -1}
+        # Make a normalized evaluate function
 
-            # Use unsafe version to support temp vars
-            # We have to trust the users...
-            env._set_vars(var_names, _x)
+        def evaluate(X):
+            Y = []  # objectives
+            I = []  # inequality constraints
+            E = []  # equality constraints
+            Xo = []  # normalized readback of variables
 
-            _xo = np.array(env._get_vars(var_names))
-            xo = norm(_xo, vranges[:, 0], vranges[:, 1])
-            Xo.append(xo)
-
-            # Return the readback rather than the values to be set
-            if before_evaluate:
-                before_evaluate(_xo)
-
-            # Deal with objectives
-            obses = []
-            obses_raw = []
-            for i, obj_name in enumerate(obj_names):
-                rule = rules[i]
-                obs = float(env.get_obs(obj_name))
-                if rule == 'MAXIMIZE':
-                    obses.append(-obs)
+            # Return current state if X is None
+            # Do not do the evaluation due to possible high cost
+            if X is None:
+                if parallel:
+                    _x = np.array(env._get_vars_async(var_names))
                 else:
-                    obses.append(obs)
-                obses_raw.append(obs)
-            Y.append(obses)
-            obses_raw = np.array(obses_raw)
+                    _x = np.array(env._get_vars(var_names))
+                x = norm(_x, vranges[:, 0], vranges[:, 1])
+                X = x.reshape(1, -1)
+                return None, None, None, X
 
-            # Deal with constraints
-            # TODO: Check overlapping between objs and cons
-            cons_i = []
-            cons_e = []
-            cons_raw = []
-            for i, con_name in enumerate(con_names):
-                relation, thres = thresholds[i][:2]
-                con = float(env.get_obs(con_name))
-                if relation == 'GREATER_THAN':
-                    cons_i.append(con - thres)
-                elif relation == 'LESS_THAN':
-                    cons_i.append(thres - con)
+            for x in X:
+                _x = denorm(x, vranges[:, 0], vranges[:, 1])
+
+                # Use unsafe version to support temp vars
+                # We have to trust the users...
+                if parallel:
+                    env._set_vars_async(var_names, _x)
                 else:
-                    cons_e.append(con - thres)
-                cons_raw.append(con)
-            if cons_i:
-                I.append(cons_i)
-            if cons_e:
-                E.append(cons_e)
-            cons_raw = np.array(cons_raw)
+                    env._set_vars(var_names, _x)
 
-            info['count'] += 1
-            _idx_x = np.insert(_xo, 0, info['count'])  # keep the idx info
+                if parallel:
+                    _xo = np.array(env._get_vars_async(var_names), dtype=np.float64)
+                else:
+                    _xo = np.array(env._get_vars(var_names), dtype=np.float64)
+                xo = norm(_xo, vranges[:, 0], vranges[:, 1])
+                Xo.append(xo)
 
-            is_optimal = not pf.is_dominated((_idx_x, obses_raw))
-            solution = (_xo, obses_raw, cons_raw, is_optimal, var_names, obj_names, con_names)
-            opt_logger.update(Events.OPTIMIZATION_STEP, solution)
+                # Return the readback rather than the values to be set
+                if before_evaluate:
+                    before_evaluate(_xo)
 
-            if after_evaluate:
-                after_evaluate(_xo, obses_raw, cons_raw)
+                # Deal with objectives
+                obses = []
+                obses_raw = []
+                for i, obj_name in enumerate(obj_names):
+                    rule = rules[i]
+                    obs = float(env.get_obs(obj_name))
+                    if rule == 'MAXIMIZE':
+                        obses.append(-obs)
+                    else:
+                        obses.append(obs)
+                    obses_raw.append(obs)
+                Y.append(obses)
+                obses_raw = np.array(obses_raw, dtype=np.float64)
 
-        Y = np.array(Y)
-        if I:
-            I = np.array(I)
-        else:
-            I = None
-        if E:
-            E = np.array(E)
-        else:
-            E = None
-        Xo = np.array(Xo)
+                # Deal with constraints
+                # TODO: Check overlapping between objs and cons
+                cons_i = []
+                cons_e = []
+                cons_raw = []
+                for i, con_name in enumerate(con_names):
+                    relation, thres = thresholds[i][:2]
+                    con = float(env.get_obs(con_name))
+                    if relation == 'GREATER_THAN':
+                        cons_i.append(con - thres)
+                    elif relation == 'LESS_THAN':
+                        cons_i.append(thres - con)
+                    else:
+                        cons_e.append(con - thres)
+                    cons_raw.append(con)
+                if cons_i:
+                    I.append(cons_i)
+                if cons_e:
+                    E.append(cons_e)
+                cons_raw = np.array(cons_raw, dtype=np.float64)
 
-        return Y, I, E, Xo
+                info['count'] += 1
+                _idx_x = np.insert(_xo, 0, info['count'])  # keep the idx info
 
-    # Start the optimization
-    print('')
-    solution = (None, None, None, None, var_names, obj_names, con_names)
-    opt_logger.update(Events.OPTIMIZATION_START, solution)
-    try:
-        if not callable(optimize):  # doing optimization through extensions
-            configs = {
-                'routine_configs': routine['config'],
-                'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
-                'env_configs': _configs_env,
-            }
-            optimize = optimize.optimize
-        else:
-            configs = routine['algo_params']
+                is_optimal = not pf.is_dominated((_idx_x, obses_raw))
+                solution = (_xo, obses_raw, cons_raw, is_optimal,
+                            var_names, obj_names, con_names)
+                opt_logger.update(Events.OPTIMIZATION_STEP, solution)
 
-        optimize(evaluate, configs)
-    except Exception as e:
+                if after_evaluate:
+                    after_evaluate(_xo, obses_raw, cons_raw)
+
+            Y = np.array(Y)
+            if I:
+                I = np.array(I)
+            else:
+                I = None
+            if E:
+                E = np.array(E)
+            else:
+                E = None
+            Xo = np.array(Xo)
+
+            return Y, I, E, Xo
+
+        # Start the optimization
+        print('')
+        solution = (None, None, None, None, var_names, obj_names, con_names)
+        opt_logger.update(Events.OPTIMIZATION_START, solution)
+        try:
+            if not callable(optimize):  # doing optimization through extensions
+                configs = {
+                    'routine_configs': routine['config'],
+                    'algo_configs': merge_params(configs_algo, {'params': routine['algo_params']}),
+                    'env_configs': _configs_env,
+                }
+                optimize = optimize.optimize
+            else:
+                configs = routine['algo_params']
+
+            optimize(evaluate, configs)
+        except Exception as e:
+            opt_logger.update(Events.OPTIMIZATION_END, solution)
+            raise e
         opt_logger.update(Events.OPTIMIZATION_END, solution)
-        raise e
-    opt_logger.update(Events.OPTIMIZATION_END, solution)
 
 
 def ts_to_str(ts, format='lcls-log'):
@@ -401,7 +429,36 @@ def str_to_ts(timestr, format='lcls-log'):
 def curr_ts_to_str(format='lcls-log'):
     return ts_to_str(datetime.now(), format)
 
-def instantiate_env(env_class, configs):
+
+def is_sync_mode(configs):
+    try:
+        is_sync = configs['params']['sync']
+    except KeyError:
+        is_sync = False
+    except Exception as e:
+        logger.warn(e)
+        is_sync = False
+
+    return is_sync
+
+
+def register_intf(configs):
+    from .factory import get_intf  # have to put here to avoid circular dependencies
+
+    try:
+        intf_name = configs['interface'][0]
+    except KeyError:
+        intf_name = None
+    except Exception as e:
+        logger.warn(e)
+        intf_name = None
+
+    if intf_name is not None:
+        Interface, _ = get_intf(intf_name)
+        BadgerManager.register('Interface', Interface)
+
+
+def instantiate_env(env_class, configs, manager=None):
     from .factory import get_intf  # have to put here to avoid circular dependencies
 
     # Configure interface
@@ -417,8 +474,11 @@ def instantiate_env(env_class, configs):
         intf_name = None
 
     if intf_name is not None:
-        Interface, _ = get_intf(intf_name)
-        intf = Interface()
+        if manager is None:
+            Interface, _ = get_intf(intf_name)
+            intf = Interface()
+        else:
+            intf = manager.Interface()
     else:
         intf = None
 
