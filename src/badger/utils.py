@@ -251,8 +251,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         register_intf(_configs_env)
 
     with BadgerManager() as manager:
-        if not parallel:
-            manager = None
+        # if not parallel:
+        manager = None
 
         env = instantiate_env(Environment, _configs_env, manager)
         if env_ready:
@@ -294,10 +294,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             # Return current state if X is None
             # Do not do the evaluation due to possible high cost
             if X is None:
-                if parallel:
-                    _x = np.array(env._get_vars_async(var_names))
-                else:
-                    _x = np.array(env._get_vars(var_names))
+                _x = np.array(env._get_vars(var_names))
                 x = norm(_x, vranges[:, 0], vranges[:, 1])
                 X = x.reshape(1, -1)
                 return None, None, None, X
@@ -307,15 +304,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
                 # Use unsafe version to support temp vars
                 # We have to trust the users...
-                if parallel:
-                    env._set_vars_async(var_names, _x)
-                else:
-                    env._set_vars(var_names, _x)
+                env._set_vars(var_names, _x)
 
-                if parallel:
-                    _xo = np.array(env._get_vars_async(var_names), dtype=np.float64)
-                else:
-                    _xo = np.array(env._get_vars(var_names), dtype=np.float64)
+                _xo = np.array(env._get_vars(var_names), dtype=np.float64)
                 xo = norm(_xo, vranges[:, 0], vranges[:, 1])
                 Xo.append(xo)
 
