@@ -156,8 +156,6 @@ class Environment(ABC):
         assert len(vars) == len(
             values), 'Variables and values number mismatch!'
 
-        print('set_vars', values)
-
         for idx, var in enumerate(vars):
             self._set_var(var, values[idx])
 
