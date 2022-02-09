@@ -1,10 +1,12 @@
 import numpy as np
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
 from PyQt5.QtCore import pyqtSignal, QThreadPool, Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from ..components.routine_runner import BadgerRoutineRunner
 # from ..utils import AURORA_PALETTE, FROST_PALETTE
+from ...utils import norm
 from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ...archive import archive_run, BADGER_ARCHIVE_ROOT
 
@@ -23,6 +25,10 @@ class BadgerOptMonitor(QWidget):
                           for d in self.routine['config']['objectives']]
         self.var_names = [next(iter(d))
                           for d in self.routine['config']['variables']]
+        # For plot type switching
+        self.x_plot_type = 0  # 0: raw, 1: normalized
+        self.vranges = np.array([d[next(iter(d))]
+                                 for d in routine['config']['variables']])
         if self.routine['config']['constraints']:
             self.con_names = [next(iter(d))
                               for d in self.routine['config']['constraints']]
@@ -39,6 +45,17 @@ class BadgerOptMonitor(QWidget):
         self.center()
 
         vbox = QVBoxLayout(self)
+
+        # Config bar
+        config_bar = QWidget()
+        hbox_config = QHBoxLayout(config_bar)
+        hbox_config.setContentsMargins(0, 0, 0, 0)
+        label = QLabel('Evaluation History (X) Plot Type')
+        self.cb_plot = cb_plot = QComboBox()
+        cb_plot.setItemDelegate(QStyledItemDelegate())
+        cb_plot.addItems(['Raw', 'Normalized'])
+        hbox_config.addWidget(label)
+        hbox_config.addWidget(cb_plot, 1)
 
         # Set up the monitor
         # Don't set show=True or there will be a blank window flashing once
@@ -182,6 +199,7 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
 
+        vbox.addWidget(config_bar)
         vbox.addWidget(monitor)
         vbox.addWidget(action_bar)
 
@@ -226,6 +244,9 @@ class BadgerOptMonitor(QWidget):
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.btn_stop.clicked.connect(self.stop_routine)
 
+        # Visualization
+        self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
+
     def center(self):
         pass
 
@@ -269,8 +290,12 @@ class BadgerOptMonitor(QWidget):
             for i in range(len(self.con_names)):
                 self.curves_con[i].setData(np.array(self.cons)[:, i])
 
+        if self.x_plot_type:
+            _vars = norm(np.array(self.vars), self.vranges[:, 0], self.vranges[:, 1])
+        else:
+            _vars = np.array(self.vars)
         for i in range(len(self.var_names)):
-            self.curves_var[i].setData(np.array(self.vars)[:, i])
+            self.curves_var[i].setData(_vars[:, i])
 
         # Check critical condition
         critical, msg = self.is_critical(cons)
@@ -395,6 +420,15 @@ class BadgerOptMonitor(QWidget):
         self.plot_var.setXRange(idx - 3, idx + 3)
         # QMessageBox.information(
         #     self, 'Set Environment', f'Env vars have been set to {solution}')
+
+    def select_x_plot_type(self, i):
+        self.x_plot_type = i
+        if i:
+            _vars = norm(np.array(self.vars), self.vranges[:, 0], self.vranges[:, 1])
+        else:
+            _vars = np.array(self.vars)
+        for i in range(len(self.var_names)):
+            self.curves_var[i].setData(_vars[:, i])
 
     def _make_label(self):
         try:
