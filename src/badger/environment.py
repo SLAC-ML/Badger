@@ -100,12 +100,18 @@ class Environment(ABC):
 
         return self._get_var(var)
 
-    # Safe version of _set_var
+    # Safe version of _set_var with check
     def set_var(self, var: str, x):
         if var not in self.list_vars():
             raise Exception(f'Variable {var} doesn\'t exist!')
 
-        return self._set_var(var, x)
+        self._set_var(var, x)
+
+        # Wait until check_var returns 0
+        status = 1
+        while status:
+            status = self._check_var(var)
+            time.sleep(0.1)
 
     # Safe version of _get_obs
     def get_obs(self, obs: str):
