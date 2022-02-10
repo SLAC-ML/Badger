@@ -12,6 +12,7 @@ from ..components.constraint_item import constraint_item
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.opt_monitor import BadgerOptMonitor
 from ..windows.var_dialog import BadgerVariableDialog
+from ..windows.edit_script_dialog import BadgerEditScriptDialog
 
 
 CONS_RELATION_DICT = {
@@ -30,6 +31,7 @@ class BadgerRoutinePage(QWidget):
         self.algos = list_algo()
         self.envs = list_env()
         self.env = None
+        self.script = ''
 
         self.init_ui()
         self.config_logic()
@@ -45,11 +47,22 @@ class BadgerRoutinePage(QWidget):
 
         group_algo = QGroupBox('Algorithm')
         vbox_algo = QVBoxLayout(group_algo)
+        action_algo = QWidget()
+        hbox_action_algo = QHBoxLayout(action_algo)
+        hbox_action_algo.setContentsMargins(0, 0, 0, 0)
         self.cb_algo = cb_algo = QComboBox()
         cb_algo.setItemDelegate(QStyledItemDelegate())
         cb_algo.addItems(self.algos)
         cb_algo.setCurrentIndex(-1)
-        vbox_algo.addWidget(cb_algo)
+        self.check_use_script = check_use_script = QCheckBox('Use Script')
+        check_use_script.setChecked(False)
+        self.btn_edit_script = btn_edit_script = QPushButton('Edit Script')
+        btn_edit_script.setFixedSize(96, 24)
+        btn_edit_script.hide()
+        hbox_action_algo.addWidget(cb_algo, 1)
+        hbox_action_algo.addWidget(check_use_script)
+        hbox_action_algo.addWidget(btn_edit_script)
+        vbox_algo.addWidget(action_algo)
         self.edit_algo = edit_algo = QPlainTextEdit()
         edit_algo.setFixedHeight(128)
         vbox_algo.addWidget(edit_algo)
@@ -57,11 +70,18 @@ class BadgerRoutinePage(QWidget):
 
         group_env = QGroupBox('Environment')
         vbox_env = QVBoxLayout(group_env)
+        action_env = QWidget()
+        hbox_action_env = QHBoxLayout(action_env)
+        hbox_action_env.setContentsMargins(0, 0, 0, 0)
         self.cb_env = cb_env = QComboBox()
         cb_env.setItemDelegate(QStyledItemDelegate())
         cb_env.addItems(self.envs)
         cb_env.setCurrentIndex(-1)
-        vbox_env.addWidget(cb_env)
+        self.btn_env_play = btn_env_play = QPushButton('Playground')
+        btn_env_play.setFixedSize(96, 24)
+        hbox_action_env.addWidget(cb_env, 1)
+        hbox_action_env.addWidget(btn_env_play)
+        vbox_env.addWidget(action_env)
         self.edit_env = edit_env = QPlainTextEdit()
         edit_env.setFixedHeight(128)
         vbox_env.addWidget(edit_env)
@@ -179,7 +199,10 @@ class BadgerRoutinePage(QWidget):
     def config_logic(self):
         self.btn_back.clicked.connect(self.go_home)
         self.cb_algo.currentIndexChanged.connect(self.select_algo)
+        self.check_use_script.stateChanged.connect(self.toggle_use_script)
+        self.btn_edit_script.clicked.connect(self.edit_script)
         self.cb_env.currentIndexChanged.connect(self.select_env)
+        self.btn_env_play.clicked.connect(self.open_playground)
         self.btn_all_var.clicked.connect(self.check_all_var)
         self.btn_un_all_var.clicked.connect(self.uncheck_all_var)
         self.btn_add_var.clicked.connect(self.add_var)
@@ -222,6 +245,10 @@ class BadgerRoutinePage(QWidget):
         idx_algo = self.algos.index(name_algo)
         self.cb_algo.setCurrentIndex(idx_algo)
         self.edit_algo.setPlainText(ystring(routine['algo_params']))
+        try:
+            self.script = routine['config']['script']
+        except KeyError:
+            self.script = None
 
         name_env = routine['env']
         idx_env = self.envs.index(name_env)
@@ -278,7 +305,14 @@ class BadgerRoutinePage(QWidget):
         self.edit_save.setText(name)
         self.check_save.setChecked(False)
 
+        if self.script:
+            self.check_use_script.setChecked(True)
+
     def select_algo(self, i):
+        # Reset the script
+        self.script = ''
+        self.check_use_script.setChecked(False)
+
         if i == -1:
             self.edit_algo.setPlainText('')
             return
@@ -290,6 +324,52 @@ class BadgerRoutinePage(QWidget):
         except Exception as e:
             self.cb_algo.setCurrentIndex(-1)
             return QMessageBox.critical(self, 'Error!', str(e))
+
+    def toggle_use_script(self):
+        if self.check_use_script.isChecked():
+            self.btn_edit_script.show()
+            self.refresh_params_algo()
+        else:
+            self.btn_edit_script.hide()
+
+    def edit_script(self):
+        algo = self.cb_algo.currentText()
+        dlg = BadgerEditScriptDialog(self, algo, self.script, self.script_updated)
+        dlg.exec()
+
+    def script_updated(self, text):
+        self.script = text
+        self.refresh_params_algo()
+
+    def refresh_params_algo(self):
+        if not self.script:
+            return
+
+        try:
+            tmp = {}
+            exec(self.script, tmp)
+            try:
+                tmp['generate']  # test if generate function is defined
+            except Exception as e:
+                QMessageBox.warning(self, 'Please define a valid generate function!', str(e))
+                return
+
+            env_params = load_config(self.edit_env.toPlainText())
+            try:
+                intf_name = self.configs['interface'][0]
+            except KeyError:
+                intf_name = None
+            configs = {
+                'params': env_params,
+                'interface': [intf_name]
+            }
+            env = instantiate_env(self.env, configs)
+            # Function generate comes from the script
+            params_algo = tmp['generate'](env, None)
+            self.edit_algo.setPlainText(ystring(params_algo))
+        except Exception as e:
+            raise e
+            QMessageBox.warning(self, 'Invalid script!', str(e))
 
     def select_env(self, i):
         if i == -1:
@@ -312,6 +392,8 @@ class BadgerRoutinePage(QWidget):
             self.env = env
             self.btn_add_con.setDisabled(False)
             self.btn_add_var.setDisabled(False)
+            if self.check_use_script.isChecked():
+                self.refresh_params_algo()
         except Exception as e:
             self.configs = None
             self.env = None
@@ -359,6 +441,9 @@ class BadgerRoutinePage(QWidget):
 
         self.list_con.clear()
         self.routine = None
+
+    def open_playground(self):
+        pass
 
     def check_all_var(self):
         for i in range(self.list_var.count()):
@@ -544,6 +629,8 @@ class BadgerRoutinePage(QWidget):
             'objectives': objectives,
             'constraints': constraints,
         }
+        if self.check_use_script.isChecked():
+            configs['script'] = self.script
 
         routine = {
             'name': name,
