@@ -18,3 +18,8 @@ pipeline:
   - c1:
       - c2
       - <10> o1
+script: |
+  import numpy as np
+
+  def Hello():
+      print('Yo')
