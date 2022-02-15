@@ -21,5 +21,15 @@ pipeline:
 script: |
   import numpy as np
 
-  def Hello():
-      print('Yo')
+  def generate(env, routine_config=None):
+      vars = env.list_vars()
+      vals = env.get_vars(vars)
+
+      algo_config = {
+          'start_from_current': False,
+          'x0': vals,
+          'isteps': None,
+          'xtol': 1e-5,
+          'max_iter': 30,
+      }
+      return algo_config
