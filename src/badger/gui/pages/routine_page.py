@@ -328,9 +328,11 @@ class BadgerRoutinePage(QWidget):
     def toggle_use_script(self):
         if self.check_use_script.isChecked():
             self.btn_edit_script.show()
+            self.edit_algo.setReadOnly(True)
             self.refresh_params_algo()
         else:
             self.btn_edit_script.hide()
+            self.edit_algo.setReadOnly(False)
 
     def edit_script(self):
         algo = self.cb_algo.currentText()
@@ -368,7 +370,6 @@ class BadgerRoutinePage(QWidget):
             params_algo = tmp['generate'](env, None)
             self.edit_algo.setPlainText(ystring(params_algo))
         except Exception as e:
-            raise e
             QMessageBox.warning(self, 'Invalid script!', str(e))
 
     def select_env(self, i):
