@@ -5,15 +5,12 @@ channels:
 dependencies:
   - python=3.7
   - scikit-learn=0.23.2
-  - xopt
-  - bayesian-optimization
-  - pyepics
-  - pyqt
-  - pyqtgraph
-  - coolname
-  - qdarkstyle
-  - pillow
+  - tensorflow=2.4.0
   - badger-opt
+  - xopt
+  - pandas
+  - pyepics
+  - bayesian-optimization
   - pytest
   - pytest-qt
 prefix: /usr/local/anaconda3/envs/badger
