@@ -79,6 +79,7 @@ class BadgerRoutinePage(QWidget):
         cb_env.setCurrentIndex(-1)
         self.btn_env_play = btn_env_play = QPushButton('Playground')
         btn_env_play.setFixedSize(96, 24)
+        btn_env_play.hide()  # hide for now to prevent confusions
         hbox_action_env.addWidget(cb_env, 1)
         hbox_action_env.addWidget(btn_env_play)
         vbox_env.addWidget(action_env)
