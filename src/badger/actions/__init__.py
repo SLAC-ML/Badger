@@ -25,6 +25,10 @@ def show_info(args):
         from ..gui import launch_gui
 
         launch_gui()
+    elif args.gui_acr:
+        from ..gui_acr import launch_gui
+
+        launch_gui()
     else:
         info = {
             'name': 'Badger the optimizer',
