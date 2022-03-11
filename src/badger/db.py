@@ -64,16 +64,16 @@ def load_routine(name):
             f'Multiple routines with name {name} found in the database!')
 
 
-def list_routine():
+def list_routine(keyword=''):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
     try:
-        cur.execute('select name, savedAt from routine')
+        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
     except sqlite3.OperationalError:
         cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
-        cur.execute('select name, savedAt from routine')
+        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
     records = cur.fetchall()
     names = [record[0] for record in records]
     timestamps = [record[1] for record in records]
