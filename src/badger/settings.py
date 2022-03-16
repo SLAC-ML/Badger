@@ -22,6 +22,15 @@ BADGER_PATH_DICT = {
 
 
 def list_settings():
+    """List all the settings in Badger
+
+    Returns
+    -------
+    dict
+        A dictionary contains the settings. Keys in the dict are fields of the
+        settings, the value for each key is the current value for that setting.
+
+    """
     settings = QSettings('SLAC-ML', 'Badger')
     result = {}
     for key in BADGER_PATH_DICT.keys():
