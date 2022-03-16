@@ -417,6 +417,10 @@ def str_to_ts(timestr, format='lcls-log'):
         return datetime.fromisoformat(timestr)
 
 
+def curr_ts():
+    return datetime.now()
+
+
 def curr_ts_to_str(format='lcls-log'):
     return ts_to_str(datetime.now(), format)
 
