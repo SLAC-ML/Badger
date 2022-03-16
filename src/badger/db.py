@@ -83,7 +83,35 @@ def list_routine(keyword=''):
 
 
 def save_run(run):
-    pass
+    db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
+
+    # Initialize
+    if not os.path.exists(db_run):
+        con = sqlite3.connect(db_run)
+        cur = con.cursor()
+        cur.execute('create table run (id integer primary key, savedAt timestamp, finishAt timestamp, routine )')
+    else:
+        con = sqlite3.connect(db_run)
+        cur = con.cursor()
+
+    # Insert a record
+    routine_name = run['routine']['name']
+    timestamps = run['data']['timestamp']
+    time_start = timestamps[0]
+    time_finish = timestamps[-1]
+    try:
+        cur.execute('insert into run values (?, ?, ?, ?)',
+                    (None, time_start, time_finish, routine_name))
+    except sqlite3.OperationalError:
+        cur.execute('create table run (id integer primary key, savedAt timestamp, finishAt timestamp, routine )')
+        cur.execute('insert into run values (?, ?, ?, ?)',
+                    (None, time_start, time_finish, routine_name))
+    rid = cur.lastrowid
+
+    con.commit()
+    con.close()
+
+    return rid
 
 
 def load_run(name):
