@@ -1,6 +1,7 @@
 import os
 import logging
 logger = logging.getLogger(__name__)
+from .db import save_run
 from .utils import curr_ts_to_str, ystring, load_config
 from .settings import read_value
 
@@ -22,6 +23,8 @@ def archive_run(routine, data):
         'routine': routine,
         'data': data.to_dict('list'),
     }
+    rid = save_run(run)
+    run = {'id': rid, **run}  # Put id in front
 
     suffix = curr_ts_to_str("lcls-fname")
     tokens = suffix.split('-')
