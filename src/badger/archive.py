@@ -1,7 +1,7 @@
 import os
 import logging
 logger = logging.getLogger(__name__)
-from .db import save_run
+from .db import save_run, remove_run_by_filename
 from .utils import curr_ts_to_str, ystring, load_config
 from .settings import read_value
 
@@ -19,13 +19,6 @@ elif not os.path.exists(BADGER_ARCHIVE_ROOT):
 def archive_run(routine, data):
     # routine: dict
     # data: pandas dataframe
-    run = {
-        'routine': routine,
-        'data': data.to_dict('list'),
-    }
-    rid = save_run(run)
-    run = {'id': rid, **run}  # Put id in front
-
     suffix = curr_ts_to_str("lcls-fname")
     tokens = suffix.split('-')
     first_level = tokens[0]
@@ -34,6 +27,15 @@ def archive_run(routine, data):
     path = os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level)
     os.makedirs(path, exist_ok=True)
     fname = f'BadgerOpt-{suffix}.yaml'
+
+    run = {
+        'filename': fname,
+        'routine': routine,
+        'data': data.to_dict('list'),
+    }
+    rid = save_run(run)
+    run = {'id': rid, **run}  # Put id in front
+
     with open(os.path.join(path, fname), 'w') as f:
         f.write(ystring(run))
 
@@ -78,5 +80,8 @@ def delete_run(run_fname):
     first_level = tokens[1]
     second_level = f'{tokens[1]}-{tokens[2]}'
     third_level = f'{tokens[1]}-{tokens[2]}-{tokens[3]}'
+
+    # Remove record from the database
+    remove_run_by_filename(run_fname)
 
     return os.remove(os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level, run_fname))
