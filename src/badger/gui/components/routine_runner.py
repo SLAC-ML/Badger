@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from ...utils import run_routine, curr_ts_to_str
+from ...utils import curr_ts, run_routine, ts_to_str
 
 
 class BadgerRoutineSignals(QObject):
@@ -28,7 +28,7 @@ class BadgerRoutineRunner(QRunnable):
             self.con_names = con_names = [next(iter(d)) for d in routine['config']['constraints']]
         else:
             self.con_names = con_names = []
-        self.data = pd.DataFrame(None, columns=['timestamp'] + obj_names + con_names + var_names)
+        self.data = pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
         self.save = save
         self.verbose = verbose
         self.use_full_ts = use_full_ts
@@ -71,7 +71,8 @@ class BadgerRoutineRunner(QRunnable):
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        solution = [curr_ts_to_str(fmt)] + list(obses) + list(cons) + list(vars)
+        ts = curr_ts()
+        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
         self.data = self.data.append(pd.Series(solution, index=self.data.columns), ignore_index=True)
 
         # take a break to let the outside signal to change the status

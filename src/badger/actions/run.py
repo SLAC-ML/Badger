@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from coolname import generate_slug
 from ..utils import load_config, merge_params, normalize_routine
-from ..utils import config_list_to_dict, curr_ts_to_str
+from ..utils import config_list_to_dict, curr_ts, ts_to_str
 from ..utils import run_routine as run
 
 
@@ -23,13 +23,14 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     else:
         con_names = []
     # Make data a list to avoid global var def
-    data = [pd.DataFrame(None, columns=['timestamp'] + obj_names + con_names + var_names)]
+    data = [pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)]
 
     def after_evaluate(vars, obses, cons):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
-        solution = [curr_ts_to_str(fmt)] + list(obses) + list(cons) + list(vars)
+        ts = curr_ts()
+        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
         data[0] = data[0].append(pd.Series(solution, index=data[0].columns), ignore_index=True)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
