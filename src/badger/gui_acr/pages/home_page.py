@@ -1,12 +1,14 @@
+import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QTabWidget, QShortcut
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QComboBox, QStyledItemDelegate, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence, QFont
 import pyqtgraph as pg
 from ..components.search_bar import search_bar
 from ..components.routine_item import routine_item
-from ...db import list_routine, load_routine
+from ...db import list_routine, load_routine, get_runs_by_routine
+from ...archive import load_run
 from ...utils import ystring
 
 
@@ -76,8 +78,33 @@ class BadgerHomePage(QWidget):
 
         # Run tab
         self.run_tab = run_tab = QTabWidget()
+
         # Config the plot
+        panel_view = QWidget()
+        vbox_view = QVBoxLayout(panel_view)
+        vbox_view.setContentsMargins(8, 8, 8, 8)
+
+        history_nav_bar = QWidget()
+        hbox_nav = QHBoxLayout(history_nav_bar)
+        hbox_nav.setContentsMargins(0, 0, 0, 0)
+        vbox_view.addWidget(history_nav_bar)
+
+        label_nav = QLabel('History Run')
+        self.cb_history = cb_history = QComboBox()
+        cb_history.setItemDelegate(QStyledItemDelegate())
+        self.btn_prev = btn_prev = QPushButton('<')
+        self.btn_next = btn_next = QPushButton('>')
+        btn_prev.setFixedWidth(32)
+        btn_next.setFixedWidth(32)
+        btn_prev.setDisabled(True)
+        btn_next.setDisabled(True)
+        hbox_nav.addWidget(label_nav)
+        hbox_nav.addWidget(cb_history, 1)
+        hbox_nav.addWidget(btn_prev)
+        hbox_nav.addWidget(btn_next)
+
         self.run_view = run_view = pg.GraphicsLayoutWidget()
+        vbox_view.addWidget(run_view)
         pg.setConfigOptions(antialias=True)
         self.plot_obj = plot_obj = run_view.addPlot(
             title='Evaluation History (Y)')
@@ -102,7 +129,7 @@ class BadgerHomePage(QWidget):
 
         # Config the raw data viewer
         self.run_edit = run_edit = QTextEdit()
-        run_tab.addTab(run_view, 'History')
+        run_tab.addTab(panel_view, 'History')
         run_tab.addTab(run_edit, 'Routine')
         vbox_info.addWidget(run_tab)
 
@@ -136,8 +163,15 @@ class BadgerHomePage(QWidget):
         splitter.addWidget(panel_info)
 
     def config_logic(self):
+        self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
+        self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
+
         self.sbar.textChanged.connect(self.build_routine_list)
         self.routine_list.itemClicked.connect(self.select_routine)
+
+        self.cb_history.currentIndexChanged.connect(self.go_run)
+        self.btn_prev.clicked.connect(self.go_prev_run)
+        self.btn_next.clicked.connect(self.go_next_run)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -149,7 +183,24 @@ class BadgerHomePage(QWidget):
     def select_routine(self, item):
         routine, timestamp = load_routine(item.routine)
         self.run_edit.setText(ystring(routine))
-        # print(routine)
+        runs = get_runs_by_routine(routine['name'])
+        if runs:
+            self.cb_history.clear()
+            self.cb_history.addItems(runs)
+            self.cb_history.setCurrentIndex(0)
+
+            if len(runs) > 1:
+                self.btn_prev.setDisabled(True)
+                self.btn_next.setDisabled(False)
+            else:
+                self.btn_prev.setDisabled(True)
+                self.btn_next.setDisabled(True)
+        else:
+            self.cb_history.clear()
+            self.plot_run(None)
+
+            self.btn_prev.setDisabled(True)
+            self.btn_next.setDisabled(True)
         # self.run_edit.setText(routine)
 
     def build_routine_list(self, keyword=''):
@@ -163,3 +214,109 @@ class BadgerHomePage(QWidget):
             item.setSizeHint(_item.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, _item)
+
+    def plot_run(self, run):
+        self.plot_obj.clear()
+        self.plot_obj.enableAutoRange()
+        try:
+            self.plot_con.clear()
+            self.plot_con.enableAutoRange()
+        except:
+            pass
+        self.plot_var.clear()
+        self.plot_var.enableAutoRange()
+
+        if not run:
+            self.btn_del.setDisabled(True)
+
+            try:
+                self.run_view.removeItem(self.plot_con)
+                del self.plot_con
+            except:
+                pass
+
+            return
+
+        self.btn_del.setDisabled(False)
+
+        var_names = [next(iter(d))
+                     for d in run['routine']['config']['variables']]
+        obj_names = [next(iter(d))
+                     for d in run['routine']['config']['objectives']]
+        try:
+            con_names = [next(iter(d))
+                         for d in run['routine']['config']['constraints']]
+        except:
+            con_names = []
+        data = run['data']
+
+        for i, obj_name in enumerate(obj_names):
+            color = self.colors[i % len(self.colors)]
+            symbol = self.symbols[i % len(self.colors)]
+            self.plot_obj.plot(np.array(data[obj_name]), pen=pg.mkPen(color, width=3),
+                               # symbol=symbol,
+                               name=obj_name)
+
+        if con_names:
+            try:
+                self.plot_con
+            except:
+                self.plot_con = plot_con = self.run_view.addPlot(
+                    row=1, col=0, title='Evaluation History (C)')
+                plot_con.setLabel('left', 'constraints')
+                plot_con.setLabel('bottom', 'iterations')
+                plot_con.showGrid(x=True, y=True)
+                leg_con = plot_con.addLegend()
+                leg_con.setBrush((50, 50, 100, 200))
+
+                plot_con.setXLink(self.plot_obj)
+
+            for i, con_name in enumerate(con_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                try:
+                    self.plot_con.plot(np.array(data[con_name]), pen=pg.mkPen(color, width=3),
+                                       # symbol=symbol,
+                                       name=con_name)
+                except:  # Mal-format data
+                    pass
+        else:
+            try:
+                self.run_view.removeItem(self.plot_con)
+                del self.plot_con
+            except:
+                pass
+
+        for i, var_name in enumerate(var_names):
+            color = self.colors[i % len(self.colors)]
+            symbol = self.symbols[i % len(self.colors)]
+            self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=3),
+                               # symbol=symbol,
+                               name=var_name)
+
+    def go_run(self, i):
+        if i == -1:
+            return self.plot_run(None)
+
+        run_filename = self.cb_history.currentText()
+        run = load_run(run_filename)
+        self.plot_run(run)
+
+        idx = self.cb_history.currentIndex()
+        if idx == 0:
+            self.btn_prev.setDisabled(True)
+        else:
+            self.btn_prev.setDisabled(False)
+        n = self.cb_history.count()
+        if idx == n - 1:
+            self.btn_next.setDisabled(True)
+        else:
+            self.btn_next.setDisabled(False)
+
+    def go_prev_run(self):
+        idx = self.cb_history.currentIndex()
+        self.cb_history.setCurrentIndex(idx - 1)
+
+    def go_next_run(self):
+        idx = self.cb_history.currentIndex()
+        self.cb_history.setCurrentIndex(idx + 1)
