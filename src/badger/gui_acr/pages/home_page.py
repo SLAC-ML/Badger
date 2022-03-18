@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence, QFont
 import pyqtgraph as pg
 from ..components.search_bar import search_bar
+from ..components.data_table import data_table, update_table
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run
@@ -106,8 +107,13 @@ class BadgerHomePage(QWidget):
         hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
 
+        self.splitter_run = splitter_run = QSplitter(Qt.Vertical)
+        splitter_run.setStretchFactor(0, 1)
+        splitter_run.setStretchFactor(1, 0)
+        vbox_view.addWidget(splitter_run)
+
         self.run_view = run_view = pg.GraphicsLayoutWidget()
-        vbox_view.addWidget(run_view)
+        splitter_run.addWidget(run_view)
         pg.setConfigOptions(antialias=True)
         self.plot_obj = plot_obj = run_view.addPlot(
             title='Evaluation History (Y)')
@@ -129,6 +135,11 @@ class BadgerHomePage(QWidget):
         leg_var.setBrush((50, 50, 100, 200))
 
         plot_var.setXLink(plot_obj)
+
+        # Data table
+        self.table = table = data_table()
+        splitter_run.addWidget(table)
+        splitter_run.setSizes([1, 0])  # collapse table by default
 
         # Config the raw data viewer
         self.run_edit = run_edit = QTextEdit()
@@ -311,10 +322,13 @@ class BadgerHomePage(QWidget):
 
     def go_run(self, i):
         if i == -1:
-            return self.plot_run(None)
+            update_table(self.table)
+            self.plot_run(None)
+            return
 
         run_filename = self.cb_history.currentText()
         run = load_run(run_filename)
+        update_table(self.table, run['data'])
         self.plot_run(run)
 
         idx = self.cb_history.currentIndex()
