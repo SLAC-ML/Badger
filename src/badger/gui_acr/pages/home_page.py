@@ -80,14 +80,12 @@ class BadgerHomePage(QWidget):
         panel_info = QWidget()
         vbox_info = QVBoxLayout(panel_info)
 
-        # Run tab
-        self.run_tab = run_tab = QTabWidget()
-
-        # Config the plot
         panel_view = QWidget()
         vbox_view = QVBoxLayout(panel_view)
-        vbox_view.setContentsMargins(8, 8, 8, 8)
+        vbox_view.setContentsMargins(0, 0, 0, 0)
+        vbox_info.addWidget(panel_view)
 
+        # History run nav
         history_nav_bar = QWidget()
         hbox_nav = QHBoxLayout(history_nav_bar)
         hbox_nav.setContentsMargins(0, 0, 0, 0)
@@ -107,13 +105,15 @@ class BadgerHomePage(QWidget):
         hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
 
+        # Routine edit + run monitor + data table
         self.splitter_run = splitter_run = QSplitter(Qt.Vertical)
-        splitter_run.setStretchFactor(0, 1)
-        splitter_run.setStretchFactor(1, 0)
+        splitter_run.setStretchFactor(0, 0)
+        splitter_run.setStretchFactor(1, 1)
+        splitter_run.setStretchFactor(2, 0)
         vbox_view.addWidget(splitter_run)
 
+        # Run monitor
         self.run_view = run_view = pg.GraphicsLayoutWidget()
-        splitter_run.addWidget(run_view)
         pg.setConfigOptions(antialias=True)
         self.plot_obj = plot_obj = run_view.addPlot(
             title='Evaluation History (Y)')
@@ -137,15 +137,15 @@ class BadgerHomePage(QWidget):
         plot_var.setXLink(plot_obj)
 
         # Data table
-        self.table = table = data_table()
-        splitter_run.addWidget(table)
-        splitter_run.setSizes([1, 0])  # collapse table by default
+        self.run_table = run_table = data_table()
 
-        # Config the raw data viewer
+        # Routine edit
         self.run_edit = run_edit = QTextEdit()
-        run_tab.addTab(panel_view, 'History')
-        run_tab.addTab(run_edit, 'Routine')
-        vbox_info.addWidget(run_tab)
+
+        splitter_run.addWidget(run_edit)
+        splitter_run.addWidget(run_view)
+        splitter_run.addWidget(run_table)
+        splitter_run.setSizes([0, 1, 0])  # collapse routine/table by default
 
         # Action bar
         action_bar = QWidget()
@@ -322,13 +322,13 @@ class BadgerHomePage(QWidget):
 
     def go_run(self, i):
         if i == -1:
-            update_table(self.table)
+            update_table(self.run_table)
             self.plot_run(None)
             return
 
         run_filename = self.cb_history.currentText()
         run = load_run(run_filename)
-        update_table(self.table, run['data'])
+        update_table(self.run_table, run['data'])
         self.plot_run(run)
 
         idx = self.cb_history.currentIndex()
