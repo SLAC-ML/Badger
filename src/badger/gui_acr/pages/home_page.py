@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence, QFont
 import pyqtgraph as pg
 from ..components.search_bar import search_bar
-from ..components.routine_item import routine_item
-from ...db import list_routine, load_routine, get_runs_by_routine
+from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
+from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run
 from ...utils import ystring
 
@@ -33,6 +33,8 @@ class BadgerHomePage(QWidget):
 
         self.init_ui()
         self.config_logic()
+
+        self.load_all_runs()
 
     def init_ui(self):
         # Set up the layout
@@ -70,6 +72,7 @@ class BadgerHomePage(QWidget):
         routine_list.setAlternatingRowColors(True)
         routine_list.setSpacing(1)
         self.build_routine_list()
+        self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
 
         # Info panel
@@ -180,32 +183,41 @@ class BadgerHomePage(QWidget):
     def go_search(self):
         self.sbar.setFocus()
 
+    def load_all_runs(self):
+        runs = get_runs()
+        self.cb_history.clear()
+        self.cb_history.addItems(runs)
+
     def select_routine(self, item):
+        if self.prev_routine:
+            try:
+                self.routine_list.itemWidget(self.prev_routine).setStyleSheet(stylesheet_normal)
+            except:
+                pass
+
+            if self.prev_routine.routine == item.routine:  # click a routine again to deselect
+                self.prev_routine = None
+                return self.load_all_runs()
+
+        self.prev_routine = item
+
         routine, timestamp = load_routine(item.routine)
         self.run_edit.setText(ystring(routine))
         runs = get_runs_by_routine(routine['name'])
+
+        self.cb_history.clear()
         if runs:
-            self.cb_history.clear()
             self.cb_history.addItems(runs)
-            self.cb_history.setCurrentIndex(0)
 
-            if len(runs) > 1:
-                self.btn_prev.setDisabled(True)
-                self.btn_next.setDisabled(False)
-            else:
-                self.btn_prev.setDisabled(True)
-                self.btn_next.setDisabled(True)
-        else:
-            self.cb_history.clear()
-            self.plot_run(None)
-
-            self.btn_prev.setDisabled(True)
-            self.btn_next.setDisabled(True)
-        # self.run_edit.setText(routine)
+        self.routine_list.itemWidget(item).setStyleSheet(stylesheet_selected)
 
     def build_routine_list(self, keyword=''):
         routines, timestamps = list_routine(keyword)
 
+        try:
+            selected_routine = self.prev_routine.routine
+        except:
+            selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
             _item = routine_item(routine, timestamps[i])
@@ -214,6 +226,9 @@ class BadgerHomePage(QWidget):
             item.setSizeHint(_item.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, _item)
+            if routine == selected_routine:
+                _item.setStyleSheet(stylesheet_selected)
+                self.prev_routine = item
 
     def plot_run(self, run):
         self.plot_obj.clear()
@@ -312,6 +327,8 @@ class BadgerHomePage(QWidget):
             self.btn_next.setDisabled(True)
         else:
             self.btn_next.setDisabled(False)
+
+        self.run_edit.setText(ystring(run['routine']))
 
     def go_prev_run(self):
         idx = self.cb_history.currentIndex()
