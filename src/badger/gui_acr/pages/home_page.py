@@ -8,6 +8,7 @@ import pyqtgraph as pg
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
+from ..components.run_monitor import BadgerOptMonitor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run
 from ...utils import ystring
@@ -113,28 +114,11 @@ class BadgerHomePage(QWidget):
         vbox_view.addWidget(splitter_run)
 
         # Run monitor
-        self.run_view = run_view = pg.GraphicsLayoutWidget()
-        pg.setConfigOptions(antialias=True)
-        self.plot_obj = plot_obj = run_view.addPlot(
-            title='Evaluation History (Y)')
-        plot_obj.setLabel('left', 'objectives')
-        plot_obj.setLabel('bottom', 'iterations')
-        plot_obj.showGrid(x=True, y=True)
-        leg_obj = plot_obj.addLegend()
-        leg_obj.setBrush((50, 50, 100, 200))
-
-        run_view.nextRow()
-        run_view.nextRow()
-
-        self.plot_var = plot_var = run_view.addPlot(
-            title='Evaluation History (X)')
-        plot_var.setLabel('left', 'variables')
-        plot_var.setLabel('bottom', 'iterations')
-        plot_var.showGrid(x=True, y=True)
-        leg_var = plot_var.addLegend()
-        leg_var.setBrush((50, 50, 100, 200))
-
-        plot_var.setXLink(plot_obj)
+        self.run_view = run_view = QWidget()  # for consistent bg
+        vbox_run_view = QVBoxLayout(run_view)
+        vbox_run_view.setContentsMargins(0, 10, 0, 0)
+        self.run_monitor = run_monitor = BadgerOptMonitor(None, False)
+        vbox_run_view.addWidget(run_monitor)
 
         # Data table
         self.run_table = run_table = data_table()
@@ -241,95 +225,16 @@ class BadgerHomePage(QWidget):
                 _item.setStyleSheet(stylesheet_selected)
                 self.prev_routine = item
 
-    def plot_run(self, run):
-        self.plot_obj.clear()
-        self.plot_obj.enableAutoRange()
-        try:
-            self.plot_con.clear()
-            self.plot_con.enableAutoRange()
-        except:
-            pass
-        self.plot_var.clear()
-        self.plot_var.enableAutoRange()
-
-        if not run:
-            self.btn_del.setDisabled(True)
-
-            try:
-                self.run_view.removeItem(self.plot_con)
-                del self.plot_con
-            except:
-                pass
-
-            return
-
-        self.btn_del.setDisabled(False)
-
-        var_names = [next(iter(d))
-                     for d in run['routine']['config']['variables']]
-        obj_names = [next(iter(d))
-                     for d in run['routine']['config']['objectives']]
-        try:
-            con_names = [next(iter(d))
-                         for d in run['routine']['config']['constraints']]
-        except:
-            con_names = []
-        data = run['data']
-
-        for i, obj_name in enumerate(obj_names):
-            color = self.colors[i % len(self.colors)]
-            symbol = self.symbols[i % len(self.colors)]
-            self.plot_obj.plot(np.array(data[obj_name]), pen=pg.mkPen(color, width=3),
-                               # symbol=symbol,
-                               name=obj_name)
-
-        if con_names:
-            try:
-                self.plot_con
-            except:
-                self.plot_con = plot_con = self.run_view.addPlot(
-                    row=1, col=0, title='Evaluation History (C)')
-                plot_con.setLabel('left', 'constraints')
-                plot_con.setLabel('bottom', 'iterations')
-                plot_con.showGrid(x=True, y=True)
-                leg_con = plot_con.addLegend()
-                leg_con.setBrush((50, 50, 100, 200))
-
-                plot_con.setXLink(self.plot_obj)
-
-            for i, con_name in enumerate(con_names):
-                color = self.colors[i % len(self.colors)]
-                symbol = self.symbols[i % len(self.colors)]
-                try:
-                    self.plot_con.plot(np.array(data[con_name]), pen=pg.mkPen(color, width=3),
-                                       # symbol=symbol,
-                                       name=con_name)
-                except:  # Mal-format data
-                    pass
-        else:
-            try:
-                self.run_view.removeItem(self.plot_con)
-                del self.plot_con
-            except:
-                pass
-
-        for i, var_name in enumerate(var_names):
-            color = self.colors[i % len(self.colors)]
-            symbol = self.symbols[i % len(self.colors)]
-            self.plot_var.plot(np.array(data[var_name]), pen=pg.mkPen(color, width=3),
-                               # symbol=symbol,
-                               name=var_name)
-
     def go_run(self, i):
         if i == -1:
             update_table(self.run_table)
-            self.plot_run(None)
+            self.run_monitor.plot_run(None)
             return
 
         run_filename = self.cb_history.currentText()
         run = load_run(run_filename)
         update_table(self.run_table, run['data'])
-        self.plot_run(run)
+        self.run_monitor.plot_run(run)
 
         idx = self.cb_history.currentIndex()
         if idx == 0:
