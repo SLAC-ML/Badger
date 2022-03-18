@@ -115,6 +115,21 @@ def save_run(run):
     return rid
 
 
+def get_runs_by_routine(routine: str):
+    db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
+
+    con = sqlite3.connect(db_run)
+    cur = con.cursor()
+
+    cur.execute(f'select filename from run where routine = "{routine}" order by savedAt desc')
+    records = cur.fetchall()
+    con.close()
+
+    filenames = [record[0] for record in records]
+
+    return filenames
+
+
 def remove_run_by_filename(name):
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
