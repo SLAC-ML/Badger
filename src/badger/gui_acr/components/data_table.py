@@ -50,6 +50,7 @@ def update_table(table, data=None):
         for j, v in enumerate(_data[key]):
             table.setItem(j, i, QTableWidgetItem(f'{v:g}'))
     table.setHorizontalHeaderLabels(list(_data.keys()))
+    table.setVerticalHeaderLabels([str(i) for i in range(m)])  # row index starts from 0
     table.horizontalHeader().setVisible(True)
 
     return table
