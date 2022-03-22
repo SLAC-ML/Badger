@@ -167,7 +167,7 @@ class BadgerHomePage(QWidget):
         self.sbar.textChanged.connect(self.build_routine_list)
         self.routine_list.itemClicked.connect(self.select_routine)
         self.run_table.cellClicked.connect(self.solution_selected)
-        # self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
+        self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
 
         self.cb_history.currentIndexChanged.connect(self.go_run)
         self.btn_prev.clicked.connect(self.go_prev_run)
@@ -267,4 +267,19 @@ class BadgerHomePage(QWidget):
 
     def table_selection_changed(self):
         indices = self.run_table.selectedIndexes()
-        print(indices)
+        if len(indices) == 1:  # let other method handles it
+            return
+
+        row = -1
+        for index in indices:
+            _row = index.row()
+            if _row == row:
+                continue
+
+            if row == -1:
+                row = _row
+                continue
+
+            return
+
+        self.run_monitor.jump_to_solution(row)
