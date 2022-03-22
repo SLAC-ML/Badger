@@ -117,7 +117,7 @@ class BadgerHomePage(QWidget):
         self.run_view = run_view = QWidget()  # for consistent bg
         vbox_run_view = QVBoxLayout(run_view)
         vbox_run_view.setContentsMargins(0, 10, 0, 0)
-        self.run_monitor = run_monitor = BadgerOptMonitor(None, False)
+        self.run_monitor = run_monitor = BadgerOptMonitor(None, False, self.inspect_solution)
         vbox_run_view.addWidget(run_monitor)
 
         # Data table
@@ -166,6 +166,8 @@ class BadgerHomePage(QWidget):
 
         self.sbar.textChanged.connect(self.build_routine_list)
         self.routine_list.itemClicked.connect(self.select_routine)
+        self.run_table.cellClicked.connect(self.solution_selected)
+        # self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
 
         self.cb_history.currentIndexChanged.connect(self.go_run)
         self.btn_prev.clicked.connect(self.go_prev_run)
@@ -256,3 +258,13 @@ class BadgerHomePage(QWidget):
     def go_next_run(self):
         idx = self.cb_history.currentIndex()
         self.cb_history.setCurrentIndex(idx + 1)
+
+    def inspect_solution(self, idx):
+        self.run_table.selectRow(idx)
+
+    def solution_selected(self, r, c):
+        self.run_monitor.jump_to_solution(r)
+
+    def table_selection_changed(self):
+        indices = self.run_table.selectedIndexes()
+        print(indices)

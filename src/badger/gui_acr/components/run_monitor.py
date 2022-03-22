@@ -15,7 +15,7 @@ class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
 
-    def __init__(self, routine, save):
+    def __init__(self, routine, save, callback_inspect=None):
         super().__init__()
         # self.setAttribute(Qt.WA_DeleteOnClose, True)
 
@@ -23,11 +23,12 @@ class BadgerOptMonitor(QWidget):
         # For plot type switching
         self.x_plot_type = 0  # 0: raw, 1: normalized
         self.save = save
+        self.callback_inspect = callback_inspect
 
         self.init_ui()
         self.config_logic()
 
-    def load_routine(self, routine):
+    def load_routine(self, routine, create_routine_runner=True):
         self.routine = routine
         try:
             self.obj_names = [next(iter(d))
@@ -52,6 +53,24 @@ class BadgerOptMonitor(QWidget):
                 self.con_names = []
         except:
             self.con_names = []
+
+        # Create a new routine runner if needed
+        if create_routine_runner and routine:
+            if self.routine_runner:
+                del self.routine_runner
+                self.sig_pause.disconnect()
+                self.sig_stop.disconnect()
+
+            self.routine_runner = routine_runner = BadgerRoutineRunner(
+                self.routine, self.save)
+            routine_runner.signals.env_ready.connect(self.env_ready)
+            routine_runner.signals.finished.connect(self.routine_finished)
+            routine_runner.signals.progress.connect(self.update)
+            routine_runner.signals.error.connect(self.on_error)
+            routine_runner.signals.info.connect(self.on_info)
+
+            self.sig_pause.connect(routine_runner.ctrl_routine)
+            self.sig_stop.connect(routine_runner.stop_routine)
 
     def init_ui(self):
         # self.main_panel = main_panel = QWidget(self)
@@ -286,7 +305,7 @@ class BadgerOptMonitor(QWidget):
 
             return
 
-        self.load_routine(run['routine'])
+        self.load_routine(run['routine'], create_routine_runner=False)
         self.load_data(run['data'])
 
         self.curves_var = []
@@ -478,6 +497,9 @@ class BadgerOptMonitor(QWidget):
             self.ins_con.setValue(value)
         self.ins_var.setValue(value)
 
+        if self.callback_inspect:
+            self.callback_inspect(value)
+
     def reset_env(self):
         reply = QMessageBox.question(self,
                                      'Reset Environment',
@@ -495,6 +517,15 @@ class BadgerOptMonitor(QWidget):
     def jump_to_optimal(self):
         pf = self.routine_runner.pf
         idx = pf.pareto_set[0][0]
+        self.ins_obj.setValue(idx)
+        if self.con_names:
+            self.ins_con.setValue(idx)
+        self.ins_var.setValue(idx)
+
+        if self.callback_inspect:
+            self.callback_inspect(idx)
+
+    def jump_to_solution(self, idx):
         self.ins_obj.setValue(idx)
         if self.con_names:
             self.ins_con.setValue(idx)
@@ -547,6 +578,9 @@ class BadgerOptMonitor(QWidget):
             if self.con_names:
                 self.ins_con.setValue(idx)
             self.ins_var.setValue(idx)
+
+            if self.callback_inspect:
+                self.callback_inspect(idx)
 
     # def closeEvent(self, event):
     #     if not self.running:
