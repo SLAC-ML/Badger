@@ -277,6 +277,7 @@ class BadgerOptMonitor(QWidget):
         self.ins_con.setValue(0)
 
         # Fill in data
+        self.data = data
         self.vars = []
         self.objs = []
         self.cons = []
@@ -437,8 +438,12 @@ class BadgerOptMonitor(QWidget):
 
     def logbook(self):
         try:
-            routine = self.routine_runner.routine
-            data = self.routine_runner.data
+            if self.routine_runner:
+                routine = self.routine_runner.routine
+                data = self.routine_runner.data.to_dict('list')
+            else:
+                routine = self.routine
+                data = self.data
             send_to_logbook(routine, data, self.monitor)
         except Exception as e:
             QMessageBox.critical(self, 'Log failed!', str(e))
