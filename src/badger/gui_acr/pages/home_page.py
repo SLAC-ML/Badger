@@ -116,7 +116,7 @@ class BadgerHomePage(QWidget):
         self.run_view = run_view = QWidget()  # for consistent bg
         vbox_run_view = QVBoxLayout(run_view)
         vbox_run_view.setContentsMargins(0, 10, 0, 0)
-        self.run_monitor = run_monitor = BadgerOptMonitor(None, False, self.inspect_solution)
+        self.run_monitor = run_monitor = BadgerOptMonitor(self.inspect_solution)
         vbox_run_view.addWidget(run_monitor)
 
         # Data table
@@ -200,15 +200,15 @@ class BadgerHomePage(QWidget):
         self.prev_routine = item
 
         routine, timestamp = load_routine(item.routine)
-        self.run_monitor.set_routine(routine)
+        self.current_routine = routine
         self.run_edit.setText(ystring(routine))
         runs = get_runs_by_routine(routine['name'])
 
         self.cb_history.clear()
         if runs:
             self.cb_history.addItems(runs)
-        else:
-            self.run_monitor.plot_run(None)
+        else:  # auto plot will not be triggered
+            self.run_monitor.init_plots(routine)
 
         self.routine_list.itemWidget(item).setStyleSheet(stylesheet_selected)
 
@@ -234,13 +234,13 @@ class BadgerHomePage(QWidget):
     def go_run(self, i):
         if i == -1:
             update_table(self.run_table)
-            self.run_monitor.plot_run(None)
+            self.run_monitor.init_plots(self.current_routine)
             return
 
         run_filename = self.cb_history.currentText()
         run = load_run(run_filename)
         update_table(self.run_table, run['data'])
-        self.run_monitor.plot_run(run)
+        self.run_monitor.init_plots(run['routine'], run['data'])
 
         idx = self.cb_history.currentIndex()
         if idx == 0:
