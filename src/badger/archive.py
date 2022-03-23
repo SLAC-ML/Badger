@@ -39,6 +39,8 @@ def archive_run(routine, data):
     with open(os.path.join(path, fname), 'w') as f:
         f.write(ystring(run))
 
+    return run
+
 
 def list_run():
     runs = {}
