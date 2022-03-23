@@ -6,7 +6,7 @@ from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from .routine_runner import BadgerRoutineRunner
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
-from ...utils import norm
+from ...utils import norm, ParetoFront
 from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ...archive import archive_run, BADGER_ARCHIVE_ROOT
 
@@ -41,6 +41,8 @@ class BadgerOptMonitor(QWidget):
         self.thread_pool = None
         self.routine_runner = None
         self.running = False
+        # Analysis tool for history runs
+        self.pf = None
 
         self.init_ui()
         self.config_logic()
@@ -181,6 +183,8 @@ class BadgerOptMonitor(QWidget):
         self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
 
     def init_plots(self, routine, data=None):
+        self.reset_routine_runner()
+
         # Parse routine
         self.routine = routine
         try:
@@ -277,6 +281,9 @@ class BadgerOptMonitor(QWidget):
         self.objs = []
         self.cons = []
         if data is None:
+            self.btn_log.setDisabled(True)
+            self.btn_opt.setDisabled(True)
+            self.enable_auto_range()
             return
 
         for var in self.var_names:
@@ -291,10 +298,12 @@ class BadgerOptMonitor(QWidget):
 
         self.update_curves()
 
+        self.calc_optimals()
+        self.btn_log.setDisabled(False)
+        self.btn_opt.setDisabled(False)
+
     def init_routine_runner(self):
-        if self.routine_runner:
-            self.sig_pause.disconnect()
-            self.sig_stop.disconnect()
+        self.reset_routine_runner()
 
         self.routine_runner = routine_runner = BadgerRoutineRunner(
             self.routine, False)
@@ -306,6 +315,21 @@ class BadgerOptMonitor(QWidget):
 
         self.sig_pause.connect(routine_runner.ctrl_routine)
         self.sig_stop.connect(routine_runner.stop_routine)
+
+    def reset_routine_runner(self):
+        if self.routine_runner:
+            self.sig_pause.disconnect()
+            self.sig_stop.disconnect()
+            self.routine_runner = None
+
+    def calc_optimals(self):
+        rules = [d[next(iter(d))] for d in self.routine['config']['objectives']]
+        self.pf = pf = ParetoFront(rules)
+
+        for i, v in enumerate(self.vars):
+            o = self.objs[i]
+            idx = [i,] + v
+            pf.is_dominated((idx, o))
 
     def start(self):
         self.init_plots(self.routine)
@@ -337,6 +361,13 @@ class BadgerOptMonitor(QWidget):
 
         return False, None
 
+    def enable_auto_range(self):
+        # Enable autorange
+        self.plot_obj.enableAutoRange()
+        self.plot_var.enableAutoRange()
+        if self.con_names:
+            self.plot_con.enableAutoRange()
+
     def update_curves(self):
         for i in range(len(self.obj_names)):
             self.curves_obj[i].setData(np.array(self.objs)[:, i])
@@ -353,11 +384,7 @@ class BadgerOptMonitor(QWidget):
         for i in range(len(self.var_names)):
             self.curves_var[i].setData(_vars[:, i])
 
-        # Enable autorange
-        self.plot_obj.enableAutoRange()
-        self.plot_var.enableAutoRange()
-        if self.con_names:
-            self.plot_con.enableAutoRange()
+        self.enable_auto_range()
 
     def update(self, vars, objs, cons):
         self.vars.append(vars)
@@ -384,6 +411,9 @@ class BadgerOptMonitor(QWidget):
     def env_ready(self, init_vars):
         self.env = self.routine_runner.env
         self.init_vars = init_vars
+
+        self.btn_log.setDisabled(False)
+        self.btn_opt.setDisabled(False)
 
     def routine_finished(self):
         self.running = False
@@ -466,7 +496,13 @@ class BadgerOptMonitor(QWidget):
             self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
 
     def jump_to_optimal(self):
-        pf = self.routine_runner.pf
+        try:
+            pf = self.routine_runner.pf
+        except:
+            pf = self.pf
+        if pf is None:
+            return
+
         idx = pf.pareto_set[0][0]
         self.ins_obj.setValue(idx)
         if self.con_names:
