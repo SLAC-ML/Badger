@@ -30,6 +30,8 @@ class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
     sig_lock = pyqtSignal(bool)  # True: lock GUI, False: unlock GUI
+    sig_new_run = pyqtSignal()
+    sig_run_name = pyqtSignal(str)  # filename of the new run
 
     def __init__(self, callback_inspect=None):
         super().__init__()
@@ -363,6 +365,7 @@ class BadgerOptMonitor(QWidget):
             pf.is_dominated((idx, o))
 
     def start(self):
+        self.sig_new_run.emit()
         self.init_plots(self.routine)
         self.init_routine_runner()
         self.running = True  # if a routine runner is working
@@ -462,7 +465,8 @@ class BadgerOptMonitor(QWidget):
         self.sig_lock.emit(False)
 
         try:
-            archive_run(self.routine_runner.routine, self.routine_runner.data)
+            run = archive_run(self.routine_runner.routine, self.routine_runner.data)
+            self.sig_run_name.emit(run['filename'])
         except Exception as e:
             QMessageBox.critical(self, 'Archive failed!', str(e))
 

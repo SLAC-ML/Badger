@@ -173,6 +173,8 @@ class BadgerHomePage(QWidget):
         self.btn_next.clicked.connect(self.go_next_run)
 
         self.run_monitor.sig_lock.connect(self.toggle_lock)
+        self.run_monitor.sig_new_run.connect(self.new_run)
+        self.run_monitor.sig_run_name.connect(self.run_name)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -232,6 +234,9 @@ class BadgerHomePage(QWidget):
                 self.prev_routine = item
 
     def go_run(self, i):
+        if self.cb_history.currentText() == 'Optimization in progress...':
+            return
+
         if i == -1:
             update_table(self.run_table)
             self.run_monitor.init_plots(self.current_routine)
@@ -295,3 +300,10 @@ class BadgerHomePage(QWidget):
         else:
             self.panel_routine.setDisabled(False)
             self.history_nav_bar.setDisabled(False)
+
+    def new_run(self):
+        self.cb_history.insertItem(0, 'Optimization in progress...')
+        self.cb_history.setCurrentIndex(0)
+
+    def run_name(self, name):
+        self.cb_history.setItemText(0, name)
