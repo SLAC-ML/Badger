@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QTabWidget, QShor
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QComboBox, QStyledItemDelegate, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence, QFont
-import pyqtgraph as pg
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
@@ -173,6 +172,8 @@ class BadgerHomePage(QWidget):
         self.btn_prev.clicked.connect(self.go_prev_run)
         self.btn_next.clicked.connect(self.go_next_run)
 
+        self.btn_run.clicked.connect(self.run_optimization)
+
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
         self.shortcut_go_search.activated.connect(self.go_search)
@@ -199,12 +200,15 @@ class BadgerHomePage(QWidget):
         self.prev_routine = item
 
         routine, timestamp = load_routine(item.routine)
+        self.run_monitor.set_routine(routine)
         self.run_edit.setText(ystring(routine))
         runs = get_runs_by_routine(routine['name'])
 
         self.cb_history.clear()
         if runs:
             self.cb_history.addItems(runs)
+        else:
+            self.run_monitor.plot_run(None)
 
         self.routine_list.itemWidget(item).setStyleSheet(stylesheet_selected)
 
@@ -283,3 +287,6 @@ class BadgerHomePage(QWidget):
             return
 
         self.run_monitor.jump_to_solution(row)
+
+    def run_optimization(self):
+        self.run_monitor.start()
