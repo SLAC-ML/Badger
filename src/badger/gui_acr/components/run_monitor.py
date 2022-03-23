@@ -11,6 +11,21 @@ from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ...archive import archive_run, BADGER_ARCHIVE_ROOT
 
 
+stylesheet_del = '''
+QPushButton:hover:pressed
+{
+    background-color: #C7737B;
+}
+QPushButton:hover
+{
+    background-color: #BF616A;
+}
+QPushButton
+{
+    background-color: #A9444E;
+}
+'''
+
 class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
@@ -126,6 +141,13 @@ class BadgerOptMonitor(QWidget):
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
+        self.btn_del = btn_del = QPushButton('Delete')
+        btn_del.setFixedSize(64, 32)
+        btn_del.setFont(cool_font)
+        btn_del.setStyleSheet(stylesheet_del)
+        # self.btn_edit = btn_edit = QPushButton('Edit')
+        # btn_edit.setFixedSize(64, 32)
+        # btn_edit.setFont(cool_font)
         self.btn_log = btn_log = QPushButton('Logbook')
         btn_log.setFixedSize(64, 32)
         btn_log.setFont(cool_font)
@@ -141,11 +163,14 @@ class BadgerOptMonitor(QWidget):
         btn_set.setFixedSize(64, 32)
         btn_set.setFont(cool_font)
         self.btn_ctrl = btn_ctrl = QPushButton('Pause')
+        btn_ctrl.setDisabled(True)
         btn_ctrl.setFixedSize(64, 32)
         btn_ctrl.setFont(cool_font)
-        self.btn_stop = btn_stop = QPushButton('Stop')
+        self.btn_stop = btn_stop = QPushButton('Run')
         btn_stop.setFixedSize(128, 32)
         btn_stop.setFont(cool_font)
+        hbox_action.addWidget(btn_del)
+        # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
         hbox_action.addWidget(btn_opt)
         hbox_action.addStretch(1)
@@ -177,7 +202,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_opt.clicked.connect(self.jump_to_optimal)
         self.btn_set.clicked.connect(self.set_vars)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
-        self.btn_stop.clicked.connect(self.stop_routine)
+        self.btn_stop.clicked.connect(self.run_stop_routine)
 
         # Visualization
         self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
@@ -282,8 +307,11 @@ class BadgerOptMonitor(QWidget):
         self.objs = []
         self.cons = []
         if data is None:
+            self.btn_del.setDisabled(True)
             self.btn_log.setDisabled(True)
             self.btn_opt.setDisabled(True)
+            self.btn_reset.setDisabled(True)
+            self.btn_set.setDisabled(True)
             self.enable_auto_range()
             return
 
@@ -300,6 +328,7 @@ class BadgerOptMonitor(QWidget):
         self.update_curves()
 
         self.calc_optimals()
+        self.btn_del.setDisabled(False)
         self.btn_log.setDisabled(False)
         self.btn_opt.setDisabled(False)
 
@@ -337,6 +366,8 @@ class BadgerOptMonitor(QWidget):
         self.init_routine_runner()
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
+        self.btn_stop.setText('Stop')
+        self.btn_ctrl.setDisabled(False)
 
     def is_critical(self, cons):
         if not self.con_names:
@@ -418,10 +449,12 @@ class BadgerOptMonitor(QWidget):
 
     def routine_finished(self):
         self.running = False
+        self.btn_ctrl.setText('Pause')
         self.btn_ctrl.setDisabled(True)
-        self.btn_stop.setDisabled(True)
+        self.btn_stop.setText('Run')
         self.btn_reset.setDisabled(False)
         self.btn_set.setDisabled(False)
+        self.btn_del.setDisabled(False)
         try:
             archive_run(self.routine_runner.routine, self.routine_runner.data)
         except Exception as e:
@@ -459,8 +492,11 @@ class BadgerOptMonitor(QWidget):
             self.sig_pause.emit(False)
             self.btn_ctrl.setText('Pause')
 
-    def stop_routine(self):
-        self.sig_stop.emit()
+    def run_stop_routine(self):
+        if self.btn_stop.text() == 'Run':
+            self.start()
+        else:
+            self.sig_stop.emit()
 
     def ins_obj_dragged(self, ins_obj):
         self.ins_var.setValue(ins_obj.value())

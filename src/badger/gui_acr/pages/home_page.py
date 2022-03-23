@@ -131,29 +131,29 @@ class BadgerHomePage(QWidget):
         splitter_run.setSizes([0, 1, 0])  # collapse routine/table by default
 
         # Action bar
-        action_bar = QWidget()
-        hbox_action = QHBoxLayout(action_bar)
-        hbox_action.setContentsMargins(0, 0, 0, 0)
+        # action_bar = QWidget()
+        # hbox_action = QHBoxLayout(action_bar)
+        # hbox_action.setContentsMargins(0, 0, 0, 0)
 
-        cool_font = QFont()
-        cool_font.setWeight(QFont.DemiBold)
-        # cool_font.setPixelSize(16)
+        # cool_font = QFont()
+        # cool_font.setWeight(QFont.DemiBold)
+        # # cool_font.setPixelSize(16)
 
-        self.btn_del = btn_del = QPushButton('Delete')
-        btn_del.setFixedSize(64, 64)
-        btn_del.setFont(cool_font)
-        btn_del.setStyleSheet(stylesheet)
-        self.btn_edit = btn_edit = QPushButton('Edit')
-        btn_edit.setFixedSize(64, 64)
-        btn_edit.setFont(cool_font)
-        self.btn_run = btn_run = QPushButton('Run')
-        btn_run.setFixedSize(128, 64)
-        btn_run.setFont(cool_font)
-        hbox_action.addWidget(btn_del)
-        hbox_action.addStretch(1)
-        hbox_action.addWidget(btn_edit)
-        hbox_action.addWidget(btn_run)
-        vbox_info.addWidget(action_bar)
+        # self.btn_del = btn_del = QPushButton('Delete')
+        # btn_del.setFixedSize(64, 64)
+        # btn_del.setFont(cool_font)
+        # btn_del.setStyleSheet(stylesheet)
+        # self.btn_edit = btn_edit = QPushButton('Edit')
+        # btn_edit.setFixedSize(64, 64)
+        # btn_edit.setFont(cool_font)
+        # self.btn_run = btn_run = QPushButton('Run')
+        # btn_run.setFixedSize(128, 64)
+        # btn_run.setFont(cool_font)
+        # hbox_action.addWidget(btn_del)
+        # hbox_action.addStretch(1)
+        # hbox_action.addWidget(btn_edit)
+        # hbox_action.addWidget(btn_run)
+        # vbox_info.addWidget(action_bar)
 
         # Add panels to splitter
         splitter.addWidget(panel_routine)
@@ -172,7 +172,7 @@ class BadgerHomePage(QWidget):
         self.btn_prev.clicked.connect(self.go_prev_run)
         self.btn_next.clicked.connect(self.go_next_run)
 
-        self.btn_run.clicked.connect(self.run_optimization)
+        # self.btn_run.clicked.connect(self.run_optimization)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
