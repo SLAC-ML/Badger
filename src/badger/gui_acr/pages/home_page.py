@@ -48,7 +48,7 @@ class BadgerHomePage(QWidget):
         vbox.addWidget(splitter, 1)
 
         # Routine panel
-        panel_routine = QWidget()
+        self.panel_routine = panel_routine = QWidget()
         vbox_routine = QVBoxLayout(panel_routine)
 
         # Search bar
@@ -86,7 +86,7 @@ class BadgerHomePage(QWidget):
         vbox_info.addWidget(panel_view)
 
         # History run nav
-        history_nav_bar = QWidget()
+        self.history_nav_bar = history_nav_bar = QWidget()
         hbox_nav = QHBoxLayout(history_nav_bar)
         hbox_nav.setContentsMargins(0, 0, 0, 0)
         vbox_view.addWidget(history_nav_bar)
@@ -172,7 +172,7 @@ class BadgerHomePage(QWidget):
         self.btn_prev.clicked.connect(self.go_prev_run)
         self.btn_next.clicked.connect(self.go_next_run)
 
-        # self.btn_run.clicked.connect(self.run_optimization)
+        self.run_monitor.sig_lock.connect(self.toggle_lock)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -288,5 +288,10 @@ class BadgerHomePage(QWidget):
 
         self.run_monitor.jump_to_solution(row)
 
-    def run_optimization(self):
-        self.run_monitor.start()
+    def toggle_lock(self, lock):
+        if lock:
+            self.panel_routine.setDisabled(True)
+            self.history_nav_bar.setDisabled(True)
+        else:
+            self.panel_routine.setDisabled(False)
+            self.history_nav_bar.setDisabled(False)

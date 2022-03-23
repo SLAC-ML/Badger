@@ -29,6 +29,7 @@ QPushButton
 class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
     sig_stop = pyqtSignal()
+    sig_lock = pyqtSignal(bool)  # True: lock GUI, False: unlock GUI
 
     def __init__(self, callback_inspect=None):
         super().__init__()
@@ -366,8 +367,10 @@ class BadgerOptMonitor(QWidget):
         self.init_routine_runner()
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
+
         self.btn_stop.setText('Stop')
         self.btn_ctrl.setDisabled(False)
+        self.sig_lock.emit(True)
 
     def is_critical(self, cons):
         if not self.con_names:
@@ -455,6 +458,9 @@ class BadgerOptMonitor(QWidget):
         self.btn_reset.setDisabled(False)
         self.btn_set.setDisabled(False)
         self.btn_del.setDisabled(False)
+
+        self.sig_lock.emit(False)
+
         try:
             archive_run(self.routine_runner.routine, self.routine_runner.data)
         except Exception as e:
