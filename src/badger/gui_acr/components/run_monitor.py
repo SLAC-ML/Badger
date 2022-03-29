@@ -171,6 +171,7 @@ class BadgerOptMonitor(QWidget):
         btn_ctrl.setFixedSize(64, 32)
         btn_ctrl.setFont(cool_font)
         self.btn_stop = btn_stop = QPushButton('Run')
+        btn_stop.setDisabled(True)
         btn_stop.setFixedSize(128, 32)
         btn_stop.setFont(cool_font)
         hbox_action.addWidget(btn_del)
@@ -305,6 +306,12 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.setValue(0)
         self.ins_var.setValue(0)
         self.ins_con.setValue(0)
+
+        # Switch run button state
+        if self.routine:
+            self.btn_stop.setDisabled(False)
+        else:
+            self.btn_stop.setDisabled(True)
 
         # Fill in data
         self.data = data
@@ -479,8 +486,10 @@ class BadgerOptMonitor(QWidget):
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
 
+    # Do not show info -- too distracting
     def on_info(self, msg):
-        QMessageBox.information(self, 'Info', msg)
+        pass
+        # QMessageBox.information(self, 'Info', msg)
 
     def logbook(self):
         try:
