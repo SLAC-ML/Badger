@@ -480,3 +480,26 @@ def instantiate_env(env_class, configs, manager=None):
     env = env_class(intf, configs['params'])
 
     return env
+
+
+def get_header(routine):
+    try:
+        obj_names = [next(iter(d))
+                        for d in routine['config']['objectives']]
+    except:
+        obj_names = []
+    try:
+        var_names = [next(iter(d))
+                        for d in routine['config']['variables']]
+    except:
+        var_names = []
+    try:
+        if routine['config']['constraints']:
+            con_names = [next(iter(d))
+                            for d in routine['config']['constraints']]
+        else:
+            con_names = []
+    except:
+        con_names = []
+
+    return obj_names + con_names + var_names
