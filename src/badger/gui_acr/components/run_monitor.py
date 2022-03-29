@@ -34,6 +34,7 @@ class BadgerOptMonitor(QWidget):
     sig_run_name = pyqtSignal(str)  # filename of the new run
     sig_inspect = pyqtSignal(int)  # index of the inspector
     sig_progress = pyqtSignal(list, list, list)  # new evaluated solution
+    sig_del = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -200,6 +201,7 @@ class BadgerOptMonitor(QWidget):
         # Thread runner
         self.thread_pool = QThreadPool(self)
 
+        self.btn_del.clicked.connect(self.delete_run)
         self.btn_log.clicked.connect(self.logbook)
         self.btn_reset.clicked.connect(self.reset_env)
         self.btn_opt.clicked.connect(self.jump_to_optimal)
@@ -617,6 +619,9 @@ class BadgerOptMonitor(QWidget):
             self.ins_var.setValue(idx)
 
             self.sig_inspect.emit(idx)
+
+    def delete_run(self):
+        self.sig_del.emit()
 
     # def closeEvent(self, event):
     #     if not self.running:

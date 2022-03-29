@@ -9,7 +9,7 @@ from ..components.data_table import data_table, update_table, reset_table, add_r
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
 from ..components.run_monitor import BadgerOptMonitor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
-from ...archive import load_run
+from ...archive import load_run, delete_run
 from ...utils import ystring, get_header
 
 
@@ -177,6 +177,7 @@ class BadgerHomePage(QWidget):
         self.run_monitor.sig_new_run.connect(self.new_run)
         self.run_monitor.sig_run_name.connect(self.run_name)
         self.run_monitor.sig_progress.connect(self.progress)
+        self.run_monitor.sig_del.connect(self.delete_run)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -199,9 +200,13 @@ class BadgerHomePage(QWidget):
 
             if self.prev_routine.routine == item.routine:  # click a routine again to deselect
                 self.prev_routine = None
-                return self.load_all_runs()
+                self.current_routine = None
+                self.load_all_runs()
+                if not self.cb_history.count():
+                    self.go_run(-1)  # sometimes we need to trigger this manually
+                return
 
-        self.prev_routine = item
+        self.prev_routine = item  # note that prev_routine is an item!
 
         routine, timestamp = load_routine(item.routine)
         self.current_routine = routine
@@ -242,6 +247,8 @@ class BadgerHomePage(QWidget):
         if i == -1:
             update_table(self.run_table)
             self.run_monitor.init_plots(self.current_routine)
+            if not self.current_routine:
+                self.run_edit.clear()
             return
 
         run_filename = self.cb_history.currentText()
@@ -316,3 +323,12 @@ class BadgerHomePage(QWidget):
 
     def progress(self, vars, objs, cons):
         add_row(self.run_table, objs + cons + vars)
+
+    def delete_run(self):
+        run_name = self.cb_history.currentText()
+        idx = self.cb_history.currentIndex()
+        # Reset current routine if no routine is selected
+        if not self.prev_routine:
+            self.current_routine = None
+        self.cb_history.removeItem(idx)
+        delete_run(run_name)
