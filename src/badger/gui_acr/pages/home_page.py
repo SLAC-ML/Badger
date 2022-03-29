@@ -5,12 +5,12 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QComboBox, QStyledItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence, QFont
 from ..components.search_bar import search_bar
-from ..components.data_table import data_table, update_table
+from ..components.data_table import data_table, update_table, reset_table, add_row
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
 from ..components.run_monitor import BadgerOptMonitor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run
-from ...utils import ystring
+from ...utils import ystring, get_header
 
 
 stylesheet = '''
@@ -116,7 +116,7 @@ class BadgerHomePage(QWidget):
         self.run_view = run_view = QWidget()  # for consistent bg
         vbox_run_view = QVBoxLayout(run_view)
         vbox_run_view.setContentsMargins(0, 10, 0, 0)
-        self.run_monitor = run_monitor = BadgerOptMonitor(self.inspect_solution)
+        self.run_monitor = run_monitor = BadgerOptMonitor()
         vbox_run_view.addWidget(run_monitor)
 
         # Data table
@@ -172,9 +172,11 @@ class BadgerHomePage(QWidget):
         self.btn_prev.clicked.connect(self.go_prev_run)
         self.btn_next.clicked.connect(self.go_next_run)
 
+        self.run_monitor.sig_inspect.connect(self.inspect_solution)
         self.run_monitor.sig_lock.connect(self.toggle_lock)
         self.run_monitor.sig_new_run.connect(self.new_run)
         self.run_monitor.sig_run_name.connect(self.run_name)
+        self.run_monitor.sig_progress.connect(self.progress)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -244,6 +246,7 @@ class BadgerHomePage(QWidget):
 
         run_filename = self.cb_history.currentText()
         run = load_run(run_filename)
+        self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'])
 
@@ -305,5 +308,11 @@ class BadgerHomePage(QWidget):
         self.cb_history.insertItem(0, 'Optimization in progress...')
         self.cb_history.setCurrentIndex(0)
 
+        header = get_header(self.current_routine)
+        reset_table(self.run_table, header)
+
     def run_name(self, name):
         self.cb_history.setItemText(0, name)
+
+    def progress(self, vars, objs, cons):
+        add_row(self.run_table, objs + cons + vars)

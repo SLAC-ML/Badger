@@ -32,15 +32,15 @@ class BadgerOptMonitor(QWidget):
     sig_lock = pyqtSignal(bool)  # True: lock GUI, False: unlock GUI
     sig_new_run = pyqtSignal()
     sig_run_name = pyqtSignal(str)  # filename of the new run
+    sig_inspect = pyqtSignal(int)  # index of the inspector
+    sig_progress = pyqtSignal(list, list, list)  # new evaluated solution
 
-    def __init__(self, callback_inspect=None):
+    def __init__(self):
         super().__init__()
         # self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         # For plot type switching
         self.x_plot_type = 0  # 0: raw, 1: normalized
-        # Inspector pos change callback
-        self.callback_inspect = callback_inspect
         # Routine info
         self.routine = None
         self.var_names = []
@@ -430,6 +430,7 @@ class BadgerOptMonitor(QWidget):
         self.cons.append(cons)
 
         self.update_curves()
+        self.sig_progress.emit(vars, objs, cons)
 
         # Check critical condition
         critical, msg = self.is_critical(cons)
@@ -529,8 +530,7 @@ class BadgerOptMonitor(QWidget):
             self.ins_con.setValue(value)
         self.ins_var.setValue(value)
 
-        if self.callback_inspect:
-            self.callback_inspect(value)
+        self.sig_inspect.emit(value)
 
     def reset_env(self):
         reply = QMessageBox.question(self,
@@ -560,8 +560,7 @@ class BadgerOptMonitor(QWidget):
             self.ins_con.setValue(idx)
         self.ins_var.setValue(idx)
 
-        if self.callback_inspect:
-            self.callback_inspect(idx)
+        self.sig_inspect.emit(idx)
 
     def jump_to_solution(self, idx):
         self.ins_obj.setValue(idx)
@@ -617,8 +616,7 @@ class BadgerOptMonitor(QWidget):
                 self.ins_con.setValue(idx)
             self.ins_var.setValue(idx)
 
-            if self.callback_inspect:
-                self.callback_inspect(idx)
+            self.sig_inspect.emit(idx)
 
     # def closeEvent(self, event):
     #     if not self.running:
