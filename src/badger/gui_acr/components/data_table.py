@@ -56,6 +56,25 @@ def update_table(table, data=None):
     return table
 
 
+def reset_table(table, header):
+    table.setRowCount(0)
+    table.horizontalHeader().setVisible(False)
+    table.setHorizontalHeaderLabels(header)
+    table.horizontalHeader().setVisible(True)
+
+    return table
+
+
+def add_row(table, row):
+    r = table.rowCount()
+    table.insertRow(r)
+    for i, v in enumerate(row):
+        table.setItem(r, i, QTableWidgetItem(f'{v:g}'))
+    table.setVerticalHeaderItem(r, QTableWidgetItem(str(r)))
+
+    return table
+
+
 def data_table(data=None):
     table = TableWithCopy()
     table.setAlternatingRowColors(True)
