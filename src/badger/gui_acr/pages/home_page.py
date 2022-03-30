@@ -1,16 +1,17 @@
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QTabWidget, QShortcut
+from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QComboBox, QStyledItemDelegate, QLabel
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence, QFont
+from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
+from ..components.tree_view import tree_view, update_tree_view
 from ..components.run_monitor import BadgerOptMonitor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run, delete_run
-from ...utils import ystring, get_header
+from ...utils import ystring, get_header, run_names_to_dict
 
 
 stylesheet = '''
@@ -105,6 +106,10 @@ class BadgerHomePage(QWidget):
         hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
 
+        # History tree view
+        self.run_tree = run_tree = tree_view()
+        vbox_view.addWidget(run_tree)
+
         # Routine edit + run monitor + data table
         self.splitter_run = splitter_run = QSplitter(Qt.Vertical)
         splitter_run.setStretchFactor(0, 0)
@@ -190,6 +195,8 @@ class BadgerHomePage(QWidget):
         runs = get_runs()
         self.cb_history.clear()
         self.cb_history.addItems(runs)
+        update_tree_view(self.run_tree, run_names_to_dict(runs))
+        self.select_run_in_tree_view(runs[0])
 
     def select_routine(self, item):
         if self.prev_routine:
@@ -214,8 +221,10 @@ class BadgerHomePage(QWidget):
         runs = get_runs_by_routine(routine['name'])
 
         self.cb_history.clear()
+        update_tree_view(self.run_tree, run_names_to_dict(runs))
         if runs:
             self.cb_history.addItems(runs)
+            self.select_run_in_tree_view(runs[0])
         else:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
 
@@ -252,6 +261,7 @@ class BadgerHomePage(QWidget):
             return
 
         run_filename = self.cb_history.currentText()
+        self.select_run_in_tree_view(run_filename)
         run = load_run(run_filename)
         self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
@@ -332,3 +342,10 @@ class BadgerHomePage(QWidget):
             self.current_routine = None
         self.cb_history.removeItem(idx)
         delete_run(run_name)
+
+    def select_run_in_tree_view(self, run_name):
+        items = self.run_tree.findItems(run_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
+        try:
+            self.run_tree.setCurrentItem(items[0])
+        except:
+            pass
