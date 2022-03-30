@@ -503,3 +503,33 @@ def get_header(routine):
         con_names = []
 
     return obj_names + con_names + var_names
+
+
+def run_names_to_dict(run_names):
+    runs = {}
+    for name in run_names:
+        tokens = name.split('-')
+        year = tokens[1]
+        month = tokens[2]
+        day = tokens[3]
+
+        try:
+            year_dict = runs[year]
+        except:
+            runs[year] = {}
+            year_dict = runs[year]
+        key_month = f'{year}-{month}'
+        try:
+            month_dict = year_dict[key_month]
+        except:
+            year_dict[key_month] = {}
+            month_dict = year_dict[key_month]
+        key_day = f'{year}-{month}-{day}'
+        try:
+            day_list = month_dict[key_day]
+        except:
+            month_dict[key_day] = []
+            day_list = month_dict[key_day]
+        day_list.append(name)
+
+    return runs
