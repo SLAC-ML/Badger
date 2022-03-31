@@ -2,11 +2,12 @@ import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QComboBox, QStyledItemDelegate, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
+from ..components.tree_combo_box import TreeComboBox
 from ..components.tree_view import tree_view, update_tree_view
 from ..components.run_monitor import BadgerOptMonitor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
@@ -93,8 +94,12 @@ class BadgerHomePage(QWidget):
         vbox_view.addWidget(history_nav_bar)
 
         label_nav = QLabel('History Run')
-        self.cb_history = cb_history = QComboBox()
-        cb_history.setItemDelegate(QStyledItemDelegate())
+        self.cb_history = cb_history = TreeComboBox()
+        # cb_history.setEditable(True)
+        self.run_tree = run_tree = tree_view()
+        self.cb_history.setModel(run_tree.model())
+        self.cb_history.setView(run_tree)
+        # cb_history.setItemDelegate(QStyledItemDelegate())
         self.btn_prev = btn_prev = QPushButton('<')
         self.btn_next = btn_next = QPushButton('>')
         btn_prev.setFixedWidth(32)
@@ -105,10 +110,6 @@ class BadgerHomePage(QWidget):
         hbox_nav.addWidget(cb_history, 1)
         hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
-
-        # History tree view
-        self.run_tree = run_tree = tree_view()
-        vbox_view.addWidget(run_tree)
 
         # Routine edit + run monitor + data table
         self.splitter_run = splitter_run = QSplitter(Qt.Vertical)
@@ -193,10 +194,10 @@ class BadgerHomePage(QWidget):
 
     def load_all_runs(self):
         runs = get_runs()
-        self.cb_history.clear()
-        self.cb_history.addItems(runs)
         update_tree_view(self.run_tree, run_names_to_dict(runs))
         self.select_run_in_tree_view(runs[0])
+        # self.cb_history.setCurrentText(runs[0])
+        # self.cb_history.setCurrentIndex(idx.row())
 
     def select_routine(self, item):
         if self.prev_routine:
@@ -220,10 +221,8 @@ class BadgerHomePage(QWidget):
         self.run_edit.setText(ystring(routine))
         runs = get_runs_by_routine(routine['name'])
 
-        self.cb_history.clear()
         update_tree_view(self.run_tree, run_names_to_dict(runs))
         if runs:
-            self.cb_history.addItems(runs)
             self.select_run_in_tree_view(runs[0])
         else:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
@@ -261,8 +260,11 @@ class BadgerHomePage(QWidget):
             return
 
         run_filename = self.cb_history.currentText()
-        self.select_run_in_tree_view(run_filename)
-        run = load_run(run_filename)
+        # self.select_run_in_tree_view(run_filename)
+        try:
+            run = load_run(run_filename)
+        except:
+            return
         self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'])
@@ -347,5 +349,11 @@ class BadgerHomePage(QWidget):
         items = self.run_tree.findItems(run_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
         try:
             self.run_tree.setCurrentItem(items[0])
+            idx_root = self.cb_history.rootModelIndex()
+            self.cb_history.setRootModelIndex(self.run_tree.currentIndex().parent())
+            self.cb_history.setCurrentIndex(self.run_tree.currentIndex().row())
+            # self.run_tree.setCurrentItem(self.run_tree.invisibleRootItem())
+            self.cb_history.setRootModelIndex(QModelIndex())
+            return self.run_tree.currentIndex()
         except:
-            pass
+            return self.run_tree.currentIndex()
