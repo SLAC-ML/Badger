@@ -1,32 +1,24 @@
-from PyQt5.QtWidgets import QComboBox, QTreeView, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QComboBox, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import QModelIndex, Qt
 from ...utils import run_names_to_dict
 
 
 # Modified based on the following solution
 # https://stackoverflow.com/a/9672359/4263605
-class TreeComboBox(QComboBox):
+class HistoryNavigator(QComboBox):
     def __init__(self):
-        super(TreeComboBox, self).__init__()
-        # self.tree = QTreeWidget()
-        # self.setView(QTreeWidget())
-        # self.setModel(self.tree.model())
+        super().__init__()
+        # self.view() = QTreeWidget()
+        self.setView(QTreeWidget())
+        self.setModel(self.view().model())
 
-        # self.view().setHeaderHidden(True)
+        self.view().setHeaderHidden(True)
+        self.view().setFixedHeight(256)
         # self.view().setItemsExpandable(False)
         # self.view().setRootIsDecorated(False)
-        # self.view().setFixedHeight(256)
-
-    def setModel(self, model):
-        super(TreeComboBox, self).setModel(model)
-        parent, row = self._firstSelectableItem()
-        if row is not None:
-            self.setRootModelIndex(parent)
-            self.setCurrentIndex(row)
 
     def showPopup(self):
-        self.setRootModelIndex(QModelIndex())
-        # self.view().expandAll()
+        self.setRootModelIndex(QModelIndex())  # key to success!
         QComboBox.showPopup(self)
 
     def _firstSelectableItem(self, parent=QModelIndex()):
@@ -35,7 +27,7 @@ class TreeComboBox(QComboBox):
         """
         for i in range(self.model().rowCount(parent)):
             itemIndex = self.model().index(i, 0, parent)
-            if self.model().itemFromIndex(itemIndex).isSelectable():
+            if self.view().itemFromIndex(itemIndex).flags() & Qt.ItemIsSelectable:
                 return parent, i
             else:
                 itemIndex, row = self._firstSelectableItem(itemIndex)
@@ -44,7 +36,7 @@ class TreeComboBox(QComboBox):
         return parent, None
 
     def updateItems(self, runs=None):
-        self.tree.clear()
+        self.view().clear()
 
         if runs is None:
             return
@@ -81,6 +73,11 @@ class TreeComboBox(QComboBox):
                     item_month.addChild(item_day)
                 item_year.addChild(item_month)
             items.append(item_year)
-        self.tree.insertTopLevelItems(0, items)
+        self.view().insertTopLevelItems(0, items)
         for item in first_items:
             item.setExpanded(True)
+
+        parent, row = self._firstSelectableItem()  # key to success!
+        if row is not None:
+            self.setRootModelIndex(parent)
+            self.setCurrentIndex(row)
