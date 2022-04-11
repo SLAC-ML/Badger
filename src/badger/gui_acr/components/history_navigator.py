@@ -16,6 +16,7 @@ class HistoryNavigator(QComboBox):
         self.view().setFixedHeight(256)
         # self.view().setItemsExpandable(False)
         # self.view().setRootIsDecorated(False)
+        self.runs = None  # all runs to be shown in combobox
 
     def showPopup(self):
         self.setRootModelIndex(QModelIndex())  # key to success!
@@ -35,9 +36,65 @@ class HistoryNavigator(QComboBox):
                     return itemIndex, row
         return parent, None
 
+    def currentIsFirst(self):
+        if not self.runs:
+            return True
+
+        run = self.currentText()
+        try:
+            idx = self.runs.index(run)
+            if idx == 0:
+                return True
+            else:
+                return False
+        except:  # run is empty string
+            return True
+
+    def currentIsLast(self):
+        if not self.runs:
+            return True
+
+        run = self.currentText()
+        try:
+            idx = self.runs.index(run)
+            tot = len(self.runs)
+            if idx == tot - 1:
+                return True
+            else:
+                return False
+        except:  # run is empty string
+            return True
+
+    def _firstMatchingSelectableItem(self, text, parent=QModelIndex()):
+        for i in range(self.model().rowCount(parent)):
+            itemIndex = self.model().index(i, 0, parent)
+            item = self.view().itemFromIndex(itemIndex)
+            if (item.flags() & Qt.ItemIsSelectable) and item.text(0) == text:
+                return parent, i
+            else:
+                itemIndex, row = self._firstMatchingSelectableItem(text, itemIndex)
+                if row is not None:
+                    return itemIndex, row
+        return parent, None
+
+    def _nextSelectableItem(self, parent=QModelIndex()):
+        run_curr = self.currentText()
+        idx = self.runs.index(run_curr)
+        run_next = self.runs[idx + 1]
+
+        return self._firstMatchingSelectableItem(run_next)
+
+    def _previousSelectableItem(self, parent=QModelIndex()):
+        run_curr = self.currentText()
+        idx = self.runs.index(run_curr)
+        run_prev = self.runs[idx - 1]
+
+        return self._firstMatchingSelectableItem(run_prev)
+
     def updateItems(self, runs=None):
         self.view().clear()
 
+        self.runs = runs  # store the runs for nav
         if runs is None:
             return
 
@@ -78,6 +135,18 @@ class HistoryNavigator(QComboBox):
             item.setExpanded(True)
 
         parent, row = self._firstSelectableItem()  # key to success!
+        if row is not None:
+            self.setRootModelIndex(parent)
+            self.setCurrentIndex(row)
+
+    def selectNextItem(self):
+        parent, row = self._nextSelectableItem()
+        if row is not None:
+            self.setRootModelIndex(parent)
+            self.setCurrentIndex(row)
+
+    def selectPreviousItem(self):
+        parent, row = self._previousSelectableItem()
         if row is not None:
             self.setRootModelIndex(parent)
             self.setCurrentIndex(row)

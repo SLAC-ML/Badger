@@ -212,6 +212,8 @@ class BadgerHomePage(QWidget):
         self.run_edit.setText(ystring(routine))
         runs = get_runs_by_routine(routine['name'])
         self.cb_history.updateItems(runs)
+        if not self.cb_history.count():
+            self.go_run(-1)  # sometimes we need to trigger this manually
 
         if not runs:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
@@ -241,6 +243,9 @@ class BadgerHomePage(QWidget):
         if self.cb_history.currentText() == 'Optimization in progress...':
             return
 
+        self.btn_prev.setDisabled(self.cb_history.currentIsFirst())
+        self.btn_next.setDisabled(self.cb_history.currentIsLast())
+
         if i == -1:
             update_table(self.run_table)
             self.run_monitor.init_plots(self.current_routine)
@@ -256,27 +261,13 @@ class BadgerHomePage(QWidget):
         self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'])
-
-        idx = self.cb_history.currentIndex()
-        if idx == 0:
-            self.btn_prev.setDisabled(True)
-        else:
-            self.btn_prev.setDisabled(False)
-        n = self.cb_history.count()
-        if idx == n - 1:
-            self.btn_next.setDisabled(True)
-        else:
-            self.btn_next.setDisabled(False)
-
         self.run_edit.setText(ystring(run['routine']))
 
     def go_prev_run(self):
-        idx = self.cb_history.currentIndex()
-        self.cb_history.setCurrentIndex(idx - 1)
+        self.cb_history.selectPreviousItem()
 
     def go_next_run(self):
-        idx = self.cb_history.currentIndex()
-        self.cb_history.setCurrentIndex(idx + 1)
+        self.cb_history.selectNextItem()
 
     def inspect_solution(self, idx):
         self.run_table.selectRow(idx)
