@@ -323,9 +323,11 @@ class BadgerHomePage(QWidget):
 
     def delete_run(self):
         run_name = self.cb_history.currentText()
-        idx = self.cb_history.currentIndex()
+        delete_run(run_name)
         # Reset current routine if no routine is selected
         if not self.prev_routine:
             self.current_routine = None
-        self.cb_history.removeItem(idx)
-        delete_run(run_name)
+            runs = get_runs()
+        else:
+            runs = get_runs_by_routine(self.current_routine['name'])
+        self.cb_history.updateItems(runs)
