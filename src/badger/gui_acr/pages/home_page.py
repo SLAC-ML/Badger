@@ -310,7 +310,13 @@ class BadgerHomePage(QWidget):
         reset_table(self.run_table, header)
 
     def run_name(self, name):
-        self.cb_history.setItemText(0, name)
+        if self.prev_routine:
+            runs = get_runs_by_routine(self.current_routine['name'])
+        else:
+            runs = get_runs()
+        # Flag will be reset once plots are initialized
+        self.run_monitor.reset_runner_when_init_plot = False
+        self.cb_history.updateItems(runs)
 
     def progress(self, vars, objs, cons):
         add_row(self.run_table, objs + cons + vars)

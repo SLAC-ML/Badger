@@ -60,6 +60,7 @@ class BadgerOptMonitor(QWidget):
         self.thread_pool = None
         self.routine_runner = None
         self.running = False
+        self.reset_runner_when_init_plot = True
         # Analysis tool for history runs
         self.pf = None
 
@@ -214,7 +215,10 @@ class BadgerOptMonitor(QWidget):
         self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
 
     def init_plots(self, routine, data=None):
-        self.reset_routine_runner()
+        if self.reset_runner_when_init_plot:
+            self.reset_routine_runner()
+        else:
+            self.reset_runner_when_init_plot = True
 
         # Parse routine
         self.routine = routine
@@ -318,12 +322,13 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
+        if self.routine_runner is None:
+            self.btn_reset.setDisabled(True)
+            self.btn_set.setDisabled(True)
         if data is None:
             self.btn_del.setDisabled(True)
             self.btn_log.setDisabled(True)
             self.btn_opt.setDisabled(True)
-            self.btn_reset.setDisabled(True)
-            self.btn_set.setDisabled(True)
             self.enable_auto_range()
             return
 
