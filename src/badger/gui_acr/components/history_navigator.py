@@ -13,7 +13,7 @@ class HistoryNavigator(QComboBox):
         self.setModel(self.view().model())
 
         self.view().setHeaderHidden(True)
-        self.view().setFixedHeight(256)
+        self.view().setMinimumHeight(256)
         # self.view().setItemsExpandable(False)
         # self.view().setRootIsDecorated(False)
         self.runs = None  # all runs to be shown in combobox
