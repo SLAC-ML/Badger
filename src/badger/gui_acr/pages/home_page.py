@@ -10,6 +10,7 @@ from ..components.routine_item import routine_item, stylesheet_normal, styleshee
 from ..components.history_navigator import HistoryNavigator
 from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
+from ..components.status_bar import BadgerStatusBar
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run, delete_run
 from ...utils import ystring, get_header
@@ -164,6 +165,10 @@ class BadgerHomePage(QWidget):
         splitter.addWidget(panel_routine)
         splitter.addWidget(panel_info)
 
+        self.status_bar = status_bar = BadgerStatusBar()
+        status_bar.set_summary('Badger is ready!')
+        vbox_view.addWidget(status_bar)
+
     def config_logic(self):
         self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
@@ -256,6 +261,9 @@ class BadgerHomePage(QWidget):
             self.run_monitor.init_plots(self.current_routine)
             if not self.current_routine:
                 self.routine_editor.clear()
+                self.status_bar.set_summary('no active routine')
+            else:
+                self.status_bar.set_summary(f'current routine: {self.current_routine["name"]}')
             return
 
         run_filename = self.cb_history.currentText()
@@ -267,6 +275,7 @@ class BadgerHomePage(QWidget):
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'], run_filename)
         self.routine_editor.set_routine(run['routine'])
+        self.status_bar.set_summary(f'current routine: {self.current_routine["name"]}')
 
     def go_prev_run(self):
         self.cb_history.selectPreviousItem()
