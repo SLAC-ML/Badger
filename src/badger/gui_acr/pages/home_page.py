@@ -260,7 +260,7 @@ class BadgerHomePage(QWidget):
             return
         self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
-        self.run_monitor.init_plots(run['routine'], run['data'])
+        self.run_monitor.init_plots(run['routine'], run['data'], run_filename)
         self.run_edit.setText(ystring(run['routine']))
 
     def go_prev_run(self):
@@ -314,8 +314,6 @@ class BadgerHomePage(QWidget):
             runs = get_runs_by_routine(self.current_routine['name'])
         else:
             runs = get_runs()
-        # Flag will be reset once plots are initialized
-        self.run_monitor.reset_runner_when_init_plot = False
         self.cb_history.updateItems(runs)
 
     def progress(self, vars, objs, cons):

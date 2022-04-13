@@ -22,6 +22,7 @@ class BadgerRoutineRunner(QRunnable):
         self.signals = BadgerRoutineSignals()
 
         self.routine = routine
+        self.run_filename = None
         self.var_names = var_names = [next(iter(d)) for d in routine['config']['variables']]
         self.obj_names = obj_names = [next(iter(d)) for d in routine['config']['objectives']]
         if routine['config']['constraints']:

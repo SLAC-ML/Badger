@@ -60,7 +60,6 @@ class BadgerOptMonitor(QWidget):
         self.thread_pool = None
         self.routine_runner = None
         self.running = False
-        self.reset_runner_when_init_plot = True
         # Analysis tool for history runs
         self.pf = None
 
@@ -214,12 +213,7 @@ class BadgerOptMonitor(QWidget):
         # Visualization
         self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
 
-    def init_plots(self, routine, data=None):
-        if self.reset_runner_when_init_plot:
-            self.reset_routine_runner()
-        else:
-            self.reset_runner_when_init_plot = True
-
+    def init_plots(self, routine, data=None, run_filename=None):
         # Parse routine
         self.routine = routine
         try:
@@ -322,7 +316,10 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
-        if self.routine_runner is None:
+        if self.routine_runner and self.routine_runner.run_filename == run_filename:
+            self.btn_reset.setDisabled(False)
+            self.btn_set.setDisabled(False)
+        else:
             self.btn_reset.setDisabled(True)
             self.btn_set.setDisabled(True)
         if data is None:
@@ -481,6 +478,7 @@ class BadgerOptMonitor(QWidget):
 
         try:
             run = archive_run(self.routine_runner.routine, self.routine_runner.data)
+            self.routine_runner.run_filename = run['filename']
             self.sig_run_name.emit(run['filename'])
         except Exception as e:
             QMessageBox.critical(self, 'Archive failed!', str(e))
