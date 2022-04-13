@@ -9,6 +9,7 @@ from ..components.data_table import data_table, update_table, reset_table, add_r
 from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
 from ..components.history_navigator import HistoryNavigator
 from ..components.run_monitor import BadgerOptMonitor
+from ..components.routine_editor import BadgerRoutineEditor
 from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
 from ...archive import load_run, delete_run
 from ...utils import ystring, get_header
@@ -115,17 +116,21 @@ class BadgerHomePage(QWidget):
         # Run monitor
         self.run_view = run_view = QWidget()  # for consistent bg
         vbox_run_view = QVBoxLayout(run_view)
-        vbox_run_view.setContentsMargins(0, 10, 0, 0)
+        vbox_run_view.setContentsMargins(0, 10, 0, 10)
         self.run_monitor = run_monitor = BadgerOptMonitor()
         vbox_run_view.addWidget(run_monitor)
 
         # Data table
         self.run_table = run_table = data_table()
 
-        # Routine edit
-        self.run_edit = run_edit = QTextEdit()
+        # Routine view
+        self.routine_view = routine_view = QWidget()  # for consistent bg
+        vbox_routine_view = QVBoxLayout(routine_view)
+        vbox_routine_view.setContentsMargins(0, 0, 0, 10)
+        self.routine_editor = routine_editor = BadgerRoutineEditor()
+        vbox_routine_view.addWidget(routine_editor)
 
-        splitter_run.addWidget(run_edit)
+        splitter_run.addWidget(routine_view)
         splitter_run.addWidget(run_view)
         splitter_run.addWidget(run_table)
         splitter_run.setSizes([0, 1, 0])  # collapse routine/table by default
@@ -209,7 +214,7 @@ class BadgerHomePage(QWidget):
 
         routine, timestamp = load_routine(item.routine)
         self.current_routine = routine
-        self.run_edit.setText(ystring(routine))
+        self.routine_editor.set_routine(routine)
         runs = get_runs_by_routine(routine['name'])
         self.cb_history.updateItems(runs)
         if not self.cb_history.count():
@@ -250,7 +255,7 @@ class BadgerHomePage(QWidget):
             update_table(self.run_table)
             self.run_monitor.init_plots(self.current_routine)
             if not self.current_routine:
-                self.run_edit.clear()
+                self.routine_editor.clear()
             return
 
         run_filename = self.cb_history.currentText()
@@ -261,7 +266,7 @@ class BadgerHomePage(QWidget):
         self.current_routine = run['routine']  # update the current routine
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'], run_filename)
-        self.run_edit.setText(ystring(run['routine']))
+        self.routine_editor.set_routine(run['routine'])
 
     def go_prev_run(self):
         self.cb_history.selectPreviousItem()

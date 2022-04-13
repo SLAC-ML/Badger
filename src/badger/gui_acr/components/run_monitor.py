@@ -185,8 +185,8 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(btn_stop)
 
         vbox.addWidget(config_bar)
-        vbox.addWidget(action_bar)
         vbox.addWidget(monitor)
+        vbox.addWidget(action_bar)
 
     def config_logic(self):
         # Sync the inspector lines
