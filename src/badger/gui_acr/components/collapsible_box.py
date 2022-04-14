@@ -14,6 +14,7 @@ class CollapsibleBox(QtWidgets.QWidget):
         super(CollapsibleBox, self).__init__(parent)
 
         self.title = title
+        self.duration = 100
 
         cool_font = QtGui.QFont()
         cool_font.setWeight(QtGui.QFont.DemiBold)
@@ -85,13 +86,13 @@ class CollapsibleBox(QtWidgets.QWidget):
         content_height = layout.sizeHint().height()
         for i in range(self.toggle_animation.animationCount()):
             animation = self.toggle_animation.animationAt(i)
-            animation.setDuration(100)
+            animation.setDuration(self.duration)
             animation.setStartValue(collapsed_height)
             animation.setEndValue(collapsed_height + content_height)
 
         content_animation = self.toggle_animation.animationAt(
             self.toggle_animation.animationCount() - 1
         )
-        content_animation.setDuration(100)
+        content_animation.setDuration(self.duration)
         content_animation.setStartValue(0)
         content_animation.setEndValue(content_height)
