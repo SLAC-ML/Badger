@@ -38,7 +38,7 @@ class BadgerRoutineEditor(QWidget):
         scroll_area.setWidget(routine_page)
         stacks.addWidget(scroll_area)
 
-        stacks.setCurrentIndex(0)
+        stacks.setCurrentIndex(1)
         vbox.addWidget(stacks)
 
         # Action bar
@@ -63,6 +63,7 @@ class BadgerRoutineEditor(QWidget):
 
     def set_routine(self, routine):
         self.routine_edit.setText(ystring(routine))
+        self.routine_page.refresh_ui(routine)
 
     def edit_routine(self):
         self.stacks.setCurrentIndex(1)
