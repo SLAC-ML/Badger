@@ -5,7 +5,7 @@ import sqlite3
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, instantiate_env
-from ...db import save_routine
+from ...db import save_routine, remove_routine
 from .variable_item import variable_item
 from .objective_item import objective_item
 from .constraint_item import constraint_item
@@ -536,5 +536,11 @@ class BadgerRoutinePage(QWidget):
         except sqlite3.IntegrityError:
             return QMessageBox.critical(self, 'Error!',
                 f'Routine {routine["name"]} already existed in the database! Please choose another name.')
+
+        return 0
+
+    def delete(self):
+        name = self.edit_save.text() or self.edit_save.placeholderText()
+        remove_routine(name)
 
         return 0

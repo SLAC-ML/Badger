@@ -2,7 +2,7 @@ import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
@@ -32,6 +32,8 @@ QPushButton
 '''
 
 class BadgerHomePage(QWidget):
+    sig_routine_activated = pyqtSignal(bool)
+
     def __init__(self):
         super().__init__()
 
@@ -190,6 +192,8 @@ class BadgerHomePage(QWidget):
         self.run_monitor.sig_del.connect(self.delete_run)
 
         self.routine_editor.sig_saved.connect(self.routine_saved)
+        self.routine_editor.sig_deleted.connect(self.routine_deleted)
+        self.sig_routine_activated.connect(self.routine_editor.toggle_del_btn)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -215,9 +219,11 @@ class BadgerHomePage(QWidget):
                 self.load_all_runs()
                 if not self.cb_history.count():
                     self.go_run(-1)  # sometimes we need to trigger this manually
+                self.sig_routine_activated.emit(False)
                 return
 
         self.prev_routine = item  # note that prev_routine is an item!
+        self.sig_routine_activated.emit(True)
 
         routine, timestamp = load_routine(item.routine)
         self.current_routine = routine
@@ -349,3 +355,14 @@ class BadgerHomePage(QWidget):
     def routine_saved(self):
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
+
+    def routine_deleted(self):
+        keyword = self.sbar.text()
+        self.build_routine_list(keyword)
+
+        self.prev_routine = None
+        self.current_routine = None
+        self.load_all_runs()
+        if not self.cb_history.count():
+            self.go_run(-1)  # sometimes we need to trigger this manually
+        self.sig_routine_activated.emit(False)

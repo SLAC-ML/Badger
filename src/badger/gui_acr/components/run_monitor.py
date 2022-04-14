@@ -145,8 +145,8 @@ class BadgerOptMonitor(QWidget):
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
-        self.btn_del = btn_del = QPushButton('Delete')
-        btn_del.setFixedSize(64, 32)
+        self.btn_del = btn_del = QPushButton('Delete Run')
+        btn_del.setFixedSize(128, 32)
         btn_del.setFont(cool_font)
         btn_del.setStyleSheet(stylesheet_del)
         # self.btn_edit = btn_edit = QPushButton('Edit')

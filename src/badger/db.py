@@ -41,6 +41,30 @@ def save_routine(routine):
     con.close()
 
 
+def remove_routine(name, remove_runs=False):
+    db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
+
+    con = sqlite3.connect(db_routine)
+    cur = con.cursor()
+
+    cur.execute(f'delete from routine where name = "{name}"')
+
+    con.commit()
+    con.close()
+
+    if remove_runs:
+        # Remove all related run records
+        db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
+
+        con = sqlite3.connect(db_run)
+        cur = con.cursor()
+
+        cur.execute(f'delete from run where routine = "{name}"')
+
+        con.commit()
+        con.close()
+
+
 def load_routine(name):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
