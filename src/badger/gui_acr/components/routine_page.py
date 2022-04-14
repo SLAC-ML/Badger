@@ -176,8 +176,7 @@ class BadgerRoutinePage(QWidget):
         self.edit_save.setText(name)
         self.check_save.setChecked(False)
 
-        if self.script:
-            self.algo_box.check_use_script.setChecked(True)
+        self.algo_box.check_use_script.setChecked(not not self.script)
 
     def select_algo(self, i):
         # Reset the script
