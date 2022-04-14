@@ -29,7 +29,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         edit_var_col = QWidget()
         vbox_var_edit = QVBoxLayout(edit_var_col)
-        vbox_var_edit.setContentsMargins(0, 0, 0, 8)
+        vbox_var_edit.setContentsMargins(0, 0, 0, 0)
         action_var = QWidget()
         hbox_action_var = QHBoxLayout(action_var)
         hbox_action_var.setContentsMargins(0, 0, 0, 0)
@@ -49,6 +49,7 @@ class BadgerConfigBox(CollapsibleBox):
         hbox_action_var.addStretch()
         hbox_action_var.addWidget(check_only_var)
         self.list_var = QListWidget()
+        self.list_var.setViewportMargins(2, 2, 17, 2)
         vbox_var_edit.addWidget(self.list_var)
         hbox_var.addWidget(edit_var_col)
 
@@ -68,7 +69,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         edit_obj_col = QWidget()
         vbox_obj_edit = QVBoxLayout(edit_obj_col)
-        vbox_obj_edit.setContentsMargins(0, 0, 0, 8)
+        vbox_obj_edit.setContentsMargins(0, 0, 0, 0)
         action_obj = QWidget()
         hbox_action_obj = QHBoxLayout(action_obj)
         hbox_action_obj.setContentsMargins(0, 0, 0, 0)
@@ -84,6 +85,7 @@ class BadgerConfigBox(CollapsibleBox):
         hbox_action_obj.addStretch()
         hbox_action_obj.addWidget(check_only_obj)
         self.list_obj = QListWidget()
+        self.list_obj.setViewportMargins(2, 2, 17, 2)
         vbox_obj_edit.addWidget(self.list_obj)
         hbox_obj.addWidget(edit_obj_col)
 
@@ -114,6 +116,7 @@ class BadgerConfigBox(CollapsibleBox):
         hbox_action_con.addWidget(btn_add_con)
         hbox_action_con.addStretch()
         self.list_con = QListWidget()
+        self.list_con.setViewportMargins(2, 2, 17, 2)
         vbox_con_edit.addWidget(self.list_con)
         hbox_con.addWidget(edit_con_col)
 

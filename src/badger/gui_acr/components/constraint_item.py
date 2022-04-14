@@ -7,9 +7,10 @@ def constraint_item(options, remove_item, name=None, relation=0, threshold=0, cr
     # relation: 0 for >, 1 for <, 2 for =
     widget = QWidget()
     hbox = QHBoxLayout(widget)
-    # hbox.setContentsMargins(0, 0, 0, 0)
+    hbox.setContentsMargins(2, 2, 2, 2)
     # hbox.setSpacing(0)
     widget.cb_obs = cb_obs = QComboBox()
+    cb_obs.setFixedWidth(200)
     cb_obs.setItemDelegate(QStyledItemDelegate())
     cb_obs.addItems(options)
     try:
@@ -41,7 +42,7 @@ def constraint_item(options, remove_item, name=None, relation=0, threshold=0, cr
     btn_del.hide()
 
     hbox.addWidget(check_crit)
-    hbox.addWidget(cb_obs, 1)
+    hbox.addWidget(cb_obs)
     hbox.addWidget(cb_rel)
     hbox.addWidget(sb, 1)
     hbox.addWidget(btn_del)
