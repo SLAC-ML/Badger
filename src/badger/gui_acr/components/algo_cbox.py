@@ -46,7 +46,7 @@ class BadgerAlgoBox(CollapsibleBox):
         hbox_script = QHBoxLayout(script_bar)
         hbox_script.setContentsMargins(0, 0, 0, 0)
         vbox_params_edit.addWidget(script_bar)
-        self.check_use_script = check_use_script = QCheckBox('Generate Using Script')
+        self.check_use_script = check_use_script = QCheckBox('Generate from Script')
         check_use_script.setChecked(False)
         self.btn_edit_script = btn_edit_script = QPushButton('Edit Script')
         btn_edit_script.setFixedSize(96, 24)
