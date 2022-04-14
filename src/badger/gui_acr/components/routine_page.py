@@ -11,6 +11,7 @@ from .variable_item import variable_item
 from .objective_item import objective_item
 from .constraint_item import constraint_item
 from .algo_cbox import BadgerAlgoBox
+from .env_cbox import BadgerEnvBox
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
@@ -49,25 +50,8 @@ class BadgerRoutinePage(QWidget):
         self.algo_box = BadgerAlgoBox(self.algos)
         vbox_int.addWidget(self.algo_box)
 
-        group_env = QGroupBox('Environment')
-        vbox_env = QVBoxLayout(group_env)
-        action_env = QWidget()
-        hbox_action_env = QHBoxLayout(action_env)
-        hbox_action_env.setContentsMargins(0, 0, 0, 0)
-        self.cb_env = cb_env = QComboBox()
-        cb_env.setItemDelegate(QStyledItemDelegate())
-        cb_env.addItems(self.envs)
-        cb_env.setCurrentIndex(-1)
-        self.btn_env_play = btn_env_play = QPushButton('Playground')
-        btn_env_play.setFixedSize(96, 24)
-        btn_env_play.hide()  # hide for now to prevent confusions
-        hbox_action_env.addWidget(cb_env, 1)
-        hbox_action_env.addWidget(btn_env_play)
-        vbox_env.addWidget(action_env)
-        self.edit_env = edit_env = QPlainTextEdit()
-        edit_env.setFixedHeight(128)
-        vbox_env.addWidget(edit_env)
-        vbox_int.addWidget(group_env)
+        self.env_box = BadgerEnvBox(self.envs)
+        vbox_int.addWidget(self.env_box)
         vbox.addWidget(panel_int)
 
         # Configs group
@@ -156,8 +140,8 @@ class BadgerRoutinePage(QWidget):
         self.algo_box.cb.currentIndexChanged.connect(self.select_algo)
         self.algo_box.check_use_script.stateChanged.connect(self.toggle_use_script)
         self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
-        self.cb_env.currentIndexChanged.connect(self.select_env)
-        self.btn_env_play.clicked.connect(self.open_playground)
+        self.env_box.cb.currentIndexChanged.connect(self.select_env)
+        self.env_box.btn_env_play.clicked.connect(self.open_playground)
         self.btn_all_var.clicked.connect(self.check_all_var)
         self.btn_un_all_var.clicked.connect(self.uncheck_all_var)
         self.btn_add_var.clicked.connect(self.add_var)
@@ -179,7 +163,7 @@ class BadgerRoutinePage(QWidget):
         if routine is None:
             # Reset the algo and env configs
             self.algo_box.cb.setCurrentIndex(-1)
-            self.cb_env.setCurrentIndex(-1)
+            self.env_box.cb.setCurrentIndex(-1)
 
             # Reset the routine configs check box status
             self.check_only_var.setChecked(False)
@@ -205,8 +189,8 @@ class BadgerRoutinePage(QWidget):
 
         name_env = routine['env']
         idx_env = self.envs.index(name_env)
-        self.cb_env.setCurrentIndex(idx_env)
-        self.edit_env.setPlainText(ystring(routine['env_params']))
+        self.env_box.cb.setCurrentIndex(idx_env)
+        self.env_box.edit.setPlainText(ystring(routine['env_params']))
 
         # Config the vocs panel
         self.check_only_var.setChecked(True)
@@ -309,7 +293,7 @@ class BadgerRoutinePage(QWidget):
                 QMessageBox.warning(self, 'Please define a valid generate function!', str(e))
                 return
 
-            env_params = load_config(self.edit_env.toPlainText())
+            env_params = load_config(self.env_box.edit.toPlainText())
             try:
                 intf_name = self.configs['interface'][0]
             except KeyError:
@@ -327,7 +311,7 @@ class BadgerRoutinePage(QWidget):
 
     def select_env(self, i):
         if i == -1:
-            self.edit_env.setPlainText('')
+            self.env_box.edit.setPlainText('')
             self.list_var.clear()
             self.dict_var.clear()
             self.list_obj.clear()
@@ -351,13 +335,13 @@ class BadgerRoutinePage(QWidget):
         except Exception as e:
             self.configs = None
             self.env = None
-            self.cb_env.setCurrentIndex(-1)
+            self.env_box.cb.setCurrentIndex(-1)
             self.btn_add_con.setDisabled(True)
             self.btn_add_var.setDisabled(True)
             self.routine = None
             return QMessageBox.critical(self, 'Error!', str(e))
 
-        self.edit_env.setPlainText(ystring(configs['params']))
+        self.env_box.edit.setPlainText(ystring(configs['params']))
 
         self.list_var.clear()
         vars_env = configs['variables']
@@ -413,7 +397,7 @@ class BadgerRoutinePage(QWidget):
 
     def add_var(self):
         # TODO: Use a cached env
-        env_params = load_config(self.edit_env.toPlainText())
+        env_params = load_config(self.env_box.edit.toPlainText())
         try:
             intf_name = self.configs['interface'][0]
         except KeyError:
@@ -537,9 +521,9 @@ class BadgerRoutinePage(QWidget):
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
         algo = self.algo_box.cb.currentText()
-        env = self.cb_env.currentText()
+        env = self.env_box.cb.currentText()
         algo_params = load_config(self.algo_box.edit.toPlainText())
-        env_params = load_config(self.edit_env.toPlainText())
+        env_params = load_config(self.env_box.edit.toPlainText())
 
         variables = []
         for i in range(self.list_var.count()):
