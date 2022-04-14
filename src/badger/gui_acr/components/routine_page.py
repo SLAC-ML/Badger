@@ -12,6 +12,7 @@ from .objective_item import objective_item
 from .constraint_item import constraint_item
 from .algo_cbox import BadgerAlgoBox
 from .env_cbox import BadgerEnvBox
+from .config_cbox import BadgerConfigBox
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
@@ -42,80 +43,17 @@ class BadgerRoutinePage(QWidget):
         vbox = QVBoxLayout(self)
         vbox.setContentsMargins(11, 11, 19, 11)
 
-        # Algo and env configs
+        # Algo box
         self.algo_box = BadgerAlgoBox(self.algos)
         vbox.addWidget(self.algo_box)
 
+        # Env box
         self.env_box = BadgerEnvBox(self.envs)
         vbox.addWidget(self.env_box)
 
-        # Configs group
-        group_ext = QGroupBox('Configs')
-        vbox_ext = QVBoxLayout(group_ext)
-
-        group_var = QGroupBox('Variables')
-        vbox_var = QVBoxLayout(group_var)
-        action_var = QWidget()
-        hbox_action_var = QHBoxLayout(action_var)
-        hbox_action_var.setContentsMargins(0, 0, 0, 0)
-        self.btn_all_var = btn_all_var = QPushButton('Check All')
-        self.btn_un_all_var = btn_un_all_var = QPushButton('Uncheck All')
-        btn_all_var.setFixedSize(96, 24)
-        btn_un_all_var.setFixedSize(96, 24)
-        self.btn_add_var = btn_add_var = QPushButton('Add')
-        btn_add_var.setFixedSize(96, 24)
-        btn_add_var.setDisabled(True)
-        self.check_only_var = check_only_var = QCheckBox('Checked Only')
-        check_only_var.setChecked(False)
-        hbox_action_var.addWidget(btn_all_var)
-        hbox_action_var.addWidget(btn_un_all_var)
-        hbox_action_var.addWidget(btn_add_var)
-        hbox_action_var.addStretch()
-        hbox_action_var.addWidget(check_only_var)
-        vbox_var.addWidget(action_var)
-        self.list_var = list_var = QListWidget()
-        self.dict_var = {}
-        vbox_var.addWidget(list_var)
-        vbox_ext.addWidget(group_var)
-
-        group_obj = QGroupBox('Objectives')
-        vbox_obj = QVBoxLayout(group_obj)
-        action_obj = QWidget()
-        hbox_action_obj = QHBoxLayout(action_obj)
-        hbox_action_obj.setContentsMargins(0, 0, 0, 0)
-        self.btn_all_obj = btn_all_obj = QPushButton('Check All')
-        self.btn_un_all_obj = btn_un_all_obj = QPushButton('Uncheck All')
-        btn_all_obj.setFixedSize(96, 24)
-        btn_un_all_obj.setFixedSize(96, 24)
-        self.check_only_obj = check_only_obj = QCheckBox('Checked Only')
-        check_only_obj.setChecked(False)
-        hbox_action_obj.addWidget(btn_all_obj)
-        hbox_action_obj.addWidget(btn_un_all_obj)
-        hbox_action_obj.addStretch()
-        hbox_action_obj.addWidget(check_only_obj)
-        vbox_obj.addWidget(action_obj)
-        self.list_obj = list_obj = QListWidget()
-        self.dict_obj = {}
-        vbox_obj.addWidget(list_obj)
-        vbox_ext.addWidget(group_obj)
-
-        group_con = QGroupBox('Constraints')
-        vbox_con = QVBoxLayout(group_con)
-        action_con = QWidget()
-        hbox_action_con = QHBoxLayout(action_con)
-        hbox_action_con.setContentsMargins(0, 0, 0, 0)
-        self.btn_add_con = btn_add_con = QPushButton('Add')
-        btn_add_con.setFixedSize(96, 24)
-        btn_add_con.setDisabled(True)
-        hbox_action_con.addWidget(btn_add_con)
-        hbox_action_con.addStretch()
-        vbox_con.addWidget(action_con)
-        self.list_con = list_con = QListWidget()
-        self.dict_con = {}
-        vbox_con.addWidget(list_con)
-        vbox_ext.addWidget(group_con)
-
-        vbox.addWidget(group_ext, 1)
+        # Configs box
+        self.configs_box = BadgerConfigBox()
+        vbox.addWidget(self.configs_box)
 
         # Misc group
         group_misc = QGroupBox('Misc')
@@ -130,6 +68,7 @@ class BadgerRoutinePage(QWidget):
         hbox_misc.addStretch(2)
 
         vbox.addWidget(group_misc)
+        vbox.addStretch()
 
     def config_logic(self):
         self.algo_box.cb.currentIndexChanged.connect(self.select_algo)
@@ -137,14 +76,14 @@ class BadgerRoutinePage(QWidget):
         self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
         self.env_box.cb.currentIndexChanged.connect(self.select_env)
         self.env_box.btn_env_play.clicked.connect(self.open_playground)
-        self.btn_all_var.clicked.connect(self.check_all_var)
-        self.btn_un_all_var.clicked.connect(self.uncheck_all_var)
-        self.btn_add_var.clicked.connect(self.add_var)
-        self.btn_all_obj.clicked.connect(self.check_all_obj)
-        self.btn_un_all_obj.clicked.connect(self.uncheck_all_obj)
-        self.check_only_var.stateChanged.connect(self.toggle_check_only_var)
-        self.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
-        self.btn_add_con.clicked.connect(self.add_constraint)
+        self.configs_box.btn_all_var.clicked.connect(self.check_all_var)
+        self.configs_box.btn_un_all_var.clicked.connect(self.uncheck_all_var)
+        self.configs_box.btn_add_var.clicked.connect(self.add_var)
+        self.configs_box.btn_all_obj.clicked.connect(self.check_all_obj)
+        self.configs_box.btn_un_all_obj.clicked.connect(self.uncheck_all_obj)
+        self.configs_box.check_only_var.stateChanged.connect(self.toggle_check_only_var)
+        self.configs_box.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
+        self.configs_box.btn_add_con.clicked.connect(self.add_constraint)
         self.check_save.stateChanged.connect(self.toggle_save)
 
     def refresh_ui(self, routine):
@@ -153,7 +92,7 @@ class BadgerRoutinePage(QWidget):
         self.algos = list_algo()
         self.envs = list_env()
         # Clean up the constraints list
-        self.list_con.clear()
+        self.configs_box.list_con.clear()
 
         if routine is None:
             # Reset the algo and env configs
@@ -161,8 +100,8 @@ class BadgerRoutinePage(QWidget):
             self.env_box.cb.setCurrentIndex(-1)
 
             # Reset the routine configs check box status
-            self.check_only_var.setChecked(False)
-            self.check_only_obj.setChecked(False)
+            self.configs_box.check_only_var.setChecked(False)
+            self.configs_box.check_only_obj.setChecked(False)
 
             # Reset the save settings
             name = generate_slug(2)
@@ -188,11 +127,11 @@ class BadgerRoutinePage(QWidget):
         self.env_box.edit.setPlainText(ystring(routine['env_params']))
 
         # Config the vocs panel
-        self.check_only_var.setChecked(True)
+        self.configs_box.check_only_var.setChecked(True)
         variables = [next(iter(v)) for v in routine['config']['variables']]
-        for i in range(self.list_var.count()):
-            item = self.list_var.item(i)
-            item_widget = self.list_var.itemWidget(item)
+        for i in range(self.configs_box.list_var.count()):
+            item = self.configs_box.list_var.item(i)
+            item_widget = self.configs_box.list_var.itemWidget(item)
             var_name = item_widget.check_name.text()
             try:
                 idx = variables.index(var_name)
@@ -203,11 +142,11 @@ class BadgerRoutinePage(QWidget):
             except ValueError:
                 item_widget.check_name.setChecked(False)
 
-        self.check_only_obj.setChecked(True)
+        self.configs_box.check_only_obj.setChecked(True)
         objectives = [next(iter(v)) for v in routine['config']['objectives']]
-        for i in range(self.list_obj.count()):
-            item = self.list_obj.item(i)
-            item_widget = self.list_obj.itemWidget(item)
+        for i in range(self.configs_box.list_obj.count()):
+            item = self.configs_box.list_obj.item(i)
+            item_widget = self.configs_box.list_obj.itemWidget(item)
             obj_name = item_widget.check_name.text()
             try:
                 idx = objectives.index(obj_name)
@@ -307,14 +246,14 @@ class BadgerRoutinePage(QWidget):
     def select_env(self, i):
         if i == -1:
             self.env_box.edit.setPlainText('')
-            self.list_var.clear()
-            self.dict_var.clear()
-            self.list_obj.clear()
-            self.dict_obj.clear()
+            self.configs_box.list_var.clear()
+            self.configs_box.dict_var.clear()
+            self.configs_box.list_obj.clear()
+            self.configs_box.dict_obj.clear()
             self.configs = None
             self.env = None
-            self.btn_add_con.setDisabled(True)
-            self.btn_add_var.setDisabled(True)
+            self.configs_box.btn_add_con.setDisabled(True)
+            self.configs_box.btn_add_var.setDisabled(True)
             self.routine = None
             return
 
@@ -323,22 +262,22 @@ class BadgerRoutinePage(QWidget):
             env, configs = get_env(name)
             self.configs = configs
             self.env = env
-            self.btn_add_con.setDisabled(False)
-            self.btn_add_var.setDisabled(False)
+            self.configs_box.btn_add_con.setDisabled(False)
+            self.configs_box.btn_add_var.setDisabled(False)
             if self.algo_box.check_use_script.isChecked():
                 self.refresh_params_algo()
         except Exception as e:
             self.configs = None
             self.env = None
             self.env_box.cb.setCurrentIndex(-1)
-            self.btn_add_con.setDisabled(True)
-            self.btn_add_var.setDisabled(True)
+            self.configs_box.btn_add_con.setDisabled(True)
+            self.configs_box.btn_add_var.setDisabled(True)
             self.routine = None
             return QMessageBox.critical(self, 'Error!', str(e))
 
         self.env_box.edit.setPlainText(ystring(configs['params']))
 
-        self.list_var.clear()
+        self.configs_box.list_var.clear()
         vars_env = configs['variables']
         vars_combine = [*vars_env]
         if self.routine:  # check for the temp variables in vocs
@@ -356,38 +295,38 @@ class BadgerRoutinePage(QWidget):
         for var in vars_combine:
             name = next(iter(var))
             vrange = var[name]
-            item = QListWidgetItem(self.list_var)
+            item = QListWidgetItem(self.configs_box.list_var)
             var_item = variable_item(name, vrange, self.toggle_var)
             item.setSizeHint(var_item.sizeHint())
-            self.list_var.addItem(item)
-            self.list_var.setItemWidget(item, var_item)
-            self.dict_var[name] = item
+            self.configs_box.list_var.addItem(item)
+            self.configs_box.list_var.setItemWidget(item, var_item)
+            self.configs_box.dict_var[name] = item
 
-        self.list_obj.clear()
+        self.configs_box.list_obj.clear()
         for obj in configs['observations']:
-            item = QListWidgetItem(self.list_obj)
+            item = QListWidgetItem(self.configs_box.list_obj)
             obj_item = objective_item(obj, 0, self.toggle_obj)
             item.setSizeHint(obj_item.sizeHint())
-            self.list_obj.addItem(item)
-            self.list_obj.setItemWidget(item, obj_item)
-            self.dict_obj[obj] = item
+            self.configs_box.list_obj.addItem(item)
+            self.configs_box.list_obj.setItemWidget(item, obj_item)
+            self.configs_box.dict_obj[obj] = item
 
-        self.list_con.clear()
+        self.configs_box.list_con.clear()
         self.routine = None
 
     def open_playground(self):
         pass
 
     def check_all_var(self):
-        for i in range(self.list_var.count()):
-            item = self.list_var.item(i)
-            item_widget = self.list_var.itemWidget(item)
+        for i in range(self.configs_box.list_var.count()):
+            item = self.configs_box.list_var.item(i)
+            item_widget = self.configs_box.list_var.itemWidget(item)
             item_widget.check_name.setChecked(True)
 
     def uncheck_all_var(self):
-        for i in range(self.list_var.count()):
-            item = self.list_var.item(i)
-            item_widget = self.list_var.itemWidget(item)
+        for i in range(self.configs_box.list_var.count()):
+            item = self.configs_box.list_var.item(i)
+            item_widget = self.configs_box.list_var.itemWidget(item)
             item_widget.check_name.setChecked(False)
 
     def add_var(self):
@@ -409,7 +348,7 @@ class BadgerRoutinePage(QWidget):
         # Check if already in the list
         ok = False
         try:
-            self.dict_var[name]
+            self.configs_box.dict_var[name]
         except:
             ok = True
 
@@ -417,47 +356,47 @@ class BadgerRoutinePage(QWidget):
             QMessageBox.warning(self, 'Variable already exists!', f'Variable {name} already exists!')
             return 1
 
-        item = QListWidgetItem(self.list_var)
+        item = QListWidgetItem(self.configs_box.list_var)
         var_item = variable_item(name, [min, max], self.toggle_var)
         var_item.check_name.setChecked(True)
         item.setSizeHint(var_item.sizeHint())
-        self.list_var.addItem(item)
-        self.list_var.setItemWidget(item, var_item)
-        self.dict_var[name] = item
+        self.configs_box.list_var.addItem(item)
+        self.configs_box.list_var.setItemWidget(item, var_item)
+        self.configs_box.dict_var[name] = item
 
         return 0
 
     def check_all_obj(self):
-        for i in range(self.list_obj.count()):
-            item = self.list_obj.item(i)
-            item_widget = self.list_obj.itemWidget(item)
+        for i in range(self.configs_box.list_obj.count()):
+            item = self.configs_box.list_obj.item(i)
+            item_widget = self.configs_box.list_obj.itemWidget(item)
             item_widget.check_name.setChecked(True)
 
     def uncheck_all_obj(self):
-        for i in range(self.list_obj.count()):
-            item = self.list_obj.item(i)
-            item_widget = self.list_obj.itemWidget(item)
+        for i in range(self.configs_box.list_obj.count()):
+            item = self.configs_box.list_obj.item(i)
+            item_widget = self.configs_box.list_obj.itemWidget(item)
             item_widget.check_name.setChecked(False)
 
     def toggle_check_only_var(self):
-        if self.check_only_var.isChecked():
-            for i in range(self.list_var.count()):
-                item = self.list_var.item(i)
-                item_widget = self.list_var.itemWidget(item)
+        if self.configs_box.check_only_var.isChecked():
+            for i in range(self.configs_box.list_var.count()):
+                item = self.configs_box.list_var.item(i)
+                item_widget = self.configs_box.list_var.itemWidget(item)
                 if not item_widget.check_name.isChecked():
                     item_widget.hide()
                     item.setSizeHint(QSize(0, 0))
         else:
-            for i in range(self.list_var.count()):
-                item = self.list_var.item(i)
-                item_widget = self.list_var.itemWidget(item)
+            for i in range(self.configs_box.list_var.count()):
+                item = self.configs_box.list_var.item(i)
+                item_widget = self.configs_box.list_var.itemWidget(item)
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
 
     def toggle_var(self, name):
-        if self.check_only_var.isChecked():
-            item = self.dict_var[name]
-            item_widget = self.list_var.itemWidget(item)
+        if self.configs_box.check_only_var.isChecked():
+            item = self.configs_box.dict_var[name]
+            item_widget = self.configs_box.list_var.itemWidget(item)
             if item_widget.check_name.isChecked():
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
@@ -466,24 +405,24 @@ class BadgerRoutinePage(QWidget):
                 item.setSizeHint(QSize(0, 0))
 
     def toggle_check_only_obj(self):
-        if self.check_only_obj.isChecked():
-            for i in range(self.list_obj.count()):
-                item = self.list_obj.item(i)
-                item_widget = self.list_obj.itemWidget(item)
+        if self.configs_box.check_only_obj.isChecked():
+            for i in range(self.configs_box.list_obj.count()):
+                item = self.configs_box.list_obj.item(i)
+                item_widget = self.configs_box.list_obj.itemWidget(item)
                 if not item_widget.check_name.isChecked():
                     item_widget.hide()
                     item.setSizeHint(QSize(0, 0))
         else:
-            for i in range(self.list_obj.count()):
-                item = self.list_obj.item(i)
-                item_widget = self.list_obj.itemWidget(item)
+            for i in range(self.configs_box.list_obj.count()):
+                item = self.configs_box.list_obj.item(i)
+                item_widget = self.configs_box.list_obj.itemWidget(item)
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
 
     def toggle_obj(self, name):
-        if self.check_only_obj.isChecked():
-            item = self.dict_obj[name]
-            item_widget = self.list_obj.itemWidget(item)
+        if self.configs_box.check_only_obj.isChecked():
+            item = self.configs_box.dict_obj[name]
+            item_widget = self.configs_box.list_obj.itemWidget(item)
             if item_widget.check_name.isChecked():
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
@@ -502,15 +441,15 @@ class BadgerRoutinePage(QWidget):
             return
 
         options = self.configs['observations']
-        item = QListWidgetItem(self.list_con)
+        item = QListWidgetItem(self.configs_box.list_con)
         con_item = constraint_item(options,
-                                   lambda: self.list_con.takeItem(
-                                       self.list_con.row(item)),
+                                   lambda: self.configs_box.list_con.takeItem(
+                                       self.configs_box.list_con.row(item)),
                                    name, relation, threshold, critical)
         item.setSizeHint(con_item.sizeHint())
-        self.list_con.addItem(item)
-        self.list_con.setItemWidget(item, con_item)
-        # self.dict_con[''] = item
+        self.configs_box.list_con.addItem(item)
+        self.configs_box.list_con.setItemWidget(item, con_item)
+        # self.configs_box.dict_con[''] = item
 
     def _compose_routine(self):
         # Compose the routine
@@ -521,9 +460,9 @@ class BadgerRoutinePage(QWidget):
         env_params = load_config(self.env_box.edit.toPlainText())
 
         variables = []
-        for i in range(self.list_var.count()):
-            item = self.list_var.item(i)
-            item_widget = self.list_var.itemWidget(item)
+        for i in range(self.configs_box.list_var.count()):
+            item = self.configs_box.list_var.item(i)
+            item_widget = self.configs_box.list_var.itemWidget(item)
             if item_widget.check_name.isChecked():
                 var_name = item_widget.check_name.text()
                 lb = item_widget.sb_lower.sb.value()
@@ -533,9 +472,9 @@ class BadgerRoutinePage(QWidget):
                 variables.append(_dict)
 
         objectives = []
-        for i in range(self.list_obj.count()):
-            item = self.list_obj.item(i)
-            item_widget = self.list_obj.itemWidget(item)
+        for i in range(self.configs_box.list_obj.count()):
+            item = self.configs_box.list_obj.item(i)
+            item_widget = self.configs_box.list_obj.itemWidget(item)
             if item_widget.check_name.isChecked():
                 obj_name = item_widget.check_name.text()
                 rule = item_widget.cb_rule.currentText()
@@ -544,9 +483,9 @@ class BadgerRoutinePage(QWidget):
                 objectives.append(_dict)
 
         constraints = []
-        for i in range(self.list_con.count()):
-            item = self.list_con.item(i)
-            item_widget = self.list_con.itemWidget(item)
+        for i in range(self.configs_box.list_con.count()):
+            item = self.configs_box.list_con.item(i)
+            item_widget = self.configs_box.list_con.itemWidget(item)
             critical = item_widget.check_crit.isChecked()
             con_name = item_widget.cb_obs.currentText()
             relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
