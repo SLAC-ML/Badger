@@ -77,6 +77,7 @@ class BadgerHomePage(QWidget):
         self.routine_list = routine_list = QListWidget()
         routine_list.setAlternatingRowColors(True)
         routine_list.setSpacing(1)
+        # routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
         self.build_routine_list()
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
