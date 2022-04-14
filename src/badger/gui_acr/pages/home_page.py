@@ -37,6 +37,9 @@ class BadgerHomePage(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.mode = 'regular'  # home page mode
+        self.splitter_state = None  # store the run splitter state
+
         self.init_ui()
         self.config_logic()
 
@@ -177,6 +180,7 @@ class BadgerHomePage(QWidget):
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
 
         self.sbar.textChanged.connect(self.build_routine_list)
+        self.btn_new.clicked.connect(self.create_new_routine)
         self.routine_list.itemClicked.connect(self.select_routine)
         self.run_table.cellClicked.connect(self.solution_selected)
         self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
@@ -207,7 +211,18 @@ class BadgerHomePage(QWidget):
         runs = get_runs()
         self.cb_history.updateItems(runs)
 
+    def create_new_routine(self):
+        self.splitter_state = self.splitter_run.saveState()
+        self.routine_editor.set_routine(None)
+        self.splitter_run.setSizes([1, 0, 0])
+        self.mode = 'new routine'
+
     def select_routine(self, item):
+        if self.mode == 'new routine':
+            self.mode = 'regular'
+            self.splitter_run.restoreState(self.splitter_state)
+            self.splitter_state = None
+
         if self.prev_routine:
             try:
                 self.routine_list.itemWidget(self.prev_routine).setStyleSheet(stylesheet_normal)
@@ -356,6 +371,11 @@ class BadgerHomePage(QWidget):
     def routine_saved(self):
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
+
+        if self.mode == 'new routine':
+            self.mode = 'regular'
+            self.splitter_run.restoreState(self.splitter_state)
+            self.splitter_state = None
 
     def routine_deleted(self):
         keyword = self.sbar.text()
