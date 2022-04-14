@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QCheckBox, QMessageBox
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox
 from PyQt5.QtCore import QSize
 import sqlite3
 from coolname import generate_slug
@@ -42,6 +42,17 @@ class BadgerRoutinePage(QWidget):
         vbox = QVBoxLayout(self)
         vbox.setContentsMargins(11, 11, 19, 11)
 
+        # Meta group
+        group_meta = QGroupBox('Metadata')
+        hbox_meta = QHBoxLayout(group_meta)
+        label_name = QLabel('Routine Name')
+        self.edit_save = edit_save = QLineEdit()
+        edit_save.setPlaceholderText(generate_slug(2))
+        hbox_meta.addWidget(label_name)
+        hbox_meta.addWidget(edit_save, 1)
+        # hbox_meta.addStretch(2)
+        vbox.addWidget(group_meta)
+
         # Algo box
         self.algo_box = BadgerAlgoBox(self.algos)
         vbox.addWidget(self.algo_box)
@@ -54,19 +65,6 @@ class BadgerRoutinePage(QWidget):
         self.configs_box = BadgerConfigBox()
         vbox.addWidget(self.configs_box)
 
-        # Misc group
-        group_misc = QGroupBox('Misc')
-        hbox_misc = QHBoxLayout(group_misc)
-        self.check_save = check_save = QCheckBox('Save as')
-        check_save.setChecked(False)
-        self.edit_save = edit_save = QLineEdit()
-        edit_save.setPlaceholderText(generate_slug(2))
-        edit_save.setDisabled(True)
-        hbox_misc.addWidget(check_save)
-        hbox_misc.addWidget(edit_save, 1)
-        hbox_misc.addStretch(2)
-
-        vbox.addWidget(group_misc)
         vbox.addStretch()
 
     def config_logic(self):
@@ -83,7 +81,6 @@ class BadgerRoutinePage(QWidget):
         self.configs_box.check_only_var.stateChanged.connect(self.toggle_check_only_var)
         self.configs_box.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
         self.configs_box.btn_add_con.clicked.connect(self.add_constraint)
-        self.check_save.stateChanged.connect(self.toggle_save)
 
     def refresh_ui(self, routine):
         self.routine = routine  # save routine for future reference
@@ -106,7 +103,6 @@ class BadgerRoutinePage(QWidget):
             name = generate_slug(2)
             self.edit_save.setText('')
             self.edit_save.setPlaceholderText(name)
-            self.check_save.setChecked(False)
 
             return
 
@@ -173,7 +169,6 @@ class BadgerRoutinePage(QWidget):
         name = routine['name']
         self.edit_save.setPlaceholderText(generate_slug(2))
         self.edit_save.setText(name)
-        self.check_save.setChecked(False)
 
         self.algo_box.check_use_script.setChecked(not not self.script)
 
@@ -433,12 +428,6 @@ class BadgerRoutinePage(QWidget):
                 item_widget.hide()
                 item.setSizeHint(QSize(0, 0))
             self.configs_box.fit_content()
-
-    def toggle_save(self):
-        if self.check_save.isChecked():
-            self.edit_save.setDisabled(False)
-        else:
-            self.edit_save.setDisabled(True)
 
     def add_constraint(self, name=None, relation=0, threshold=0, critical=False):
         if self.configs is None:
