@@ -15,7 +15,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         # Variables config
         var_panel = QWidget()
-        vbox.addWidget(var_panel)
+        vbox.addWidget(var_panel, 3)
         hbox_var = QHBoxLayout(var_panel)
         hbox_var.setContentsMargins(0, 0, 0, 0)
         lbl_var_col = QWidget()
@@ -55,7 +55,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         # Objectives config
         obj_panel = QWidget()
-        vbox.addWidget(obj_panel)
+        vbox.addWidget(obj_panel, 1)
         hbox_obj = QHBoxLayout(obj_panel)
         hbox_obj.setContentsMargins(0, 0, 0, 0)
         lbl_obj_col = QWidget()
@@ -91,7 +91,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         # Constraints config
         con_panel = QWidget()
-        vbox.addWidget(con_panel)
+        vbox.addWidget(con_panel, 1)
         hbox_con = QHBoxLayout(con_panel)
         hbox_con.setContentsMargins(0, 0, 0, 0)
         lbl_con_col = QWidget()
