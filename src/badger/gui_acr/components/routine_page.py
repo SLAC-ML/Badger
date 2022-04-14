@@ -43,16 +43,11 @@ class BadgerRoutinePage(QWidget):
         vbox.setContentsMargins(11, 11, 19, 11)
 
         # Algo and env configs
-        panel_int = QWidget()
-        vbox_int = QVBoxLayout(panel_int)
-        vbox_int.setContentsMargins(0, 0, 0, 0)
-
         self.algo_box = BadgerAlgoBox(self.algos)
-        vbox_int.addWidget(self.algo_box)
+        vbox.addWidget(self.algo_box)
 
         self.env_box = BadgerEnvBox(self.envs)
-        vbox_int.addWidget(self.env_box)
-        vbox.addWidget(panel_int)
+        vbox.addWidget(self.env_box)
 
         # Configs group
         group_ext = QGroupBox('Configs')
