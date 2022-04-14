@@ -1,12 +1,11 @@
-from PyQt5.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QPushButton, QGroupBox, QComboBox, QLineEdit, QPlainTextEdit, QCheckBox
-from PyQt5.QtWidgets import QMessageBox, QStyledItemDelegate, QLabel
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QCheckBox, QMessageBox
+from PyQt5.QtCore import QSize
+import sqlite3
 from coolname import generate_slug
-from pytest import param
 from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, instantiate_env
+from ...db import save_routine
 from .variable_item import variable_item
 from .objective_item import objective_item
 from .constraint_item import constraint_item
@@ -311,6 +310,7 @@ class BadgerRoutinePage(QWidget):
             self.configs_box.dict_obj[obj] = item
 
         self.configs_box.list_con.clear()
+        self.configs_box.fit_content()
         self.routine = None
 
     def open_playground(self):
@@ -362,6 +362,7 @@ class BadgerRoutinePage(QWidget):
         self.configs_box.list_var.addItem(item)
         self.configs_box.list_var.setItemWidget(item, var_item)
         self.configs_box.dict_var[name] = item
+        self.configs_box.fit_content()
 
         return 0
 
@@ -391,6 +392,7 @@ class BadgerRoutinePage(QWidget):
                 item_widget = self.configs_box.list_var.itemWidget(item)
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
+        self.configs_box.fit_content()
 
     def toggle_var(self, name):
         if self.configs_box.check_only_var.isChecked():
@@ -402,6 +404,7 @@ class BadgerRoutinePage(QWidget):
             else:
                 item_widget.hide()
                 item.setSizeHint(QSize(0, 0))
+            self.configs_box.fit_content()
 
     def toggle_check_only_obj(self):
         if self.configs_box.check_only_obj.isChecked():
@@ -417,6 +420,7 @@ class BadgerRoutinePage(QWidget):
                 item_widget = self.configs_box.list_obj.itemWidget(item)
                 item_widget.show()
                 item.setSizeHint(item_widget.sizeHint())
+        self.configs_box.fit_content()
 
     def toggle_obj(self, name):
         if self.configs_box.check_only_obj.isChecked():
@@ -428,6 +432,7 @@ class BadgerRoutinePage(QWidget):
             else:
                 item_widget.hide()
                 item.setSizeHint(QSize(0, 0))
+            self.configs_box.fit_content()
 
     def toggle_save(self):
         if self.check_save.isChecked():
@@ -449,6 +454,7 @@ class BadgerRoutinePage(QWidget):
         self.configs_box.list_con.addItem(item)
         self.configs_box.list_con.setItemWidget(item, con_item)
         # self.configs_box.dict_con[''] = item
+        self.configs_box.fit_content()
 
     def _compose_routine(self):
         # Compose the routine
@@ -529,3 +535,17 @@ class BadgerRoutinePage(QWidget):
 
         dlg = BadgerReviewDialog(self, routine)
         dlg.exec()
+
+    def save(self):
+        try:
+            routine = self._compose_routine()
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error!', str(e))
+
+        try:
+            save_routine(routine)
+        except sqlite3.IntegrityError:
+            return QMessageBox.critical(self, 'Error!',
+                f'Routine {routine["name"]} already existed in the database! Please choose another name.')
+
+        return 0

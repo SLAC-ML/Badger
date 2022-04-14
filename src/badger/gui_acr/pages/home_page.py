@@ -189,6 +189,8 @@ class BadgerHomePage(QWidget):
         self.run_monitor.sig_progress.connect(self.progress)
         self.run_monitor.sig_del.connect(self.delete_run)
 
+        self.routine_editor.sig_saved.connect(self.routine_saved)
+
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
         self.shortcut_go_search.activated.connect(self.go_search)
@@ -343,3 +345,7 @@ class BadgerHomePage(QWidget):
         else:
             runs = get_runs_by_routine(self.current_routine['name'])
         self.cb_history.updateItems(runs)
+
+    def routine_saved(self):
+        keyword = self.sbar.text()
+        self.build_routine_list(keyword)

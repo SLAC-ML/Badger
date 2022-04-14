@@ -1,13 +1,14 @@
-from inspect import stack
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton
 from PyQt5.QtWidgets import QTextEdit, QStackedWidget, QScrollArea
-# from PyQt5.QtWidgets import QFrame, QSizePolicy
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from .routine_page import BadgerRoutinePage
 from ...utils import ystring
 
 
 class BadgerRoutineEditor(QWidget):
+    sig_saved = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -51,15 +52,15 @@ class BadgerRoutineEditor(QWidget):
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
-        self.btn_edit = btn_edit = QPushButton('Edit')
-        btn_edit.setFixedSize(128, 32)
-        btn_edit.setFont(cool_font)
+        self.btn_save = btn_save = QPushButton('Save')
+        btn_save.setFixedSize(128, 32)
+        btn_save.setFont(cool_font)
         hbox_action.addStretch(1)
-        hbox_action.addWidget(btn_edit)
+        hbox_action.addWidget(btn_save)
         vbox.addWidget(action_bar)
 
     def config_logic(self):
-        self.btn_edit.clicked.connect(self.edit_routine)
+        self.btn_save.clicked.connect(self.save_routine)
 
     def set_routine(self, routine):
         self.routine_edit.setText(ystring(routine))
@@ -67,6 +68,10 @@ class BadgerRoutineEditor(QWidget):
 
     def edit_routine(self):
         self.stacks.setCurrentIndex(1)
+
+    def save_routine(self):
+        if self.routine_page.save() == 0:
+            self.sig_saved.emit()
 
     def clear(self):
         self.routine_edit.clear()

@@ -11,11 +11,11 @@ class BadgerConfigBox(CollapsibleBox):
         self.config_logic()
 
     def init_ui(self):
-        vbox = QVBoxLayout()
+        self.vbox = vbox = QVBoxLayout()
 
         # Variables config
         var_panel = QWidget()
-        vbox.addWidget(var_panel, 3)
+        vbox.addWidget(var_panel, 2)
         hbox_var = QHBoxLayout(var_panel)
         hbox_var.setContentsMargins(0, 0, 0, 0)
         lbl_var_col = QWidget()
@@ -41,7 +41,7 @@ class BadgerConfigBox(CollapsibleBox):
         self.btn_add_var = btn_add_var = QPushButton('Add')
         btn_add_var.setFixedSize(96, 24)
         btn_add_var.setDisabled(True)
-        self.check_only_var = check_only_var = QCheckBox('Checked Only')
+        self.check_only_var = check_only_var = QCheckBox('Show Checked Only')
         check_only_var.setChecked(False)
         hbox_action_var.addWidget(btn_all_var)
         hbox_action_var.addWidget(btn_un_all_var)
@@ -50,7 +50,9 @@ class BadgerConfigBox(CollapsibleBox):
         hbox_action_var.addWidget(check_only_var)
         self.list_var = QListWidget()
         self.list_var.setViewportMargins(2, 2, 17, 2)
+        # self.list_var.setFixedHeight(128)
         vbox_var_edit.addWidget(self.list_var)
+        # vbox_var_edit.addStretch()
         hbox_var.addWidget(edit_var_col)
 
         # Objectives config
@@ -78,15 +80,17 @@ class BadgerConfigBox(CollapsibleBox):
         self.btn_un_all_obj = btn_un_all_obj = QPushButton('Uncheck All')
         btn_all_obj.setFixedSize(96, 24)
         btn_un_all_obj.setFixedSize(96, 24)
-        self.check_only_obj = check_only_obj = QCheckBox('Checked Only')
+        self.check_only_obj = check_only_obj = QCheckBox('Show Checked Only')
         check_only_obj.setChecked(False)
         hbox_action_obj.addWidget(btn_all_obj)
         hbox_action_obj.addWidget(btn_un_all_obj)
         hbox_action_obj.addStretch()
         hbox_action_obj.addWidget(check_only_obj)
         self.list_obj = QListWidget()
+        # self.list_obj.setFixedHeight(64)
         self.list_obj.setViewportMargins(2, 2, 17, 2)
         vbox_obj_edit.addWidget(self.list_obj)
+        # vbox_obj_edit.addStretch()
         hbox_obj.addWidget(edit_obj_col)
 
         # Constraints config
@@ -105,7 +109,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         edit_con_col = QWidget()
         vbox_con_edit = QVBoxLayout(edit_con_col)
-        vbox_con_edit.setContentsMargins(0, 0, 0, 8)
+        vbox_con_edit.setContentsMargins(0, 0, 0, 0)
         action_con = QWidget()
         hbox_action_con = QHBoxLayout(action_con)
         hbox_action_con.setContentsMargins(0, 0, 0, 0)
@@ -116,8 +120,10 @@ class BadgerConfigBox(CollapsibleBox):
         hbox_action_con.addWidget(btn_add_con)
         hbox_action_con.addStretch()
         self.list_con = QListWidget()
+        # self.list_con.setFixedHeight(64)
         self.list_con.setViewportMargins(2, 2, 17, 2)
         vbox_con_edit.addWidget(self.list_con)
+        # vbox_con_edit.addStretch()
         hbox_con.addWidget(edit_con_col)
 
         self.setContentLayout(vbox)
@@ -126,3 +132,14 @@ class BadgerConfigBox(CollapsibleBox):
         self.dict_var = {}
         self.dict_obj = {}
         self.dict_con = {}
+
+    def _fit_content(self, list):
+        height = list.sizeHintForRow(0) * list.count() + 2 * list.frameWidth() + 4
+        height = max(28, min(height, 192))
+        list.setFixedHeight(height)
+
+    def fit_content(self):
+        return
+        self._fit_content(self.list_var)
+        self._fit_content(self.list_obj)
+        self._fit_content(self.list_con)
