@@ -142,31 +142,6 @@ class BadgerHomePage(QWidget):
         splitter_run.addWidget(run_table)
         splitter_run.setSizes([0, 1, 0])  # collapse routine/table by default
 
-        # Action bar
-        # action_bar = QWidget()
-        # hbox_action = QHBoxLayout(action_bar)
-        # hbox_action.setContentsMargins(0, 0, 0, 0)
-
-        # cool_font = QFont()
-        # cool_font.setWeight(QFont.DemiBold)
-        # # cool_font.setPixelSize(16)
-
-        # self.btn_del = btn_del = QPushButton('Delete')
-        # btn_del.setFixedSize(64, 64)
-        # btn_del.setFont(cool_font)
-        # btn_del.setStyleSheet(stylesheet)
-        # self.btn_edit = btn_edit = QPushButton('Edit')
-        # btn_edit.setFixedSize(64, 64)
-        # btn_edit.setFont(cool_font)
-        # self.btn_run = btn_run = QPushButton('Run')
-        # btn_run.setFixedSize(128, 64)
-        # btn_run.setFont(cool_font)
-        # hbox_action.addWidget(btn_del)
-        # hbox_action.addStretch(1)
-        # hbox_action.addWidget(btn_edit)
-        # hbox_action.addWidget(btn_run)
-        # vbox_info.addWidget(action_bar)
-
         # Add panels to splitter
         splitter.addWidget(panel_routine)
         splitter.addWidget(panel_info)
@@ -367,6 +342,8 @@ class BadgerHomePage(QWidget):
         else:
             runs = get_runs_by_routine(self.current_routine['name'])
         self.cb_history.updateItems(runs)
+        if not self.cb_history.count():
+            self.go_run(-1)  # sometimes we need to trigger this manually
 
     def routine_saved(self):
         keyword = self.sbar.text()

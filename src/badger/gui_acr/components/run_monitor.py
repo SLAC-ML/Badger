@@ -562,9 +562,9 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_optimal(self):
         try:
-            pf = self.routine_runner.pf
-        except:
             pf = self.pf
+        except:
+            pf = self.routine_runner.pf
         if pf is None:
             return
 
