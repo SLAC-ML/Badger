@@ -6,23 +6,9 @@ from .routine_page import BadgerRoutinePage
 from ...utils import ystring
 
 
-stylesheet_del = '''
-QPushButton:hover:pressed
-{
-    background-color: #C7737B;
-}
-QPushButton:hover
-{
-    background-color: #BF616A;
-}
-QPushButton
-{
-    background-color: #A9444E;
-}
-'''
-
 class BadgerRoutineEditor(QWidget):
     sig_saved = pyqtSignal()
+    sig_canceled = pyqtSignal()
     sig_deleted = pyqtSignal()
 
     def __init__(self):
@@ -68,21 +54,22 @@ class BadgerRoutineEditor(QWidget):
         cool_font.setWeight(QFont.DemiBold)
         # cool_font.setPixelSize(16)
 
-        self.btn_del = btn_del = QPushButton('Delete Routine')
-        btn_del.setFixedSize(128, 32)
-        btn_del.setFont(cool_font)
-        btn_del.setStyleSheet(stylesheet_del)
-        btn_del.setDisabled(True)
+        # Only show when create new routine
+        self.btn_cancel = btn_cancel = QPushButton('Cancel')
+        btn_cancel.setFixedSize(64, 32)
+        btn_cancel.setFont(cool_font)
+        btn_cancel.hide()
+
         self.btn_save = btn_save = QPushButton('Save')
         btn_save.setFixedSize(128, 32)
         btn_save.setFont(cool_font)
-        hbox_action.addWidget(btn_del)
+        hbox_action.addWidget(btn_cancel)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_save)
         vbox.addWidget(action_bar)
 
     def config_logic(self):
-        self.btn_del.clicked.connect(self.del_routine)
+        self.btn_cancel.clicked.connect(self.cancel_create_routine)
         self.btn_save.clicked.connect(self.save_routine)
 
     def set_routine(self, routine):
@@ -92,12 +79,12 @@ class BadgerRoutineEditor(QWidget):
     def edit_routine(self):
         self.stacks.setCurrentIndex(1)
 
-    def toggle_del_btn(self, enabled):
-        self.btn_del.setDisabled(not enabled)
-
     def del_routine(self):
         if self.routine_page.delete() == 0:
             self.sig_deleted.emit()
+
+    def cancel_create_routine(self):
+        self.sig_canceled.emit()
 
     def save_routine(self):
         if self.routine_page.save() == 0:
@@ -105,3 +92,9 @@ class BadgerRoutineEditor(QWidget):
 
     def clear(self):
         self.routine_edit.clear()
+
+    def switch_mode(self, mode):
+        if mode == 'regular':
+            self.btn_cancel.hide()
+        elif mode == 'new routine':
+            self.btn_cancel.show()

@@ -6,14 +6,14 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
-from ..components.routine_item import routine_item, stylesheet_normal, stylesheet_selected
+from ..components.routine_item import BadgerRoutineItem
 from ..components.history_navigator import HistoryNavigator
 from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
-from ...db import list_routine, load_routine, get_runs_by_routine, get_runs
+from ...db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ...archive import load_run, delete_run
-from ...utils import ystring, get_header
+from ...utils import get_header
 
 
 stylesheet = '''
@@ -80,7 +80,7 @@ class BadgerHomePage(QWidget):
         self.routine_list = routine_list = QListWidget()
         routine_list.setAlternatingRowColors(True)
         routine_list.setSpacing(1)
-        # routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
+        routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
         self.build_routine_list()
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
@@ -172,8 +172,8 @@ class BadgerHomePage(QWidget):
         self.run_monitor.sig_del.connect(self.delete_run)
 
         self.routine_editor.sig_saved.connect(self.routine_saved)
+        self.routine_editor.sig_canceled.connect(self.done_create_routine)
         self.routine_editor.sig_deleted.connect(self.routine_deleted)
-        self.sig_routine_activated.connect(self.routine_editor.toggle_del_btn)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -191,16 +191,15 @@ class BadgerHomePage(QWidget):
         self.routine_editor.set_routine(None)
         self.splitter_run.setSizes([1, 0, 0])
         self.mode = 'new routine'
+        self.routine_editor.switch_mode(self.mode)
+        self.toggle_lock(True)
+        self.run_monitor.setDisabled(True)
+        self.run_table.setDisabled(True)
 
     def select_routine(self, item):
-        if self.mode == 'new routine':
-            self.mode = 'regular'
-            self.splitter_run.restoreState(self.splitter_state)
-            self.splitter_state = None
-
         if self.prev_routine:
             try:
-                self.routine_list.itemWidget(self.prev_routine).setStyleSheet(stylesheet_normal)
+                self.routine_list.itemWidget(self.prev_routine).deactivate()
             except:
                 pass
 
@@ -227,7 +226,7 @@ class BadgerHomePage(QWidget):
         if not runs:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
 
-        self.routine_list.itemWidget(item).setStyleSheet(stylesheet_selected)
+        self.routine_list.itemWidget(item).activate()
 
     def build_routine_list(self, keyword=''):
         routines, timestamps = list_routine(keyword)
@@ -238,14 +237,15 @@ class BadgerHomePage(QWidget):
             selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
-            _item = routine_item(routine, timestamps[i])
+            _item = BadgerRoutineItem(routine, timestamps[i])
+            _item.sig_del.connect(self.delete_routine)
             item = QListWidgetItem(self.routine_list)
             item.routine = routine  # dirty trick
             item.setSizeHint(_item.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, _item)
             if routine == selected_routine:
-                _item.setStyleSheet(stylesheet_selected)
+                _item.activate()
                 self.prev_routine = item
 
     def go_run(self, i):
@@ -348,19 +348,31 @@ class BadgerHomePage(QWidget):
     def routine_saved(self):
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
+        self.done_create_routine()
 
+    def done_create_routine(self):
         if self.mode == 'new routine':
             self.mode = 'regular'
+            self.routine_editor.switch_mode(self.mode)
             self.splitter_run.restoreState(self.splitter_state)
             self.splitter_state = None
+            self.toggle_lock(False)
+            self.run_monitor.setDisabled(False)
+            self.run_table.setDisabled(False)
 
-    def routine_deleted(self):
+    def delete_routine(self, name):
+        remove_routine(name)
+        self.routine_deleted(name)
+
+    def routine_deleted(self, name=None):
+        if self.prev_routine:
+            if self.prev_routine.routine == name:
+                self.prev_routine = None
+                self.current_routine = None
+                self.load_all_runs()
+                if not self.cb_history.count():
+                    self.go_run(-1)  # sometimes we need to trigger this manually
+                self.sig_routine_activated.emit(False)
+
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
-
-        self.prev_routine = None
-        self.current_routine = None
-        self.load_all_runs()
-        if not self.cb_history.count():
-            self.go_run(-1)  # sometimes we need to trigger this manually
-        self.sig_routine_activated.emit(False)

@@ -449,7 +449,9 @@ class BadgerRoutinePage(QWidget):
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
         algo = self.algo_box.cb.currentText()
+        assert algo, 'Please specify algorithm'
         env = self.env_box.cb.currentText()
+        assert env, 'Please specify environment'
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
