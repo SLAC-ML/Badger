@@ -305,6 +305,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 # Use unsafe version to support temp vars
                 # We have to trust the users...
                 env._set_vars(var_names, _x)
+                env.vars_changed(var_names, _x)
 
                 _xo = np.array(env._get_vars(var_names), dtype=np.float64)
                 xo = norm(_xo, vranges[:, 0], vranges[:, 1])

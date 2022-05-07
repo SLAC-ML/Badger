@@ -56,6 +56,10 @@ class Environment(ABC):
         # other: error code
         return 0
 
+    # Actions to preform after change vars and before read vars/obj
+    def vars_changed(self, vars: List[str], values: list):
+        pass
+
     # Get observation
     # Unsafe version
     @abstractmethod
