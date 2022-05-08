@@ -1,7 +1,7 @@
 from pkg_resources import resource_filename
 import signal
 import time
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5 import QtCore
 import sys
@@ -86,4 +86,9 @@ def launch_gui():
     timer.start(200)
 
     window.show()
+
+    # Show the saving SCORE heads-up
+    QMessageBox.information(
+            window, 'Heads-up!', 'This might be a good time to save a SCORE.')
+
     sys.exit(app.exec())
