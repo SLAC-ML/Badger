@@ -580,13 +580,27 @@ class BadgerOptMonitor(QWidget):
             self.ins_con.setValue(ins_var.value())
 
     def ins_drag_done(self, ins):
-        value = np.round(ins.value())
+        self.sync_ins(ins.value())
+
+    def sync_ins(self, pos):
+        if self.plot_x_axis:  # x-axis is time
+            value, idx = self.closest_ts(pos)
+        else:
+            value = idx = np.round(pos)
         self.ins_obj.setValue(value)
         if self.con_names:
             self.ins_con.setValue(value)
         self.ins_var.setValue(value)
 
-        self.sig_inspect.emit(value)
+        self.sig_inspect.emit(idx)
+
+    def closest_ts(self, t):
+        # Get the closest timestamp in self.ts regarding t
+        ts = np.array(self.ts)
+        ts -= ts[0]
+        idx = np.argmin(np.abs(ts - t))
+
+        return ts[idx], idx
 
     def reset_env(self):
         reply = QMessageBox.question(self,
@@ -611,18 +625,19 @@ class BadgerOptMonitor(QWidget):
             return
 
         idx = pf.pareto_set[0][0]
-        self.ins_obj.setValue(idx)
-        if self.con_names:
-            self.ins_con.setValue(idx)
-        self.ins_var.setValue(idx)
-
+        self.jump_to_solution(int(idx))
         self.sig_inspect.emit(idx)
 
     def jump_to_solution(self, idx):
-        self.ins_obj.setValue(idx)
+        if self.plot_x_axis:  # x-axis is time
+            value = self.ts[idx] -  self.ts[0]
+        else:
+            value = idx
+
+        self.ins_obj.setValue(value)
         if self.con_names:
-            self.ins_con.setValue(idx)
-        self.ins_var.setValue(idx)
+            self.ins_con.setValue(value)
+        self.ins_var.setValue(value)
 
     def set_vars(self):
         df = self.routine_runner.data
@@ -657,6 +672,16 @@ class BadgerOptMonitor(QWidget):
             if self.con_names:
                 self.plot_con.setLabel('bottom', 'iterations')
 
+        # Update inspector line position
+        if i:
+            value = self.ts[int(self.ins_obj.value())] - self.ts[0]
+        else:
+            _, value = self.closest_ts(self.ins_obj.value())
+        self.ins_obj.setValue(value)
+        if self.con_names:
+            self.ins_con.setValue(value)
+        self.ins_var.setValue(value)
+
         self.update_curves(auto_range=True)
 
     def select_x_plot_y_axis(self, i):
@@ -680,14 +705,7 @@ class BadgerOptMonitor(QWidget):
             flag = flag or self.plot_con.viewRect().contains(coor_con)
 
         if flag:
-            idx = int(np.round(coor_obj.x()))
-
-            self.ins_obj.setValue(idx)
-            if self.con_names:
-                self.ins_con.setValue(idx)
-            self.ins_var.setValue(idx)
-
-            self.sig_inspect.emit(idx)
+            self.sync_ins(coor_obj.x())
 
     def delete_run(self):
         self.sig_del.emit()
