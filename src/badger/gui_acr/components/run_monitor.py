@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from PyQt5.QtGui import QFont
@@ -41,7 +41,9 @@ class BadgerOptMonitor(QWidget):
         # self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         # For plot type switching
-        self.x_plot_type = 0  # 0: raw, 1: normalized
+        self.x_plot_y_axis = 0  # 0: raw, 1: normalized
+        self.plot_x_axis = 0  # 0: iteration, 1: time
+        self.x_plot_relative = True
         # Routine info
         self.routine = None
         self.var_names = []
@@ -76,12 +78,24 @@ class BadgerOptMonitor(QWidget):
         config_bar = QWidget()
         hbox_config = QHBoxLayout(config_bar)
         hbox_config.setContentsMargins(0, 0, 0, 0)
-        label = QLabel('Evaluation History (X) Plot Type')
-        self.cb_plot = cb_plot = QComboBox()
-        cb_plot.setItemDelegate(QStyledItemDelegate())
-        cb_plot.addItems(['Raw', 'Normalized'])
+        label = QLabel('Evaluation History Plot Type')
+        label_x = QLabel('X Axis')
+        self.cb_plot_x = cb_plot_x = QComboBox()
+        cb_plot_x.setItemDelegate(QStyledItemDelegate())
+        cb_plot_x.addItems(['Iteration', 'Time'])
+        label_y = QLabel('Y Axis (Var)')
+        self.cb_plot_y = cb_plot_y = QComboBox()
+        cb_plot_y.setItemDelegate(QStyledItemDelegate())
+        cb_plot_y.addItems(['Raw', 'Normalized'])
+        self.check_relative = check_relative = QCheckBox('Relative')
+        check_relative.setChecked(True)
         hbox_config.addWidget(label)
-        hbox_config.addWidget(cb_plot, 1)
+        # hbox_config.addSpacing(1)
+        hbox_config.addWidget(label_x)
+        hbox_config.addWidget(cb_plot_x, 1)
+        hbox_config.addWidget(label_y)
+        hbox_config.addWidget(cb_plot_y, 1)
+        hbox_config.addWidget(check_relative)
 
         # Set up the monitor
         # Don't set show=True or there will be a blank window flashing once
@@ -211,7 +225,9 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.clicked.connect(self.run_stop_routine)
 
         # Visualization
-        self.cb_plot.currentIndexChanged.connect(self.select_x_plot_type)
+        self.cb_plot_x.currentIndexChanged.connect(self.select_x_axis)
+        self.cb_plot_y.currentIndexChanged.connect(self.select_x_plot_y_axis)
+        self.check_relative.stateChanged.connect(self.toggle_x_plot_y_axis_relative)
 
     def init_plots(self, routine, data=None, run_filename=None):
         # Parse routine
@@ -425,13 +441,7 @@ class BadgerOptMonitor(QWidget):
             for i in range(len(self.con_names)):
                 self.curves_con[i].setData(np.array(self.cons)[:, i])
 
-        if self.x_plot_type:
-            _vars = norm(np.array(self.vars),
-                         self.vranges[:, 0], self.vranges[:, 1])
-        else:
-            _vars = np.array(self.vars)
-        for i in range(len(self.var_names)):
-            self.curves_var[i].setData(_vars[:, i])
+        self.update_plot()
 
         self.enable_auto_range()
 
@@ -600,13 +610,32 @@ class BadgerOptMonitor(QWidget):
         # QMessageBox.information(
         #     self, 'Set Environment', f'Env vars have been set to {solution}')
 
-    def select_x_plot_type(self, i):
-        self.x_plot_type = i
-        if i:
+    def select_x_axis(self, i):
+        self.plot_x_axis = i
+        self.update_plot()
+
+    def select_x_plot_y_axis(self, i):
+        self.x_plot_y_axis = i
+        self.update_plot()
+
+    def toggle_x_plot_y_axis_relative(self):
+        self.x_plot_relative = self.check_relative.isChecked()
+        self.update_plot()
+
+    def update_plot(self):
+        type_x = self.plot_x_axis
+        type_y = self.x_plot_y_axis
+        relative = self.x_plot_relative
+
+        if type_y:
             _vars = norm(np.array(self.vars),
                          self.vranges[:, 0], self.vranges[:, 1])
         else:
             _vars = np.array(self.vars)
+
+        if relative:
+            _vars = _vars - _vars[0]
+
         for i in range(len(self.var_names)):
             self.curves_var[i].setData(_vars[:, i])
 
