@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
 from .settings import read_value
+from .archive import BADGER_ARCHIVE_ROOT
 
 
 # Check badger logbook root
@@ -19,21 +20,23 @@ def send_to_logbook(routine, data, widget=None):
     from xml.etree import ElementTree
     from re import sub
 
+    obj_names = [next(iter(d))
+        for d in routine['config']['objectives']]
+
     log_text = ''
-    algo_name = 'simplex'
-    data_path = 'runs'
-    obj_name = 'obj'
-    obj_start = 0
-    obj_end = 1
-    n_iter = 10
-    n_point = 10
-    if n_iter > 0:
-        log_text = f'Gain ({obj_name}): {round(obj_start, 4)} -> {round(obj_end, 4)}'
-    log_text += f'\nIterations: {n_iter}\n'
-    # log_text += 'Trim delay: '+str(gui.sb_tdelay.value())+'\n'
-    log_text += f'Points Requested: {n_point}\n'
-    # log_text += 'Normalization Amp Coeff: ' + \
-        # str(gui.sb_scaling_coef.value())+'\n'
+    routine_name = routine['name']
+    algo_name = routine['algo']
+    data_path = BADGER_ARCHIVE_ROOT
+    obj_name = obj_names[0]
+    obj_start = data[obj_name][0]
+    obj_end = data[obj_name][-1]
+    duration = data['timestamp_raw'][-1] - data['timestamp_raw'][0]
+    n_point = len(data)
+    if n_point > 0:
+        log_text = f'Gain ({obj_name}): {round(obj_start, 4)} -> {round(obj_end, 4)}\n'
+    log_text += f'Time cost: {round(duration, 2)}s\n'
+    log_text += f'Points requested: {n_point}\n'
+    log_text += f'Routine name: {routine_name}\n'
     log_text += f'Type of optimization: {algo_name}\n'
     log_text += f'Data location: {data_path}\n'
     try:
