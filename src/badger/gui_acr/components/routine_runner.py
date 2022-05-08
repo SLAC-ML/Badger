@@ -7,7 +7,7 @@ from ...utils import curr_ts, run_routine, ts_to_str
 class BadgerRoutineSignals(QObject):
     env_ready = pyqtSignal(list)
     finished = pyqtSignal()
-    progress = pyqtSignal(list, list, list)
+    progress = pyqtSignal(list, list, list, float)
     error = pyqtSignal(Exception)
     info = pyqtSignal(str)
 
@@ -68,11 +68,11 @@ class BadgerRoutineRunner(QRunnable):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
-        self.signals.progress.emit(list(vars), list(obses), list(cons))
+        ts = curr_ts()
+        self.signals.progress.emit(list(vars), list(obses), list(cons), ts.timestamp())
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        ts = curr_ts()
         solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
         self.data = self.data.append(pd.Series(solution, index=self.data.columns), ignore_index=True)
 

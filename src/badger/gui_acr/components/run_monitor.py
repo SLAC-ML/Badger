@@ -58,6 +58,7 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
+        self.ts = []
         # Run optimization
         self.thread_pool = None
         self.routine_runner = None
@@ -332,6 +333,7 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
+        self.ts = []
         if self.routine_runner and self.routine_runner.run_filename == run_filename:
             self.btn_reset.setDisabled(False)
             self.btn_set.setDisabled(False)
@@ -354,8 +356,9 @@ class BadgerOptMonitor(QWidget):
         for con in self.con_names:
             self.cons.append(data[con])
         self.cons = np.array(self.cons).T.tolist()
+        self.ts = data['timestamp_raw']
 
-        self.update_curves()
+        self.update_curves(auto_range=True)
 
         self.calc_optimals()
         self.btn_del.setDisabled(False)
@@ -433,24 +436,53 @@ class BadgerOptMonitor(QWidget):
         if self.con_names:
             self.plot_con.enableAutoRange()
 
-    def update_curves(self):
+    def update_curves(self, auto_range=False):
+        type_x = self.plot_x_axis
+        type_y = self.x_plot_y_axis
+        relative = self.x_plot_relative
+
+        if type_y:
+            _vars = norm(np.array(self.vars),
+                         self.vranges[:, 0], self.vranges[:, 1])
+        else:
+            _vars = np.array(self.vars)
+
+        if relative:
+            _vars = _vars - _vars[0]
+
+        if type_x:
+            ts = np.array(self.ts)
+            ts -= ts[0]
+
+        for i in range(len(self.var_names)):
+            if type_x:
+                self.curves_var[i].setData(ts, _vars[:, i])
+            else:
+                self.curves_var[i].setData(_vars[:, i])
+
         for i in range(len(self.obj_names)):
-            self.curves_obj[i].setData(np.array(self.objs)[:, i])
+            if type_x:
+                self.curves_obj[i].setData(ts, np.array(self.objs)[:, i])
+            else:
+                self.curves_obj[i].setData(np.array(self.objs)[:, i])
 
         if self.con_names:
             for i in range(len(self.con_names)):
-                self.curves_con[i].setData(np.array(self.cons)[:, i])
+                if type_x:
+                    self.curves_con[i].setData(ts, np.array(self.cons)[:, i])
+                else:
+                    self.curves_con[i].setData(np.array(self.cons)[:, i])
 
-        self.update_plot()
+        if auto_range:
+            self.enable_auto_range()
 
-        self.enable_auto_range()
-
-    def update(self, vars, objs, cons):
+    def update(self, vars, objs, cons, ts):
         self.vars.append(vars)
         self.objs.append(objs)
         self.cons.append(cons)
+        self.ts.append(ts)
 
-        self.update_curves()
+        self.update_curves(auto_range=True)
         self.sig_progress.emit(vars, objs, cons)
 
         # Check critical condition
@@ -612,32 +644,28 @@ class BadgerOptMonitor(QWidget):
 
     def select_x_axis(self, i):
         self.plot_x_axis = i
-        self.update_plot()
+
+        # Switch the x-axis labels
+        if i:
+            self.plot_var.setLabel('bottom', 'time (s)')
+            self.plot_obj.setLabel('bottom', 'time (s)')
+            if self.con_names:
+                self.plot_con.setLabel('bottom', 'time (s)')
+        else:
+            self.plot_var.setLabel('bottom', 'iterations')
+            self.plot_obj.setLabel('bottom', 'iterations')
+            if self.con_names:
+                self.plot_con.setLabel('bottom', 'iterations')
+
+        self.update_curves(auto_range=True)
 
     def select_x_plot_y_axis(self, i):
         self.x_plot_y_axis = i
-        self.update_plot()
+        self.update_curves()
 
     def toggle_x_plot_y_axis_relative(self):
         self.x_plot_relative = self.check_relative.isChecked()
-        self.update_plot()
-
-    def update_plot(self):
-        type_x = self.plot_x_axis
-        type_y = self.x_plot_y_axis
-        relative = self.x_plot_relative
-
-        if type_y:
-            _vars = norm(np.array(self.vars),
-                         self.vranges[:, 0], self.vranges[:, 1])
-        else:
-            _vars = np.array(self.vars)
-
-        if relative:
-            _vars = _vars - _vars[0]
-
-        for i in range(len(self.var_names)):
-            self.curves_var[i].setData(_vars[:, i])
+        self.update_curves()
 
     def on_mouse_click(self, event):
         # https://stackoverflow.com/a/64081483
