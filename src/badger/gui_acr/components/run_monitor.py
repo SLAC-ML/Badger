@@ -586,7 +586,7 @@ class BadgerOptMonitor(QWidget):
         if self.plot_x_axis:  # x-axis is time
             value, idx = self.closest_ts(pos)
         else:
-            value = idx = np.round(pos)
+            value = idx = np.clip(np.round(pos), 0, len(self.ts) - 1)
         self.ins_obj.setValue(value)
         if self.con_names:
             self.ins_con.setValue(value)
