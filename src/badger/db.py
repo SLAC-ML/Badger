@@ -17,30 +17,59 @@ elif not os.path.exists(BADGER_DB_ROOT):
         f'Badger database root {BADGER_DB_ROOT} created')
 
 
+def maybe_create_routines_db(func):
+
+    def func_safe(*args, **kwargs):
+        db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
+
+        con = sqlite3.connect(db_routine)
+        cur = con.cursor()
+
+        cur.execute('create table if not exists routine (name not null primary key, config, savedAt timestamp)')
+
+        con.commit()
+        con.close()
+
+        return func(*args, **kwargs)
+
+    return func_safe
+
+
+def maybe_create_runs_db(func):
+
+    def func_safe(*args, **kwargs):
+        db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
+
+        con = sqlite3.connect(db_run)
+        cur = con.cursor()
+
+        cur.execute('create table if not exists run (id integer primary key, savedAt timestamp, finishedAt timestamp, routine, filename)')
+
+        con.commit()
+        con.close()
+
+        return func(*args, **kwargs)
+
+    return func_safe
+
+
+@maybe_create_routines_db
 def save_routine(routine):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
 
-    # Initialize
-    if not os.path.exists(db_routine):
-        con = sqlite3.connect(db_routine)
-        cur = con.cursor()
-        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
-    else:
-        con = sqlite3.connect(db_routine)
-        cur = con.cursor()
+    con = sqlite3.connect(db_routine)
+    cur = con.cursor()
 
     # Insert a record
-    try:
-        cur.execute('insert into routine values (?, ?, ?)',
-                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
-    except sqlite3.OperationalError:
-        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
-        cur.execute('insert into routine values (?, ?, ?)',
-                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
+    cur.execute('insert into routine values (?, ?, ?)',
+                (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
+
     con.commit()
     con.close()
 
 
+@maybe_create_routines_db
+@maybe_create_runs_db
 def remove_routine(name, remove_runs=False):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
 
@@ -65,16 +94,14 @@ def remove_routine(name, remove_runs=False):
         con.close()
 
 
+@maybe_create_routines_db
 def load_routine(name):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    try:
-        cur.execute('select * from routine where name=:name', {'name': name})
-    except sqlite3.OperationalError:
-        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
-        cur.execute('select * from routine where name=:name', {'name': name})
+    cur.execute('select * from routine where name=:name', {'name': name})
+
     records = cur.fetchall()
     con.close()
 
@@ -88,40 +115,20 @@ def load_routine(name):
             f'Multiple routines with name {name} found in the database!')
 
 
+@maybe_create_routines_db
 def list_routine(keyword=''):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    try:
-        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
-    except sqlite3.OperationalError:
-        cur.execute('create table routine (name not null primary key, config, savedAt timestamp)')
-        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
+    cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
+
     records = cur.fetchall()
     names = [record[0] for record in records]
     timestamps = [record[1] for record in records]
     con.close()
 
     return names, timestamps
-
-
-def maybe_create_runs_db(func):
-
-    def func_safe(*args, **kwargs):
-        db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
-
-        con = sqlite3.connect(db_run)
-        cur = con.cursor()
-
-        cur.execute(f'create table if not exists run (id integer primary key, savedAt timestamp, finishedAt timestamp, routine, filename)')
-
-        con.commit()
-        con.close()
-
-        return func(*args, **kwargs)
-
-    return func_safe
 
 
 @maybe_create_runs_db
