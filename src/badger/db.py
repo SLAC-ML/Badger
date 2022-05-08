@@ -106,17 +106,30 @@ def list_routine(keyword=''):
     return names, timestamps
 
 
+def maybe_create_runs_db(func):
+
+    def func_safe(*args, **kwargs):
+        db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
+
+        con = sqlite3.connect(db_run)
+        cur = con.cursor()
+
+        cur.execute(f'create table if not exists run (id integer primary key, savedAt timestamp, finishedAt timestamp, routine, filename)')
+
+        con.commit()
+        con.close()
+
+        return func(*args, **kwargs)
+
+    return func_safe
+
+
+@maybe_create_runs_db
 def save_run(run):
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
-    # Initialize
-    if not os.path.exists(db_run):
-        con = sqlite3.connect(db_run)
-        cur = con.cursor()
-        cur.execute('create table run (id integer primary key, savedAt timestamp, finishedAt timestamp, routine, filename)')
-    else:
-        con = sqlite3.connect(db_run)
-        cur = con.cursor()
+    con = sqlite3.connect(db_run)
+    cur = con.cursor()
 
     # Insert a record
     routine_name = run['routine']['name']
@@ -124,13 +137,9 @@ def save_run(run):
     timestamps = run['data']['timestamp_raw']
     time_start = datetime.fromtimestamp(timestamps[0])
     time_finish = datetime.fromtimestamp(timestamps[-1])
-    try:
-        cur.execute('insert into run values (?, ?, ?, ?, ?)',
-                    (None, time_start, time_finish, routine_name, run_filename))
-    except sqlite3.OperationalError:
-        cur.execute('create table run (id integer primary key, savedAt timestamp, finishedAt timestamp, routine, filename)')
-        cur.execute('insert into run values (?, ?, ?, ?, ?)',
-                    (None, time_start, time_finish, routine_name, run_filename))
+    cur.execute('insert into run values (?, ?, ?, ?, ?)',
+                (None, time_start, time_finish, routine_name, run_filename))
+
     rid = cur.lastrowid
 
     con.commit()
@@ -139,6 +148,7 @@ def save_run(run):
     return rid
 
 
+@maybe_create_runs_db
 def get_runs_by_routine(routine: str):
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
@@ -154,6 +164,7 @@ def get_runs_by_routine(routine: str):
     return filenames
 
 
+@maybe_create_runs_db
 def get_runs():
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
@@ -162,6 +173,7 @@ def get_runs():
 
     cur.execute(f'select filename from run order by savedAt desc')
     records = cur.fetchall()
+
     con.close()
 
     filenames = [record[0] for record in records]
@@ -169,6 +181,7 @@ def get_runs():
     return filenames
 
 
+@maybe_create_runs_db
 def remove_run_by_filename(name):
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
@@ -181,6 +194,7 @@ def remove_run_by_filename(name):
     con.close()
 
 
+@maybe_create_runs_db
 def remove_run_by_id(rid):
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
