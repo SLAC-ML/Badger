@@ -367,8 +367,13 @@ class BadgerRoutinePage(QWidget):
                 'interface': [intf_name]
             }
             env = instantiate_env(self.env, configs)
+            # Get vocs
+            try:
+                vocs = self._compose_vocs()
+            except Exception:
+                vocs = None
             # Function generate comes from the script
-            params_algo = tmp['generate'](env, None)
+            params_algo = tmp['generate'](env, vocs)
             self.edit_algo.setPlainText(ystring(params_algo))
         except Exception as e:
             QMessageBox.warning(self, 'Invalid script!', str(e))
@@ -651,6 +656,53 @@ class BadgerRoutinePage(QWidget):
             raise e
 
         return routine
+
+    def _compose_vocs(self):
+        # Compose the VOCS settings
+        variables = []
+        for i in range(self.list_var.count()):
+            item = self.list_var.item(i)
+            item_widget = self.list_var.itemWidget(item)
+            if item_widget.check_name.isChecked():
+                var_name = item_widget.check_name.text()
+                lb = item_widget.sb_lower.sb.value()
+                ub = item_widget.sb_upper.sb.value()
+                _dict = {}
+                _dict[var_name] = [lb, ub]
+                variables.append(_dict)
+
+        objectives = []
+        for i in range(self.list_obj.count()):
+            item = self.list_obj.item(i)
+            item_widget = self.list_obj.itemWidget(item)
+            if item_widget.check_name.isChecked():
+                obj_name = item_widget.check_name.text()
+                rule = item_widget.cb_rule.currentText()
+                _dict = {}
+                _dict[obj_name] = rule
+                objectives.append(_dict)
+
+        constraints = []
+        for i in range(self.list_con.count()):
+            item = self.list_con.item(i)
+            item_widget = self.list_con.itemWidget(item)
+            critical = item_widget.check_crit.isChecked()
+            con_name = item_widget.cb_obs.currentText()
+            relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
+            value = item_widget.sb.value()
+            _dict = {}
+            _dict[con_name] = [relation, value]
+            if critical:
+                _dict[con_name].append('CRITICAL')
+            constraints.append(_dict)
+
+        vocs = {
+            'variables': variables,
+            'objectives': objectives,
+            'constraints': constraints,
+        }
+
+        return vocs
 
     def review(self):
         try:
