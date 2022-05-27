@@ -299,6 +299,11 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 X = x.reshape(1, -1)
                 return None, None, None, X
 
+            # Check if bounds are violated
+            if np.max(X) > 1 or np.min(X) < 0:
+                logger.warning('proposed trial solution exceeds the bounds, solution has been clipped at bounds!')
+                X = np.clip(X, 0, 1)
+
             for x in X:
                 _x = denorm(x, vranges[:, 0], vranges[:, 1])
 
