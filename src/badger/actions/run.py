@@ -3,9 +3,10 @@ logger = logging.getLogger(__name__)
 import time
 import pandas as pd
 from coolname import generate_slug
-from ..utils import load_config, merge_params, normalize_routine
+from ..utils import load_config, merge_params
 from ..utils import config_list_to_dict, curr_ts, ts_to_str
-from ..utils import run_routine as run
+from ..core import run_routine as run
+from ..core import normalize_routine
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,

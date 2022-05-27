@@ -1,6 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
-from ..utils import range_to_str, yprint, run_routine
+from ..utils import range_to_str, yprint
 
 
 def show_routine(args):

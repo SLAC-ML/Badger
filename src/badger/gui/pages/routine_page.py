@@ -5,7 +5,8 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QFont
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, instantiate_env
+from ...utils import ystring, load_config, config_list_to_dict
+from ...core import normalize_routine, instantiate_env
 from ..components.variable_item import variable_item
 from ..components.objective_item import objective_item
 from ..components.constraint_item import constraint_item

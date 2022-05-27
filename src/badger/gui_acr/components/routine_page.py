@@ -4,7 +4,8 @@ from PyQt5.QtCore import QSize
 import sqlite3
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
-from ...utils import ystring, load_config, config_list_to_dict, normalize_routine, instantiate_env
+from ...utils import ystring, load_config, config_list_to_dict
+from ...core import normalize_routine, instantiate_env
 from ...db import save_routine, remove_routine
 from .variable_item import variable_item
 from .objective_item import objective_item

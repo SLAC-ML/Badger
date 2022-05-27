@@ -1,7 +1,8 @@
 import time
 import pandas as pd
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from ...utils import curr_ts, run_routine, ts_to_str
+from ...utils import curr_ts, ts_to_str
+from ...core import run_routine
 
 
 class BadgerRoutineSignals(QObject):

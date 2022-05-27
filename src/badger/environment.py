@@ -1,6 +1,5 @@
 import numpy as np
 import time
-import multiprocessing as mp
 from abc import ABC, abstractmethod
 from typing import List
 from .interface import Interface

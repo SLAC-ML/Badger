@@ -41,7 +41,7 @@ def test_run(mock_config_root):
     config_log()
     from badger.factory import get_algo, get_env
     from badger.utils import load_config, merge_params, config_list_to_dict
-    from badger.utils import normalize_routine, run_routine
+    from badger.core import normalize_routine, run_routine
 
     # Args
     algo = 'silly'
