@@ -65,6 +65,8 @@ class BadgerOptMonitor(QWidget):
         self.running = False
         # Analysis tool for history runs
         self.pf = None
+        # Fix the auto range issue
+        self.eval_count = 0
 
         self.init_ui()
         self.config_logic()
@@ -328,6 +330,9 @@ class BadgerOptMonitor(QWidget):
         else:
             self.btn_stop.setDisabled(True)
 
+        self.eval_count = 0  # reset the evaluation count
+        self.enable_auto_range()
+
         # Fill in data
         self.data = data
         self.vars = []
@@ -344,7 +349,6 @@ class BadgerOptMonitor(QWidget):
             self.btn_del.setDisabled(True)
             self.btn_log.setDisabled(True)
             self.btn_opt.setDisabled(True)
-            self.enable_auto_range()
             return
 
         for var in self.var_names:
@@ -358,7 +362,7 @@ class BadgerOptMonitor(QWidget):
         self.cons = np.array(self.cons).T.tolist()
         self.ts = data['timestamp_raw']
 
-        self.update_curves(auto_range=True)
+        self.update_curves()
 
         self.calc_optimals()
         self.btn_del.setDisabled(False)
@@ -436,7 +440,7 @@ class BadgerOptMonitor(QWidget):
         if self.con_names:
             self.plot_con.enableAutoRange()
 
-    def update_curves(self, auto_range=False):
+    def update_curves(self):
         type_x = self.plot_x_axis
         type_y = self.x_plot_y_axis
         relative = self.x_plot_relative
@@ -473,16 +477,19 @@ class BadgerOptMonitor(QWidget):
                 else:
                     self.curves_con[i].setData(np.array(self.cons)[:, i])
 
-        if auto_range:
-            self.enable_auto_range()
-
     def update(self, vars, objs, cons, ts):
         self.vars.append(vars)
         self.objs.append(objs)
         self.cons.append(cons)
         self.ts.append(ts)
 
-        self.update_curves(auto_range=True)
+        self.update_curves()
+
+        # Quick-n-dirty fix to the auto range issue
+        self.eval_count += 1
+        if self.eval_count < 5:
+            self.enable_auto_range()
+
         self.sig_progress.emit(vars, objs, cons)
 
         # Check critical condition
@@ -682,7 +689,8 @@ class BadgerOptMonitor(QWidget):
             self.ins_con.setValue(value)
         self.ins_var.setValue(value)
 
-        self.update_curves(auto_range=True)
+        self.update_curves()
+        self.enable_auto_range()
 
     def select_x_plot_y_axis(self, i):
         self.x_plot_y_axis = i
