@@ -348,6 +348,7 @@ class BadgerHomePage(QWidget):
     def routine_saved(self):
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
+        self.select_routine(self.routine_list.item(0))
         self.done_create_routine()
 
     def done_create_routine(self):
