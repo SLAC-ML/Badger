@@ -41,7 +41,10 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     except Exception as e:
         logger.error(e)
 
-    archive_run(routine, data[0])
+    try:
+        archive_run(routine, data[0])
+    except IndexError:  # dataframe is empty
+        pass
 
 
 def run_routine(args):
