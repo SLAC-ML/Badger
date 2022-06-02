@@ -32,9 +32,8 @@ class Environment(ABC):
 
     # Get the default params of the environment
     @staticmethod
-    @abstractmethod
     def get_default_params() -> dict:
-        pass
+        return None
 
     # Get current variable
     # Unsafe version (var won't be checked beforehand)
