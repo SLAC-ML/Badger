@@ -23,8 +23,8 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         con_names = [next(iter(d)) for d in routine['config']['constraints']]
     else:
         con_names = []
-    # Make data a list to avoid global var def
-    data = [pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)]
+    # Store solutions in a list to avoid global var def
+    solutions = []
 
     def after_evaluate(vars, obses, cons):
         # vars: ndarray
@@ -32,7 +32,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         # cons: ndarray
         ts = curr_ts()
         solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
-        data[0] = data[0].append(pd.Series(solution, index=data[0].columns), ignore_index=True)
+        solutions.append(solution)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
 
@@ -41,10 +41,9 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     except Exception as e:
         logger.error(e)
 
-    try:
-        archive_run(routine, data[0])
-    except IndexError:  # dataframe is empty
-        pass
+    if solutions:  # only save the run when at least one solution has been evaluated
+        df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
+        archive_run(routine, df)
 
 
 def run_routine(args):
