@@ -76,7 +76,7 @@ def normalize_routine(routine):
 
 def run_routine(routine, skip_review=False, save=None, verbose=2,
                 before_evaluate=None, after_evaluate=None,
-                env_ready=None, pf_ready=None):
+                env_ready=None, pf_ready=None, states_ready=None):
     # Review the routine
     if not skip_review:
         print('Please review the routine to be run:\n')
@@ -256,6 +256,11 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             optimize = optimize.optimize
         else:
             configs = routine['algo_params']
+
+        # Save system states if applicable
+        states = env.get_system_states()
+        if states_ready and (states is not None):
+            states_ready(states)
 
         optimize(evaluate, configs)
     except Exception as e:

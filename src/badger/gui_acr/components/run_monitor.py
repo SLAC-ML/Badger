@@ -526,7 +526,8 @@ class BadgerOptMonitor(QWidget):
         self.sig_lock.emit(False)
 
         try:
-            run = archive_run(self.routine_runner.routine, self.routine_runner.data)
+            run = archive_run(self.routine_runner.routine, self.routine_runner.data,
+                self.routine_runner.states)
             self.routine_runner.run_filename = run['filename']
             self.sig_run_name.emit(run['filename'])
         except Exception as e:

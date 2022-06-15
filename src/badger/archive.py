@@ -16,7 +16,7 @@ elif not os.path.exists(BADGER_ARCHIVE_ROOT):
         f'Badger run root {BADGER_ARCHIVE_ROOT} created')
 
 
-def archive_run(routine, data):
+def archive_run(routine, data, states=None):
     # routine: dict
     # data: pandas dataframe
     suffix = curr_ts_to_str("lcls-fname")
@@ -34,6 +34,8 @@ def archive_run(routine, data):
     }
     rid = save_run(run)
     run = {'id': rid, **run}  # Put id in front
+    if states:  # save the system states
+        run['system_states'] = states
 
     os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, fname), 'w') as f:

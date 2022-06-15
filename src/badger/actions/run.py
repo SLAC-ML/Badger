@@ -35,15 +35,19 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         solutions.append(solution)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
+    # Store system states
+    storage = {'states': None}
+    def states_ready(states):
+        storage['states'] = states
 
     try:
-        run(routine, yes, save, verbose, after_evaluate=after_evaluate)
+        run(routine, yes, save, verbose, after_evaluate=after_evaluate, states_ready=states_ready)
     except Exception as e:
         logger.error(e)
 
     if solutions:  # only save the run when at least one solution has been evaluated
         df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
-        archive_run(routine, df)
+        archive_run(routine, df, storage['states'])
 
 
 def run_routine(args):

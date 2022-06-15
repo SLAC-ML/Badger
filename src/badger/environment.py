@@ -58,6 +58,12 @@ class Environment(ABC):
     def vars_changed(self, vars: List[str], values: list):
         pass
 
+    # Get current system states
+    # If return is not None, the states would be saved at the start of each run
+    # Should return a dict if not None
+    def get_system_states(self):
+        return None
+
     # Get observation
     # Unsafe version
     @abstractmethod

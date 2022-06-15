@@ -31,6 +31,7 @@ class BadgerRoutineRunner(QRunnable):
         else:
             self.con_names = con_names = []
         self.data = pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
+        self.states = None  # system states to be saved at start of a run
         self.save = save
         self.verbose = verbose
         self.use_full_ts = use_full_ts
@@ -43,7 +44,7 @@ class BadgerRoutineRunner(QRunnable):
         try:
             run_routine(self.routine, True, self.save, self.verbose,
                         self.before_evaluate, self.after_evaluate,
-                        self.env_ready, self.pf_ready)
+                        self.env_ready, self.pf_ready, self.states_ready)
         except Exception as e:
             error = e
 
@@ -87,6 +88,9 @@ class BadgerRoutineRunner(QRunnable):
 
     def pf_ready(self, pf):
         self.pf = pf
+
+    def states_ready(self, states):
+        self.states = states
 
     def ctrl_routine(self, pause):
         self.is_paused = pause
