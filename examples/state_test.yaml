@@ -1,0 +1,9 @@
+variables:
+  - q1
+  - q2: [-1, 0.5]
+  - q4: [0, 1]
+objectives:
+  - l2
+states:
+  - q3
+  - l1
