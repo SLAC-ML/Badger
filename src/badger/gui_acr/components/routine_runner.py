@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import time
 import pandas as pd
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
@@ -46,6 +48,7 @@ class BadgerRoutineRunner(QRunnable):
                         self.before_evaluate, self.after_evaluate,
                         self.env_ready, self.pf_ready, self.states_ready)
         except Exception as e:
+            logger.exception(e)
             error = e
 
         self.signals.finished.emit()
