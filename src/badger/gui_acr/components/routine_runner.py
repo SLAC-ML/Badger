@@ -10,7 +10,7 @@ from ...core import run_routine
 class BadgerRoutineSignals(QObject):
     env_ready = pyqtSignal(list)
     finished = pyqtSignal()
-    progress = pyqtSignal(list, list, list, float)
+    progress = pyqtSignal(list, list, list, list, float)
     error = pyqtSignal(Exception)
     info = pyqtSignal(str)
 
@@ -32,7 +32,11 @@ class BadgerRoutineRunner(QRunnable):
             self.con_names = con_names = [next(iter(d)) for d in routine['config']['constraints']]
         else:
             self.con_names = con_names = []
-        self.data = pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
+        try:
+            self.sta_names = sta_names = routine['config']['states'] or []
+        except KeyError:  # this would happen when rerun an old version routine
+            self.sta_names = sta_names = []
+        self.data = pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
         self.states = None  # system states to be saved at start of a run
         self.save = save
         self.verbose = verbose
@@ -69,16 +73,17 @@ class BadgerRoutineRunner(QRunnable):
         if self.is_killed:
             raise Exception('Optimization run has been terminated!')
 
-    def after_evaluate(self, vars, obses, cons):
+    def after_evaluate(self, vars, obses, cons, stas):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
+        # stas: list
         ts = curr_ts()
-        self.signals.progress.emit(list(vars), list(obses), list(cons), ts.timestamp())
+        self.signals.progress.emit(list(vars), list(obses), list(cons), stas, ts.timestamp())
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
+        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
         self.data = self.data.append(pd.Series(solution, index=self.data.columns), ignore_index=True)
 
         # take a break to let the outside signal to change the status

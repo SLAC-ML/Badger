@@ -68,6 +68,14 @@ def normalize_routine(routine):
     except KeyError:
         config['constraints'] = None
 
+    # Normalize the states
+    try:
+        _ = config['states']
+        if not _:  # empty list
+            config['states'] = None
+    except KeyError:
+        config['states'] = None
+
     # Remove the additional info
     del routine['env_vranges']
 
@@ -144,6 +152,10 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     else:
         con_names = []
         thresholds = []
+    try:
+        sta_names = routine['config']['states'] or []
+    except KeyError:  # this would happen when rerun an old version routine
+        sta_names = []
 
     info = {'count': -1}
     # Make a normalized evaluate function
@@ -218,16 +230,26 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                 E.append(cons_e)
             cons_raw = np.array(cons_raw, dtype=np.float64)
 
+            # Deal with states
+            states = []
+            for sta_name in sta_names:
+                # A state could be an observation or a variable
+                try:
+                    sta = env.get_obs(sta_name)
+                except:
+                    sta = env.get_var(sta_name)
+                states.append(sta)
+
             info['count'] += 1
             _idx_x = np.insert(_xo, 0, info['count'])  # keep the idx info
 
             is_optimal = not pf.is_dominated((_idx_x, obses_raw))
-            solution = (_xo, obses_raw, cons_raw, is_optimal,
-                        var_names, obj_names, con_names)
+            solution = (_xo, obses_raw, cons_raw, states, is_optimal,
+                        var_names, obj_names, con_names, sta_names)
             opt_logger.update(Events.OPTIMIZATION_STEP, solution)
 
             if after_evaluate:
-                after_evaluate(_xo, obses_raw, cons_raw)
+                after_evaluate(_xo, obses_raw, cons_raw, states)
 
         Y = np.array(Y)
         if I:
@@ -244,7 +266,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
     # Start the optimization
     print('')
-    solution = (None, None, None, None, var_names, obj_names, con_names)
+    solution = (None, None, None, None, None,
+                var_names, obj_names, con_names, sta_names)
     opt_logger.update(Events.OPTIMIZATION_START, solution)
     try:
         if not callable(optimize):  # doing optimization through extensions

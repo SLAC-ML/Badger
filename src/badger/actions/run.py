@@ -23,15 +23,20 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         con_names = [next(iter(d)) for d in routine['config']['constraints']]
     else:
         con_names = []
+    try:
+        sta_names = routine['config']['states'] or []
+    except KeyError:  # this would happen when rerun an old version routine
+        sta_names = []
     # Store solutions in a list to avoid global var def
     solutions = []
 
-    def after_evaluate(vars, obses, cons):
+    def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
+        # stas: list
         ts = curr_ts()
-        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars)
+        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
         solutions.append(solution)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
@@ -46,7 +51,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         logger.error(e)
 
     if solutions:  # only save the run when at least one solution has been evaluated
-        df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names)
+        df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
         archive_run(routine, df, storage['states'])
 
 

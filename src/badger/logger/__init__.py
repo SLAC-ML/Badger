@@ -58,8 +58,8 @@ class ScreenLogger(_Tracker):
         return s
 
     def _step(self, solution, colour=Colours.black):
-        # solution: (x: 1d array, y: 1d array, c: 1d array, is_optimal: bool,
-        #            vars: str list, obses: str list, cons: str list)
+        # solution: (x: 1d array, y: 1d array, c: 1d array, s: 1d array, is_optimal: bool,
+        #            vars: str list, obses: str list, cons: str list, stas: str list)
         cells = []
 
         cells.append(self._format_number(self._iterations + 1))
@@ -73,27 +73,33 @@ class ScreenLogger(_Tracker):
         for v in solution[0]:
             cells.append(self._format_number(v))
 
+        for s in solution[3]:
+            cells.append(self._format_number(s))  # TODO: deal with the str case
+
         return "| " + " | ".join(map(colour, cells)) + " |"
 
     def _header(self, solution):
         cells = []
         cells.append(self._format_key("iter"))
 
-        for obs in solution[5]:
+        for obs in solution[6]:
             cells.append(self._format_key(obs))
 
-        for con in solution[6]:
+        for con in solution[7]:
             cells.append(self._format_key(con))
 
-        for var in solution[4]:
+        for var in solution[5]:
             cells.append(self._format_key(var))
+
+        for sta in solution[8]:
+            cells.append(self._format_key(sta))
 
         line = "| " + " | ".join(cells) + " |"
         self._header_length = len(line)
         return line + "\n" + ("-" * self._header_length)
 
     def _is_new_max(self, solution):
-        return solution[3]
+        return solution[4]
 
     def update(self, event, solution):
         if event == Events.OPTIMIZATION_START:
@@ -129,7 +135,8 @@ class JSONLogger(_Tracker):
                 'x': solution[0],
                 'y': solution[1],
                 'c': solution[2],
-                'is_optimal': solution[3]
+                's': solution[3],
+                'is_optimal': solution[4]
             }
 
             now, time_elapsed, time_delta = self._time_metrics()

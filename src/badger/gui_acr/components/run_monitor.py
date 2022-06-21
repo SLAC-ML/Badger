@@ -49,6 +49,7 @@ class BadgerOptMonitor(QWidget):
         self.var_names = []
         self.obj_names = []
         self.con_names = []
+        self.sta_names = []
         self.vranges = []
         # Curves in the monitor
         self.curves_var = []
@@ -58,6 +59,7 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
+        self.stas = []
         self.ts = []
         # Run optimization
         self.thread_pool = None
@@ -258,6 +260,10 @@ class BadgerOptMonitor(QWidget):
                 self.con_names = []
         except:
             self.con_names = []
+        try:
+            self.sta_names = self.routine['config']['states'] or []
+        except KeyError:  # this would happen when rerun an old version routine
+            self.sta_names = []
 
         # Configure plots
         # Clear current plots
@@ -338,6 +344,7 @@ class BadgerOptMonitor(QWidget):
         self.vars = []
         self.objs = []
         self.cons = []
+        self.stas = []
         self.ts = []
         if self.routine_runner and self.routine_runner.run_filename == run_filename:
             self.btn_reset.setDisabled(False)
@@ -360,6 +367,8 @@ class BadgerOptMonitor(QWidget):
         for con in self.con_names:
             self.cons.append(data[con])
         self.cons = np.array(self.cons).T.tolist()
+        for sta in self.sta_names:
+            self.stas.append(data[sta])
         self.ts = data['timestamp_raw']
 
         self.update_curves()
@@ -477,10 +486,11 @@ class BadgerOptMonitor(QWidget):
                 else:
                     self.curves_con[i].setData(np.array(self.cons)[:, i])
 
-    def update(self, vars, objs, cons, ts):
+    def update(self, vars, objs, cons, stas, ts):
         self.vars.append(vars)
         self.objs.append(objs)
         self.cons.append(cons)
+        self.stas.append(stas)
         self.ts.append(ts)
 
         self.update_curves()
