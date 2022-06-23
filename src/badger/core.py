@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 logger = logging.getLogger(__name__)
+from operator import itemgetter
 from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm
 
 
@@ -75,6 +76,14 @@ def normalize_routine(routine):
             config['states'] = None
     except KeyError:
         config['states'] = None
+
+    # Normalize the domain scaling
+    try:
+        _ = config['domain_scaling']
+        if not _:  # empty dict
+            config['domain_scaling'] = None
+    except KeyError:
+        config['domain_scaling'] = None
 
     # Remove the additional info
     del routine['env_vranges']
@@ -157,6 +166,13 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
     except KeyError:  # this would happen when rerun an old version routine
         sta_names = []
 
+    # Domain scaling for safety
+    try:
+        configs_scaling = routine['config']['domain_scaling']
+    except KeyError:  # this would happen when rerun an old version routine
+        configs_scaling = None
+    scaling = get_scaling_func(configs_scaling)
+
     info = {'count': -1}
     # Make a normalized evaluate function
 
@@ -174,7 +190,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             X = x.reshape(1, -1)
             return None, None, None, X
 
-        # Check if bounds are violated
+        # Perform domain scaling to avoid boundary violations
+        X = scaling(X)
+        # Double Check if bounds are violated
         if np.max(X) > 1 or np.min(X) < 0:
             logger.warning('proposed trial solution exceeds the bounds, solution has been clipped at bounds!')
             X = np.clip(X, 0, 1)
@@ -319,3 +337,50 @@ def instantiate_env(env_class, configs, manager=None):
     env = env_class(intf, configs['params'])
 
     return env
+
+
+def get_scaling_func(configs):
+    if not configs:  # fallback to default
+        configs = {'func': 'semi-linear'}
+
+    name = configs['func']
+    params = configs.copy()
+    del params['func']
+
+    if name == 'semi-linear':
+        default_params = {
+            'center': 0.5,
+            'range': 1,
+        }
+        params = merge_params(default_params, params)
+        center, range = itemgetter('center', 'range')(params)
+
+        def func(X):
+            return np.clip((X - center) / range + 0.5, 0, 1)
+
+    elif name == 'sinusoid':
+        default_params = {
+            'center': 0.5,
+            'period': 2,
+        }
+        params = merge_params(default_params, params)
+        center, period = itemgetter('center', 'period')(params)
+
+        def func(X):
+            return 0.5 * np.sin(2 * np.pi / period * (X - center)) + 0.5
+
+    elif name == 'sigmoid':
+        default_params = {
+            'center': 0.5,
+            'lambda': 8,
+        }
+        params = merge_params(default_params, params)
+        center, lamb = itemgetter('center', 'lambda')(params)
+
+        def func(X):
+            return 1 / (1 + np.exp(-lamb * (X - center)))
+
+    else:
+        raise Exception(f'scaling function {name} is not supported')
+
+    return func
