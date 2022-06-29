@@ -137,10 +137,12 @@ def scan_extensions(root):
             module = importlib.import_module(f'extensions.{ename}')
             ext = module.Extension()
             extensions[ename] = ext
-        except ImportError:
-            pass
-            # logger.warning(
-            #     f'Extension {ename} is not available due to missing dependencies')
+        except ImportError:  # usually caused by missing dependencies
+            logger.denug(
+                f'Extension {ename} is not available due to missing dependencies')
+        except Exception as e:
+            logger.debug(
+                f'Failed to load extension {ename}: {str(e)}')
 
     return extensions
 
