@@ -19,6 +19,9 @@ def main():
                         help='launch the GUI')
     parser.add_argument('-ga', '--gui-acr', action='store_true',
                         help='launch the GUI for ACR')
+    parser.add_argument('-l', '--log', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'],
+                        default='WARNING', const='WARNING', nargs='?',
+                        help='change the log level')
     parser.set_defaults(func=show_info)
     subparsers = parser.add_subparsers(help='Badger commands help')
 

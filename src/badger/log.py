@@ -1,3 +1,4 @@
+import logging
 from logging.config import dictConfig
 from .utils import merge_params
 
@@ -26,6 +27,14 @@ LOG_CONFIG_DEFAULT = {
 }
 
 
+# Do not call this function twice within one session
+# it will screw up the logging system
 def config_log(dict_config=None):
     _config = merge_params(LOG_CONFIG_DEFAULT, dict_config)
     dictConfig(_config)
+
+
+def set_log_level(level):
+    loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
+    for logger in loggers:
+        logger.setLevel(level)

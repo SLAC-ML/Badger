@@ -1,26 +1,13 @@
 from pkg_resources import get_distribution
-try:
-    from ..factory import BADGER_PLUGIN_ROOT, BADGER_EXTENSIONS
-except:
-    BADGER_PLUGIN_ROOT = None
-    BADGER_EXTENSIONS = None
-try:
-    from ..db import BADGER_DB_ROOT
-except:
-    BADGER_DB_ROOT = None
-try:
-    from ..logbook import BADGER_LOGBOOK_ROOT
-except:
-    BADGER_LOGBOOK_ROOT = None
-try:
-    from ..archive import BADGER_ARCHIVE_ROOT
-except:
-    BADGER_ARCHIVE_ROOT = None
-from ..utils import yprint
 from .doctor import check_n_config_paths
+from ..utils import yprint
+from ..log import set_log_level
 
 
 def show_info(args):
+    # Change log level for all existed loggers
+    set_log_level(args.log)
+
     if args.gui:
         from ..gui import launch_gui
 
@@ -30,6 +17,24 @@ def show_info(args):
 
         launch_gui()
     else:
+        try:
+            from ..factory import BADGER_PLUGIN_ROOT, BADGER_EXTENSIONS
+        except:
+            BADGER_PLUGIN_ROOT = None
+            BADGER_EXTENSIONS = None
+        try:
+            from ..db import BADGER_DB_ROOT
+        except:
+            BADGER_DB_ROOT = None
+        try:
+            from ..logbook import BADGER_LOGBOOK_ROOT
+        except:
+            BADGER_LOGBOOK_ROOT = None
+        try:
+            from ..archive import BADGER_ARCHIVE_ROOT
+        except:
+            BADGER_ARCHIVE_ROOT = None
+
         info = {
             'name': 'Badger the optimizer',
             'version': get_distribution('badger-opt').version,
