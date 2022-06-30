@@ -10,6 +10,7 @@ from ...db import save_routine, remove_routine
 from .variable_item import variable_item
 from .objective_item import objective_item
 from .constraint_item import constraint_item
+from .state_item import state_item
 from .algo_cbox import BadgerAlgoBox
 from .env_cbox import BadgerEnvBox
 from .config_cbox import BadgerConfigBox
@@ -84,14 +85,16 @@ class BadgerRoutinePage(QWidget):
         self.configs_box.check_only_var.stateChanged.connect(self.toggle_check_only_var)
         self.configs_box.check_only_obj.stateChanged.connect(self.toggle_check_only_obj)
         self.configs_box.btn_add_con.clicked.connect(self.add_constraint)
+        self.configs_box.btn_add_sta.clicked.connect(self.add_state)
 
     def refresh_ui(self, routine):
         self.routine = routine  # save routine for future reference
 
         self.algos = list_algo()
         self.envs = list_env()
-        # Clean up the constraints list
+        # Clean up the constraints/states list
         self.configs_box.list_con.clear()
+        self.configs_box.list_sta.clear()
 
         if routine is None:
             # Reset the algo and env configs
@@ -180,6 +183,14 @@ class BadgerRoutinePage(QWidget):
                 relation = ['GREATER_THAN', 'LESS_THAN',
                             'EQUAL_TO'].index(relation)
                 self.add_constraint(name, relation, thres, critical)
+
+        try:
+            config_states = routine['config']['states']
+        except KeyError:
+            config_states = None
+        if config_states is not None:
+            for name_sta in config_states:
+                self.add_state(name_sta)
 
         # Config the save settings
         name = routine['name']
@@ -280,6 +291,7 @@ class BadgerRoutinePage(QWidget):
             self.configs = None
             self.env = None
             self.configs_box.btn_add_con.setDisabled(True)
+            self.configs_box.btn_add_sta.setDisabled(True)
             self.configs_box.btn_add_var.setDisabled(True)
             self.routine = None
             return
@@ -290,6 +302,7 @@ class BadgerRoutinePage(QWidget):
             self.configs = configs
             self.env = env
             self.configs_box.btn_add_con.setDisabled(False)
+            self.configs_box.btn_add_sta.setDisabled(False)
             self.configs_box.btn_add_var.setDisabled(False)
             if self.algo_box.check_use_script.isChecked():
                 self.refresh_params_algo()
@@ -298,6 +311,7 @@ class BadgerRoutinePage(QWidget):
             self.env = None
             self.env_box.cb.setCurrentIndex(-1)
             self.configs_box.btn_add_con.setDisabled(True)
+            self.configs_box.btn_add_sta.setDisabled(True)
             self.configs_box.btn_add_var.setDisabled(True)
             self.routine = None
             return QMessageBox.critical(self, 'Error!', str(e))
@@ -339,6 +353,7 @@ class BadgerRoutinePage(QWidget):
             self.configs_box.dict_obj[obj] = item
 
         self.configs_box.list_con.clear()
+        self.configs_box.list_sta.clear()
         self.configs_box.fit_content()
         self.routine = None
 
@@ -479,6 +494,21 @@ class BadgerRoutinePage(QWidget):
         # self.configs_box.dict_con[''] = item
         self.configs_box.fit_content()
 
+    def add_state(self, name=None):
+        if self.configs is None:
+            return
+
+        var_names = [next(iter(d)) for d in self.configs['variables']]
+        options = self.configs['observations'] + var_names
+        item = QListWidgetItem(self.configs_box.list_sta)
+        sta_item = state_item(options,
+                              lambda: self.configs_box.list_sta.takeItem(
+                                  self.configs_box.list_sta.row(item)), name)
+        item.setSizeHint(sta_item.sizeHint())
+        self.configs_box.list_sta.addItem(item)
+        self.configs_box.list_sta.setItemWidget(item, sta_item)
+        self.configs_box.fit_content()
+
     def _compose_vocs(self):
         # Compose the VOCS settings
         variables = []
@@ -518,10 +548,18 @@ class BadgerRoutinePage(QWidget):
                 _dict[con_name].append('CRITICAL')
             constraints.append(_dict)
 
+        states = []
+        for i in range(self.configs_box.list_sta.count()):
+            item = self.configs_box.list_sta.item(i)
+            item_widget = self.configs_box.list_sta.itemWidget(item)
+            sta_name = item_widget.cb_sta.currentText()
+            states.append(sta_name)
+
         vocs = {
             'variables': variables,
             'objectives': objectives,
             'constraints': constraints,
+            'states': states,
         }
 
         return vocs
@@ -573,6 +611,13 @@ class BadgerRoutinePage(QWidget):
                 _dict[con_name].append('CRITICAL')
             constraints.append(_dict)
 
+        states = []
+        for i in range(self.configs_box.list_sta.count()):
+            item = self.configs_box.list_sta.item(i)
+            item_widget = self.configs_box.list_sta.itemWidget(item)
+            sta_name = item_widget.cb_sta.currentText()
+            states.append(sta_name)
+
         try:
             scaling = self.algo_box.cb_scaling.currentText()
             scaling_params = load_config(self.algo_box.edit_scaling.toPlainText())
@@ -584,6 +629,7 @@ class BadgerRoutinePage(QWidget):
             'variables': variables,
             'objectives': objectives,
             'constraints': constraints,
+            'states': states,
             'domain_scaling': domain_scaling,
         }
         if self.algo_box.check_use_script.isChecked():

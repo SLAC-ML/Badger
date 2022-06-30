@@ -15,7 +15,7 @@ class BadgerConfigBox(CollapsibleBox):
 
         # Variables config
         var_panel = QWidget()
-        vbox.addWidget(var_panel, 2)
+        vbox.addWidget(var_panel, 1)
         hbox_var = QHBoxLayout(var_panel)
         hbox_var.setContentsMargins(0, 0, 0, 0)
         lbl_var_col = QWidget()
@@ -126,6 +126,39 @@ class BadgerConfigBox(CollapsibleBox):
         # vbox_con_edit.addStretch()
         hbox_con.addWidget(edit_con_col)
 
+        # States config
+        sta_panel = QWidget()
+        vbox.addWidget(sta_panel, 1)
+        hbox_sta = QHBoxLayout(sta_panel)
+        hbox_sta.setContentsMargins(0, 0, 0, 0)
+        lbl_sta_col = QWidget()
+        vbox_lbl_sta = QVBoxLayout(lbl_sta_col)
+        vbox_lbl_sta.setContentsMargins(0, 0, 0, 0)
+        lbl_sta = QLabel('States')
+        lbl_sta.setFixedWidth(64)
+        vbox_lbl_sta.addWidget(lbl_sta)
+        vbox_lbl_sta.addStretch(1)
+        hbox_sta.addWidget(lbl_sta_col)
+
+        edit_sta_col = QWidget()
+        vbox_sta_edit = QVBoxLayout(edit_sta_col)
+        vbox_sta_edit.setContentsMargins(0, 0, 0, 0)
+        action_sta = QWidget()
+        hbox_action_sta = QHBoxLayout(action_sta)
+        hbox_action_sta.setContentsMargins(0, 0, 0, 0)
+        vbox_sta_edit.addWidget(action_sta)
+        self.btn_add_sta = btn_add_sta = QPushButton('Add')
+        btn_add_sta.setFixedSize(96, 24)
+        btn_add_sta.setDisabled(True)
+        hbox_action_sta.addWidget(btn_add_sta)
+        hbox_action_sta.addStretch()
+        self.list_sta = QListWidget()
+        # self.list_sta.setFixedHeight(64)
+        self.list_sta.setViewportMargins(2, 2, 17, 2)
+        vbox_sta_edit.addWidget(self.list_sta)
+        # vbox_sta_edit.addStretch()
+        hbox_sta.addWidget(edit_sta_col)
+
         self.setContentLayout(vbox)
 
     def config_logic(self):
@@ -143,3 +176,4 @@ class BadgerConfigBox(CollapsibleBox):
         self._fit_content(self.list_var)
         self._fit_content(self.list_obj)
         self._fit_content(self.list_con)
+        self._fit_content(self.list_sta)
