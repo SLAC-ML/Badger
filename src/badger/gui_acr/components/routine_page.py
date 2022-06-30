@@ -5,7 +5,7 @@ import sqlite3
 from coolname import generate_slug
 from ...factory import list_algo, list_env, get_algo, get_env
 from ...utils import ystring, load_config, config_list_to_dict
-from ...core import normalize_routine, instantiate_env
+from ...core import normalize_routine, instantiate_env, list_scaling_func, get_scaling_default_params
 from ...db import save_routine, remove_routine
 from .variable_item import variable_item
 from .objective_item import objective_item
@@ -34,6 +34,7 @@ class BadgerRoutinePage(QWidget):
         self.env = None
         self.routine = None
         self.script = ''
+        self.scaling_functions = list_scaling_func()
 
         self.init_ui()
         self.config_logic()
@@ -55,7 +56,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(group_meta)
 
         # Algo box
-        self.algo_box = BadgerAlgoBox(self.algos)
+        self.algo_box = BadgerAlgoBox(self.algos, self.scaling_functions)
         vbox.addWidget(self.algo_box)
 
         # Env box
@@ -72,6 +73,7 @@ class BadgerRoutinePage(QWidget):
         self.algo_box.cb.currentIndexChanged.connect(self.select_algo)
         self.algo_box.check_use_script.stateChanged.connect(self.toggle_use_script)
         self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
+        self.algo_box.cb_scaling.currentIndexChanged.connect(self.select_scaling_func)
         self.env_box.cb.currentIndexChanged.connect(self.select_env)
         self.env_box.btn_env_play.clicked.connect(self.open_playground)
         self.configs_box.btn_all_var.clicked.connect(self.check_all_var)
@@ -116,6 +118,19 @@ class BadgerRoutinePage(QWidget):
             self.script = routine['config']['script']
         except KeyError:
             self.script = None
+        try:
+            name_scaling = routine['config']['domain_scaling']['func']
+            params_scaling = routine['config']['domain_scaling'].copy()
+            del params_scaling['func']
+        except:
+            name_scaling = None
+            params_scaling = None
+        try:
+            idx_scaling = self.scaling_functions.index(name_scaling)
+        except ValueError:
+            idx_scaling = -1
+        self.algo_box.cb_scaling.setCurrentIndex(idx_scaling)
+        self.algo_box.edit_scaling.setPlainText(ystring(params_scaling))
 
         name_env = routine['env']
         idx_env = self.envs.index(name_env)
@@ -241,6 +256,19 @@ class BadgerRoutinePage(QWidget):
             self.algo_box.edit.setPlainText(ystring(params_algo))
         except Exception as e:
             QMessageBox.warning(self, 'Invalid script!', str(e))
+
+    def select_scaling_func(self, i):
+        if i == -1:
+            self.algo_box.edit_scaling.setPlainText('')
+            return
+
+        try:
+            name = self.scaling_functions[i]
+            default_params = get_scaling_default_params(name)
+            self.algo_box.edit_scaling.setPlainText(ystring(default_params))
+        except Exception as e:
+            self.algo_box.cb.setCurrentIndex(-1)
+            return QMessageBox.critical(self, 'Error!', str(e))
 
     def select_env(self, i):
         if i == -1:
@@ -545,10 +573,18 @@ class BadgerRoutinePage(QWidget):
                 _dict[con_name].append('CRITICAL')
             constraints.append(_dict)
 
+        try:
+            scaling = self.algo_box.cb_scaling.currentText()
+            scaling_params = load_config(self.algo_box.edit_scaling.toPlainText())
+            domain_scaling = {'func': scaling, **scaling_params}
+        except:
+            domain_scaling = None
+
         configs = {
             'variables': variables,
             'objectives': objectives,
             'constraints': constraints,
+            'domain_scaling': domain_scaling,
         }
         if self.algo_box.check_use_script.isChecked():
             configs['script'] = self.script

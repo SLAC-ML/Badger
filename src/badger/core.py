@@ -338,6 +338,33 @@ def instantiate_env(env_class, configs, manager=None):
 
     return env
 
+# The following functions are related to domain scaling
+# TODO: consider combine them into a class and make it extensible
+def list_scaling_func():
+    return ['semi-linear', 'sinusoid', 'sigmoid']
+
+
+def get_scaling_default_params(name):
+    if name == 'semi-linear':
+        default_params = {
+            'center': 0.5,
+            'range': 1,
+        }
+    elif name == 'sinusoid':
+        default_params = {
+            'center': 0.5,
+            'period': 2,
+        }
+    elif name == 'sigmoid':
+        default_params = {
+            'center': 0.5,
+            'lambda': 8,
+        }
+    else:
+        raise Exception(f'scaling function {name} is not supported')
+
+    return default_params
+
 
 def get_scaling_func(configs):
     if not configs:  # fallback to default
@@ -347,39 +374,28 @@ def get_scaling_func(configs):
     params = configs.copy()
     del params['func']
 
+    default_params = get_scaling_default_params(name)
+    params = merge_params(default_params, params)
+
     if name == 'semi-linear':
-        default_params = {
-            'center': 0.5,
-            'range': 1,
-        }
-        params = merge_params(default_params, params)
         center, range = itemgetter('center', 'range')(params)
 
         def func(X):
             return np.clip((X - center) / range + 0.5, 0, 1)
 
     elif name == 'sinusoid':
-        default_params = {
-            'center': 0.5,
-            'period': 2,
-        }
-        params = merge_params(default_params, params)
         center, period = itemgetter('center', 'period')(params)
 
         def func(X):
             return 0.5 * np.sin(2 * np.pi / period * (X - center)) + 0.5
 
     elif name == 'sigmoid':
-        default_params = {
-            'center': 0.5,
-            'lambda': 8,
-        }
-        params = merge_params(default_params, params)
         center, lamb = itemgetter('center', 'lambda')(params)
 
         def func(X):
             return 1 / (1 + np.exp(-lamb * (X - center)))
 
+    # TODO: consider remove this branch since it's useless
     else:
         raise Exception(f'scaling function {name} is not supported')
 
