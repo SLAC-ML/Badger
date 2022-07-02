@@ -599,6 +599,8 @@ class BadgerOptMonitor(QWidget):
                 self, 'Success!', f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
 
         except Exception as e:
+            self.sig_run_name.emit(None)
+
             QMessageBox.critical(self, 'Archive failed!', f'Archive failed: {str(e)}')
 
     def on_error(self, error):
