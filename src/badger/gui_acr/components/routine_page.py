@@ -206,6 +206,7 @@ class BadgerRoutinePage(QWidget):
 
         if i == -1:
             self.algo_box.edit.setPlainText('')
+            self.algo_box.cb_scaling.setCurrentIndex(-1)
             return
 
         name = self.algos[i]
