@@ -540,11 +540,12 @@ class BadgerOptMonitor(QWidget):
                 self.routine_runner.states)
             self.routine_runner.run_filename = run['filename']
             self.sig_run_name.emit(run['filename'])
-        except Exception as e:
-            QMessageBox.critical(self, 'Archive failed!', str(e))
 
-        QMessageBox.information(
-            self, 'Success!', f'Run data archived to {BADGER_ARCHIVE_ROOT}')
+            QMessageBox.information(
+                self, 'Success!', f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
+
+        except Exception as e:
+            QMessageBox.critical(self, 'Archive failed!', f'Archive failed: {str(e)}')
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
