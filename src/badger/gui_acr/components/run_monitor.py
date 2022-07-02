@@ -1,3 +1,4 @@
+from click import style
 import numpy as np
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
@@ -25,6 +26,55 @@ QPushButton
     background-color: #A9444E;
 }
 '''
+
+stylesheet_log = '''
+QPushButton:hover:pressed
+{
+    background-color: #5C8899;
+}
+QPushButton:hover
+{
+    background-color: #72A4B4;
+}
+QPushButton
+{
+    background-color: #88C0D0;
+    color: #000000;
+}
+'''
+
+stylesheet_run = '''
+QPushButton:hover:pressed
+{
+    background-color: #92D38C;
+}
+QPushButton:hover
+{
+    background-color: #6EC566;
+}
+QPushButton
+{
+    background-color: #4AB640;
+    color: #000000;
+}
+'''
+
+stylesheet_stop = '''
+QPushButton:hover:pressed
+{
+    background-color: #ed9c33;
+}
+QPushButton:hover
+{
+    background-color: #eb8f1a;
+}
+QPushButton
+{
+    background-color: #E98300;
+    color: #000000;
+}
+'''
+
 
 class BadgerOptMonitor(QWidget):
     sig_pause = pyqtSignal(bool)  # True: pause, False: resume
@@ -172,8 +222,9 @@ class BadgerOptMonitor(QWidget):
         # btn_edit.setFixedSize(64, 32)
         # btn_edit.setFont(cool_font)
         self.btn_log = btn_log = QPushButton('Logbook')
-        btn_log.setFixedSize(64, 32)
+        btn_log.setFixedSize(128, 32)
         btn_log.setFont(cool_font)
+        btn_log.setStyleSheet(stylesheet_log)
         self.btn_reset = btn_reset = QPushButton('Reset')
         btn_reset.setDisabled(True)
         btn_reset.setFixedSize(64, 32)
@@ -193,6 +244,7 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setDisabled(True)
         btn_stop.setFixedSize(128, 32)
         btn_stop.setFont(cool_font)
+        btn_stop.setStyleSheet(stylesheet_run)
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
@@ -415,6 +467,7 @@ class BadgerOptMonitor(QWidget):
         self.thread_pool.start(self.routine_runner)
 
         self.btn_stop.setText('Stop')
+        self.btn_stop.setStyleSheet(stylesheet_stop)
         self.btn_ctrl.setDisabled(False)
         self.sig_lock.emit(True)
 
@@ -529,6 +582,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_ctrl.setText('Pause')
         self.btn_ctrl.setDisabled(True)
         self.btn_stop.setText('Run')
+        self.btn_stop.setStyleSheet(stylesheet_run)
         self.btn_reset.setDisabled(False)
         self.btn_set.setDisabled(False)
         self.btn_del.setDisabled(False)
