@@ -5,7 +5,7 @@ from .collapsible_box import CollapsibleBox
 
 class BadgerEnvBox(CollapsibleBox):
     def __init__(self, envs=[], parent=None):
-        super().__init__(' Environment', parent)
+        super().__init__(' Environment + VOCS', parent)
 
         self.envs = envs
 
