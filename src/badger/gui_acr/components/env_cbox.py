@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame
 from .collapsible_box import CollapsibleBox
 
 
@@ -24,8 +24,11 @@ class BadgerEnvBox(CollapsibleBox):
         cb.setItemDelegate(QStyledItemDelegate())
         cb.addItems(self.envs)
         cb.setCurrentIndex(-1)
+        self.btn_env_play = btn_env_play = QPushButton('Open Playground')
+        btn_env_play.setFixedSize(128, 24)
         hbox_name.addWidget(lbl)
         hbox_name.addWidget(cb, 1)
+        hbox_name.addWidget(btn_env_play)
         vbox.addWidget(name)
 
         params = QWidget()
@@ -42,22 +45,29 @@ class BadgerEnvBox(CollapsibleBox):
 
         edit_params_col = QWidget()
         vbox_params_edit = QVBoxLayout(edit_params_col)
-        vbox_params_edit.setContentsMargins(0, 0, 0, 8)
+        vbox_params_edit.setContentsMargins(0, 0, 0, 0)
         self.edit = edit = QPlainTextEdit()
         edit.setFixedHeight(128)
         vbox_params_edit.addWidget(edit)
         hbox_params.addWidget(edit_params_col)
         vbox.addWidget(params)
 
-        action_bar = QWidget()
-        hbox_action = QHBoxLayout(action_bar)
-        hbox_action.setContentsMargins(0, 0, 0, 0)
-        self.btn_env_play = btn_env_play = QPushButton('Open Playground')
-        btn_env_play.setFixedSize(128, 24)
+        # action_bar = QWidget()
+        # hbox_action = QHBoxLayout(action_bar)
+        # hbox_action.setContentsMargins(0, 0, 0, 0)
+        # self.btn_env_play = btn_env_play = QPushButton('Open Playground')
+        # btn_env_play.setFixedSize(128, 24)
         # btn_env_play.hide()  # hide for now to prevent confusions
-        hbox_action.addStretch(1)
-        hbox_action.addWidget(btn_env_play)
-        vbox.addWidget(action_bar)
+        # hbox_action.addStretch(1)
+        # hbox_action.addWidget(btn_env_play)
+        # vbox.addWidget(action_bar)
+
+        seperator = QFrame()
+        seperator.setFrameShape(QFrame.HLine)
+        seperator.setFrameShadow(QFrame.Sunken)
+        seperator.setLineWidth(0)
+        seperator.setMidLineWidth(0)
+        vbox.addWidget(seperator)
 
         # Variables config
         var_panel = QWidget()

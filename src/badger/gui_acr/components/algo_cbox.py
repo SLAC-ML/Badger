@@ -84,7 +84,7 @@ class BadgerAlgoBox(CollapsibleBox):
         cb_scaling.setCurrentIndex(-1)
         vbox_scaling_edit.addWidget(cb_scaling)
         self.edit_scaling = edit_scaling = QPlainTextEdit()
-        edit_scaling.setFixedHeight(64)
+        edit_scaling.setFixedHeight(128)
         vbox_scaling_edit.addWidget(edit_scaling)
         hbox_scaling.addWidget(edit_scaling_col)
         vbox.addWidget(scaling)
