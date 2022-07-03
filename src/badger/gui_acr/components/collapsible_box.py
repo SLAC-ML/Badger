@@ -76,6 +76,10 @@ class CollapsibleBox(QtWidgets.QWidget):
         )
         self.toggle_animation.start()
 
+    def expand(self):
+        if not self.toggle_button.isChecked():
+            self.toggle_button.click()
+
     def setContentLayout(self, layout):
         lay = self.content_area.layout()
         del lay
