@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QPushButton, QSplitter, QTextEdit, QShortcut
+from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
@@ -39,6 +39,7 @@ class BadgerHomePage(QWidget):
 
         self.mode = 'regular'  # home page mode
         self.splitter_state = None  # store the run splitter state
+        self.tab_state = None  # store the tabs state before creating new routine
 
         self.init_ui()
         self.config_logic()
@@ -113,12 +114,14 @@ class BadgerHomePage(QWidget):
         hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
 
-        # Routine edit + run monitor + data table
+        self.tabs = tabs = QTabWidget()
+        vbox_view.addWidget(tabs)
+
+        # Run monitor + data table
         self.splitter_run = splitter_run = QSplitter(Qt.Vertical)
-        splitter_run.setStretchFactor(0, 0)
-        splitter_run.setStretchFactor(1, 1)
-        splitter_run.setStretchFactor(2, 0)
-        vbox_view.addWidget(splitter_run)
+        splitter_run.setStretchFactor(0, 1)
+        splitter_run.setStretchFactor(1, 0)
+        tabs.addTab(splitter_run, 'Run Monitor')
 
         # Run monitor
         self.run_view = run_view = QWidget()  # for consistent bg
@@ -130,21 +133,24 @@ class BadgerHomePage(QWidget):
         # Data table
         self.run_table = run_table = data_table()
 
+        splitter_run.addWidget(run_view)
+        splitter_run.addWidget(run_table)
+        splitter_run.setSizes([1, 0])  # collapse table by default
+
+        splitter_run.setStretchFactor(0, 1)
+        splitter_run.setStretchFactor(1, 0)
+
+        # Add panels to splitter
+        splitter.addWidget(panel_routine)
+        splitter.addWidget(panel_info)
+
         # Routine view
         self.routine_view = routine_view = QWidget()  # for consistent bg
         vbox_routine_view = QVBoxLayout(routine_view)
         vbox_routine_view.setContentsMargins(0, 0, 0, 10)
         self.routine_editor = routine_editor = BadgerRoutineEditor()
         vbox_routine_view.addWidget(routine_editor)
-
-        splitter_run.addWidget(routine_view)
-        splitter_run.addWidget(run_view)
-        splitter_run.addWidget(run_table)
-        splitter_run.setSizes([0, 1, 0])  # collapse routine/table by default
-
-        # Add panels to splitter
-        splitter.addWidget(panel_routine)
-        splitter.addWidget(panel_info)
+        tabs.addTab(routine_view, 'Routine Editor')
 
         self.status_bar = status_bar = BadgerStatusBar()
         status_bar.set_summary('Badger is ready!')
@@ -189,12 +195,11 @@ class BadgerHomePage(QWidget):
     def create_new_routine(self):
         self.splitter_state = self.splitter_run.saveState()
         self.routine_editor.set_routine(None)
-        self.splitter_run.setSizes([1, 0, 0])
+        self.tab_state = self.tabs.currentIndex()
+        self.tabs.setCurrentIndex(1)
         self.mode = 'new routine'
         self.routine_editor.switch_mode(self.mode)
-        self.toggle_lock(True)
-        self.run_monitor.setDisabled(True)
-        self.run_table.setDisabled(True)
+        self.toggle_lock(True, 0)
 
     def select_routine(self, item):
         if self.prev_routine:
@@ -307,13 +312,16 @@ class BadgerHomePage(QWidget):
 
         self.run_monitor.jump_to_solution(row)
 
-    def toggle_lock(self, lock):
+    def toggle_lock(self, lock, lock_tab=1):
         if lock:
             self.panel_routine.setDisabled(True)
             self.history_nav_bar.setDisabled(True)
+            self.tabs.setTabEnabled(lock_tab, False)
         else:
             self.panel_routine.setDisabled(False)
             self.history_nav_bar.setDisabled(False)
+            self.tabs.setTabEnabled(0, True)
+            self.tabs.setTabEnabled(1, True)
 
     def new_run(self):
         self.cb_history.insertItem(0, 'Optimization in progress...')
@@ -349,17 +357,22 @@ class BadgerHomePage(QWidget):
         keyword = self.sbar.text()
         self.build_routine_list(keyword)
         self.select_routine(self.routine_list.item(0))
+        self.tab_state = 0  # force jump to run monitor
         self.done_create_routine()
 
     def done_create_routine(self):
         if self.mode == 'new routine':
             self.mode = 'regular'
             self.routine_editor.switch_mode(self.mode)
+            self.routine_editor.set_routine(self.current_routine)
             self.splitter_run.restoreState(self.splitter_state)
             self.splitter_state = None
+            self.tabs.setCurrentIndex(self.tab_state)
+            self.tab_state = None
             self.toggle_lock(False)
-            self.run_monitor.setDisabled(False)
-            self.run_table.setDisabled(False)
+        else:
+            self.tabs.setCurrentIndex(self.tab_state)
+            self.tab_state = None
 
     def delete_routine(self, name):
         remove_routine(name)

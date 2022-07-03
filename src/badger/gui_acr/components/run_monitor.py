@@ -132,7 +132,7 @@ class BadgerOptMonitor(QWidget):
         # Config bar
         config_bar = QWidget()
         hbox_config = QHBoxLayout(config_bar)
-        hbox_config.setContentsMargins(0, 0, 0, 0)
+        hbox_config.setContentsMargins(8, 0, 8, 0)
         label = QLabel('Evaluation History Plot Type')
         label_x = QLabel('X Axis')
         self.cb_plot_x = cb_plot_x = QComboBox()
@@ -208,7 +208,7 @@ class BadgerOptMonitor(QWidget):
         action_bar = QWidget()
         # action_bar.hide()
         hbox_action = QHBoxLayout(action_bar)
-        hbox_action.setContentsMargins(0, 0, 0, 0)
+        hbox_action.setContentsMargins(8, 0, 8, 0)
 
         cool_font = QFont()
         cool_font.setWeight(QFont.DemiBold)

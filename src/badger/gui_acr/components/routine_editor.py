@@ -48,7 +48,7 @@ class BadgerRoutineEditor(QWidget):
         self.action_bar = action_bar = QWidget()
         # action_bar.hide()
         hbox_action = QHBoxLayout(action_bar)
-        hbox_action.setContentsMargins(0, 0, 0, 0)
+        hbox_action.setContentsMargins(8, 0, 8, 0)
 
         cool_font = QFont()
         cool_font.setWeight(QFont.DemiBold)
