@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QDoubleSpinBox, QAbstractSpinBox
 from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate
-from PyQt5.QtCore import QPropertyAnimation, QSize
+from PyQt5.QtCore import Qt
+from ..utils import MouseWheelWidgetAdjustmentGuard
 
 
 def constraint_item(options, remove_item, name=None, relation=0, threshold=0, critical=False, decimals=4):
@@ -27,6 +28,8 @@ def constraint_item(options, remove_item, name=None, relation=0, threshold=0, cr
 
     widget.sb = sb = QDoubleSpinBox()
     sb.setDecimals(decimals)
+    sb.setFocusPolicy(Qt.StrongFocus)
+    sb.installEventFilter(MouseWheelWidgetAdjustmentGuard(sb))
     default_value = threshold
     lb = default_value - 1e3
     ub = default_value + 1e3

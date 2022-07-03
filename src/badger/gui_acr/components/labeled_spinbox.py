@@ -1,4 +1,6 @@
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QWidget, QDoubleSpinBox, QAbstractSpinBox
+from PyQt5.QtCore import Qt
+from ..utils import MouseWheelWidgetAdjustmentGuard
 
 
 def labeled_spinbox(name, default_value, lb, ub, decimals=4):
@@ -8,6 +10,8 @@ def labeled_spinbox(name, default_value, lb, ub, decimals=4):
     label = QLabel(name)
     widget.sb = sb = QDoubleSpinBox()
     sb.setDecimals(decimals)
+    sb.setFocusPolicy(Qt.StrongFocus)
+    sb.installEventFilter(MouseWheelWidgetAdjustmentGuard(sb))
 
     # Sanity check
     if lb is None:
