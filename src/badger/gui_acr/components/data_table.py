@@ -58,6 +58,9 @@ def update_table(table, data=None):
 
 def reset_table(table, header):
     table.setRowCount(0)
+    # Need to set col num or the old col num will be used for new data,
+    # resulting in potential incomplete table
+    table.setColumnCount(len(header))
     table.horizontalHeader().setVisible(False)
     table.setHorizontalHeaderLabels(header)
     table.horizontalHeader().setVisible(True)

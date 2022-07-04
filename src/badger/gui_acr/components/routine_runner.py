@@ -80,11 +80,11 @@ class BadgerRoutineRunner(QRunnable):
         # cons: ndarray
         # stas: list
         ts = curr_ts()
-        self.signals.progress.emit(list(vars), list(obses), list(cons), stas, ts.timestamp())
+        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts.timestamp())
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
+        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + list(stas)
         self.data = self.data.append(pd.Series(solution, index=self.data.columns), ignore_index=True)
 
         # take a break to let the outside signal to change the status

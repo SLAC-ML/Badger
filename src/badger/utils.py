@@ -175,8 +175,12 @@ def get_header(routine):
             con_names = []
     except:
         con_names = []
+    try:
+        sta_names = routine['config']['states'] or []
+    except KeyError:
+        sta_names = []
 
-    return obj_names + con_names + var_names
+    return obj_names + con_names + var_names + sta_names
 
 
 def run_names_to_dict(run_names):

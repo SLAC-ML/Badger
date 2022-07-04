@@ -254,8 +254,10 @@ class BadgerHomePage(QWidget):
                 self.prev_routine = item
 
     def go_run(self, i):
-        if self.cb_history.currentText() == 'Optimization in progress...':
+        if self.cb_history.itemText(0) == 'Optimization in progress...':
             return
+        # if self.cb_history.currentText() == 'Optimization in progress...':
+        #     return
 
         self.btn_prev.setDisabled(self.cb_history.currentIsFirst())
         self.btn_next.setDisabled(self.cb_history.currentIsLast())
@@ -337,8 +339,8 @@ class BadgerHomePage(QWidget):
             runs = get_runs()
         self.cb_history.updateItems(runs)
 
-    def progress(self, vars, objs, cons):
-        add_row(self.run_table, objs + cons + vars)
+    def progress(self, vars, objs, cons, stas):
+        add_row(self.run_table, objs + cons + vars + stas)
 
     def delete_run(self):
         run_name = self.cb_history.currentText()

@@ -83,7 +83,7 @@ class BadgerOptMonitor(QWidget):
     sig_new_run = pyqtSignal()
     sig_run_name = pyqtSignal(str)  # filename of the new run
     sig_inspect = pyqtSignal(int)  # index of the inspector
-    sig_progress = pyqtSignal(list, list, list)  # new evaluated solution
+    sig_progress = pyqtSignal(list, list, list, list)  # new evaluated solution
     sig_del = pyqtSignal()
 
     def __init__(self):
@@ -105,6 +105,7 @@ class BadgerOptMonitor(QWidget):
         self.curves_var = []
         self.curves_obj = []
         self.curves_con = []
+        self.curves_sta = []
         # Data to be visualized
         self.vars = []
         self.objs = []
@@ -168,6 +169,7 @@ class BadgerOptMonitor(QWidget):
         leg_obj.setBrush((50, 50, 100, 200))
 
         monitor.nextRow()  # leave space for the cons plot
+        monitor.nextRow()  # leave space for the stas plot
         monitor.nextRow()
 
         self.plot_var = plot_var = monitor.addPlot(
@@ -190,6 +192,12 @@ class BadgerOptMonitor(QWidget):
                                            'fill': (200, 200, 200, 50),
                                            'movable': True})
         self.ins_con = pg.InfiniteLine(movable=True, angle=90, label=None,
+                                       labelOpts={
+                                           'position': 0.1,
+                                           'color': (200, 200, 100),
+                                           'fill': (200, 200, 200, 50),
+                                           'movable': True})
+        self.ins_sta = pg.InfiniteLine(movable=True, angle=90, label=None,
                                        labelOpts={
                                            'position': 0.1,
                                            'color': (200, 200, 100),
@@ -265,6 +273,8 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.ins_con.sigDragged.connect(self.ins_con_dragged)
         self.ins_con.sigPositionChangeFinished.connect(self.ins_drag_done)
+        self.ins_sta.sigDragged.connect(self.ins_sta_dragged)
+        self.ins_sta.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.ins_var.sigDragged.connect(self.ins_var_dragged)
         self.ins_var.sigPositionChangeFinished.connect(self.ins_drag_done)
         self.plot_obj.scene().sigMouseClicked.connect(self.on_mouse_click)
@@ -326,12 +336,18 @@ class BadgerOptMonitor(QWidget):
             self.plot_con.addItem(self.ins_con)
         except:
             pass
+        try:
+            self.plot_sta.clear()
+            self.plot_sta.addItem(self.ins_sta)
+        except:
+            pass
         self.plot_var.clear()
         self.plot_var.addItem(self.ins_var)
         # Put in the empty curves
         self.curves_var = []
         self.curves_obj = []
         self.curves_con = []
+        self.curves_sta = []
 
         for i, obj_name in enumerate(self.obj_names):
             color = self.colors[i % len(self.colors)]
@@ -377,10 +393,41 @@ class BadgerOptMonitor(QWidget):
                 del self.plot_con
             except:
                 pass
+
+        if self.sta_names:
+            try:
+                self.plot_sta
+            except:
+                self.plot_sta = plot_sta = self.monitor.addPlot(
+                    row=2, col=0, title='Evaluation History (S)')
+                plot_sta.setLabel('left', 'states')
+                plot_sta.setLabel('bottom', 'iterations')
+                plot_sta.showGrid(x=True, y=True)
+                leg_sta = plot_sta.addLegend()
+                leg_sta.setBrush((50, 50, 100, 200))
+                plot_sta.addItem(self.ins_sta)
+                plot_sta.setXLink(self.plot_obj)
+
+            for i, sta_name in enumerate(self.sta_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_sta.plot(pen=pg.mkPen(color, width=3),
+                                            # symbol=symbol,
+                                            name=sta_name)
+                self.curves_sta.append(_curve)
+        else:
+            try:
+                self.monitor.removeItem(self.plot_sta)
+                self.plot_sta.removeItem(self.ins_sta)
+                del self.plot_sta
+            except:
+                pass
+
         # Reset inspectors
         self.ins_obj.setValue(0)
         self.ins_var.setValue(0)
         self.ins_con.setValue(0)
+        self.ins_sta.setValue(0)
 
         # Switch run button state
         if self.routine:
@@ -421,6 +468,7 @@ class BadgerOptMonitor(QWidget):
         self.cons = np.array(self.cons).T.tolist()
         for sta in self.sta_names:
             self.stas.append(data[sta])
+        self.stas = np.array(self.stas).T.tolist()
         self.ts = data['timestamp_raw']
 
         self.update_curves()
@@ -501,6 +549,8 @@ class BadgerOptMonitor(QWidget):
         self.plot_var.enableAutoRange()
         if self.con_names:
             self.plot_con.enableAutoRange()
+        if self.sta_names:
+            self.plot_sta.enableAutoRange()
 
     def update_curves(self):
         type_x = self.plot_x_axis
@@ -539,6 +589,13 @@ class BadgerOptMonitor(QWidget):
                 else:
                     self.curves_con[i].setData(np.array(self.cons)[:, i])
 
+        if self.sta_names:
+            for i in range(len(self.sta_names)):
+                if type_x:
+                    self.curves_sta[i].setData(ts, np.array(self.stas)[:, i])
+                else:
+                    self.curves_sta[i].setData(np.array(self.stas)[:, i])
+
     def update(self, vars, objs, cons, stas, ts):
         self.vars.append(vars)
         self.objs.append(objs)
@@ -553,7 +610,7 @@ class BadgerOptMonitor(QWidget):
         if self.eval_count < 5:
             self.enable_auto_range()
 
-        self.sig_progress.emit(vars, objs, cons)
+        self.sig_progress.emit(vars, objs, cons, stas)
 
         # Check critical condition
         critical, msg = self.is_critical(cons)
@@ -644,15 +701,27 @@ class BadgerOptMonitor(QWidget):
         self.ins_var.setValue(ins_obj.value())
         if self.con_names:
             self.ins_con.setValue(ins_obj.value())
+        if self.sta_names:
+            self.ins_sta.setValue(ins_obj.value())
 
     def ins_con_dragged(self, ins_con):
         self.ins_var.setValue(ins_con.value())
         self.ins_obj.setValue(ins_con.value())
+        if self.sta_names:
+            self.ins_sta.setValue(ins_con.value())
+
+    def ins_sta_dragged(self, ins_sta):
+        self.ins_var.setValue(ins_sta.value())
+        self.ins_obj.setValue(ins_sta.value())
+        if self.con_names:
+            self.ins_con.setValue(ins_sta.value())
 
     def ins_var_dragged(self, ins_var):
         self.ins_obj.setValue(ins_var.value())
         if self.con_names:
             self.ins_con.setValue(ins_var.value())
+        if self.sta_names:
+            self.ins_sta.setValue(ins_var.value())
 
     def ins_drag_done(self, ins):
         self.sync_ins(ins.value())
@@ -665,6 +734,8 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.setValue(value)
         if self.con_names:
             self.ins_con.setValue(value)
+        if self.sta_names:
+            self.ins_sta.setValue(value)
         self.ins_var.setValue(value)
 
         self.sig_inspect.emit(idx)
@@ -712,6 +783,8 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.setValue(value)
         if self.con_names:
             self.ins_con.setValue(value)
+        if self.sta_names:
+            self.ins_sta.setValue(value)
         self.ins_var.setValue(value)
 
     def set_vars(self):
@@ -741,11 +814,15 @@ class BadgerOptMonitor(QWidget):
             self.plot_obj.setLabel('bottom', 'time (s)')
             if self.con_names:
                 self.plot_con.setLabel('bottom', 'time (s)')
+            if self.sta_names:
+                self.plot_sta.setLabel('bottom', 'time (s)')
         else:
             self.plot_var.setLabel('bottom', 'iterations')
             self.plot_obj.setLabel('bottom', 'iterations')
             if self.con_names:
                 self.plot_con.setLabel('bottom', 'iterations')
+            if self.sta_names:
+                self.plot_sta.setLabel('bottom', 'iterations')
 
         # Update inspector line position
         if i:
@@ -755,6 +832,8 @@ class BadgerOptMonitor(QWidget):
         self.ins_obj.setValue(value)
         if self.con_names:
             self.ins_con.setValue(value)
+        if self.sta_names:
+            self.ins_sta.setValue(value)
         self.ins_var.setValue(value)
 
         self.update_curves()
@@ -773,12 +852,16 @@ class BadgerOptMonitor(QWidget):
         coor_obj = self.plot_obj.vb.mapSceneToView(event._scenePos)
         if self.con_names:
             coor_con = self.plot_con.vb.mapSceneToView(event._scenePos)
+        if self.sta_names:
+            coor_sta = self.plot_sta.vb.mapSceneToView(event._scenePos)
         coor_var = self.plot_var.vb.mapSceneToView(event._scenePos)
 
         flag = self.plot_obj.viewRect().contains(coor_obj) or \
             self.plot_var.viewRect().contains(coor_var)
         if self.con_names:
             flag = flag or self.plot_con.viewRect().contains(coor_con)
+        if self.sta_names:
+            flag = flag or self.plot_sta.viewRect().contains(coor_sta)
 
         if flag:
             self.sync_ins(coor_obj.x())
