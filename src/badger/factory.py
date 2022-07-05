@@ -138,7 +138,7 @@ def scan_extensions(root):
             ext = module.Extension()
             extensions[ename] = ext
         except ImportError:  # usually caused by missing dependencies
-            logger.denug(
+            logger.debug(
                 f'Extension {ename} is not available due to missing dependencies')
         except Exception as e:
             logger.debug(
