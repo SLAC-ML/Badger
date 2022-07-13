@@ -31,7 +31,7 @@ def send_to_logbook(routine, data, widget=None):
     obj_start = data[obj_name][0]
     obj_end = data[obj_name][-1]
     duration = data['timestamp_raw'][-1] - data['timestamp_raw'][0]
-    n_point = len(data)
+    n_point = len(data['timestamp_raw'])
     if n_point > 0:
         log_text = f'Gain ({obj_name}): {round(obj_start, 4)} -> {round(obj_end, 4)}\n'
     log_text += f'Time cost: {round(duration, 2)}s\n'
