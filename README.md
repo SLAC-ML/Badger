@@ -1,4 +1,4 @@
-# Badger: The Ocelot Optimizer Rebirth
+# Badger: The Ocelot Optimizer Rebirth Yo!
 
 ## Installation
 
