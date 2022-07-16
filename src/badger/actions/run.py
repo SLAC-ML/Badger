@@ -1,4 +1,5 @@
 import logging
+import signal
 logger = logging.getLogger(__name__)
 import time
 import pandas as pd
@@ -30,17 +31,16 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     # Store solutions in a list to avoid global var def
     solutions = []
 
-    def before_evaluate(vars):
-        # vars: ndarray
-        print('Yay')
-        
+    def handler(signum, frame): 
+        print('Ouch', end='\n', flush=True)     
+
+    signal.signal(signal.SIGINT, handler)   
 
     def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
         # stas: list
-        print('Yo')
         ts = curr_ts()
         solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
         solutions.append(solution)
@@ -52,7 +52,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         storage['states'] = states
 
     try:
-        run(routine, yes, save, verbose, before_evaluate=before_evaluate, after_evaluate=after_evaluate, states_ready=states_ready)
+        run(routine, yes, save, verbose, after_evaluate=after_evaluate, states_ready=states_ready)
     except Exception as e:
         logger.error(e)
 
