@@ -1,0 +1,41 @@
+id: 13
+filename: BadgerOpt-2022-07-18-130238.yaml
+routine:
+  name: nocturnal-sheep
+  algo: silly
+  env: TNK
+  algo_params:
+    start_from_current: true
+    max_iter: 42
+  env_params: null
+  config:
+    variables:
+      - x2:
+          - 0
+          - 3.14159
+    objectives:
+      - c1: MINIMIZE
+    constraints: null
+    states: null
+    domain_scaling: null
+data:
+  timestamp_raw:
+    - 1658174558.580184
+    - 1658174558.688895
+    - 1658174558.79586
+    - 1658174558.903012
+  timestamp:
+    - 18-Jul-2022 13:02:38.580184
+    - 18-Jul-2022 13:02:38.688895
+    - 18-Jul-2022 13:02:38.795860
+    - 18-Jul-2022 13:02:38.903012
+  c1:
+    - -1.1
+    - -0.9348929584701566
+    - -0.21260021098078255
+    - 4.875912286292158
+  x2:
+    - 0.0
+    - 0.40633365788455594
+    - 0.9420189961031664
+    - 2.444567914027376

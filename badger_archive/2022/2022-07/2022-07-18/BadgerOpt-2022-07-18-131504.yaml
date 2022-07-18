@@ -1,0 +1,41 @@
+id: 16
+filename: BadgerOpt-2022-07-18-131504.yaml
+routine:
+  name: denim-llama
+  algo: silly
+  env: TNK
+  algo_params:
+    start_from_current: true
+    max_iter: 42
+  env_params: null
+  config:
+    variables:
+      - x2:
+          - 0
+          - 3.14159
+    objectives:
+      - c1: MINIMIZE
+    constraints: null
+    states: null
+    domain_scaling: null
+data:
+  timestamp_raw:
+    - 1658175303.593056
+    - 1658175303.702755
+    - 1658175303.809904
+    - 1658175303.913266
+  timestamp:
+    - 18-Jul-2022 13:15:03.593056
+    - 18-Jul-2022 13:15:03.702755
+    - 18-Jul-2022 13:15:03.809904
+    - 18-Jul-2022 13:15:03.913266
+  c1:
+    - -1.1
+    - 6.68071011275744
+    - -0.08277544889977531
+    - -0.9473892168185729
+  x2:
+    - 0.0
+    - 2.789392427170734
+    - 1.008575505899397
+    - 0.3906543013732564

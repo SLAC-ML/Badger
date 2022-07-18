@@ -8,6 +8,7 @@ from ..utils import load_config, merge_params
 from ..utils import config_list_to_dict, curr_ts, ts_to_str
 from ..core import run_routine as run
 from ..core import normalize_routine
+from PyQt5.QtCore import QRunnable
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,
@@ -32,9 +33,14 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     solutions = []
 
     def handler(signum, frame): 
-        print('Ouch', end='\n', flush=True)     
+        response = input('Press r to resume run. Press t to terminate run')
+        if response == 't':
+            raise Exception('Optimization run has been terminated!')
+            exit(1)
 
-    signal.signal(signal.SIGINT, handler)   
+    def before_evaluate(vars):
+        signal.signal(signal.SIGINT, handler)
+        
 
     def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
@@ -52,7 +58,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         storage['states'] = states
 
     try:
-        run(routine, yes, save, verbose, after_evaluate=after_evaluate, states_ready=states_ready)
+        run(routine, yes, save, verbose, before_evaluate=before_evaluate, after_evaluate=after_evaluate, states_ready=states_ready)
     except Exception as e:
         logger.error(e)
 
