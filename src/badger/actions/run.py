@@ -33,10 +33,10 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     solutions = []
 
     def handler(signum, frame): 
-        response = input('Press r to resume run. Press t to terminate run')
+        response = input(' Run paused! Press r to resume run, or press t to terminate run:  ')
         if response == 't':
             raise Exception('Optimization run has been terminated!')
-            exit(1) 
+            exit(1)
 
     def before_evaluate(vars):
         signal.signal(signal.SIGINT, handler)
