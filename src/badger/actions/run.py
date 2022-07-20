@@ -32,15 +32,23 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     # Store solutions in a list to avoid global var def
     solutions = []
 
-    def handler(signum, frame): 
-        response = input(' Run paused. Press r to resume run or t to terminate run:  ')
-        if response == 't':
+    sample_dict = {}
+    sample_dict['paused'] = False 
+
+    def handler(*args): 
+        if sample_dict['paused'] == True:   
             raise Exception('Optimization run has been terminated!')
             exit(1)
+        sample_dict['paused'] = True
+        
+    signal.signal(signal.SIGINT, handler)
 
     def before_evaluate(vars):
-        signal.signal(signal.SIGINT, handler)
-        
+        if sample_dict['paused'] == True: 
+            response = input(' Press enter to resume or ctrl+c to terminate:  ') 
+
+        sample_dict['paused'] =  False
+
 
     def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
