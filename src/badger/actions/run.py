@@ -46,8 +46,8 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     def before_evaluate(vars):
         if status['paused'] == True: 
             res = input(' Press enter to resume or ctrl+c to terminate:  ') 
-            if res != '':
-                res2 = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate')
+            while res != '':
+                res = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate:   ')
         status['paused'] =  False
 
 
