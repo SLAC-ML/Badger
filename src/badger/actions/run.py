@@ -30,6 +30,24 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     # Store solutions in a list to avoid global var def
     solutions = []
 
+    status = {}
+    status['paused'] = False
+
+    def handler(*args): 
+        if status['paused'] == True:   
+            raise Exception('Optimization run has been terminated!')
+            exit(1)
+        status['paused'] = True
+        
+    signal.signal(signal.SIGINT, handler)
+
+    def before_evaluate(vars):
+        if status['paused'] == True: 
+            res = input(' Press enter to resume or ctrl+c to terminate:  ') 
+            while res != '':
+                res = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate:   ')
+        status['paused'] =  False
+
     def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
         # obses: ndarray
@@ -46,7 +64,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         storage['states'] = states
 
     try:
-        run(routine, yes, save, verbose, after_evaluate=after_evaluate, states_ready=states_ready)
+        run(routine, yes, save, verbose, before_evaluate=before_evaluate, after_evaluate=after_evaluate, states_ready=states_ready)
     except Exception as e:
         logger.error(e)
 
