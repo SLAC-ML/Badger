@@ -230,3 +230,32 @@ def convert_str_to_value(str):
         pass
 
     return str
+
+
+def parse_rule(rule):
+    if type(rule) is str:
+        return {
+            'direction': rule,
+            'filter': 'ignore_nan',
+            'reducer': 'percentile_80',
+        }
+
+    # rule is a dict
+    try:
+        direction = rule['direction']
+    except:
+        direction = 'MINIMIZE'
+    try:
+        filter = rule['filter']
+    except:
+        filter = 'ignore_nan'
+    try:
+        reducer = rule['reducer']
+    except:
+        reducer = 'percentile_80'
+
+    return {
+        'direction': direction,
+        'filter': filter,
+        'reducer': reducer,
+    }
