@@ -2,7 +2,20 @@ import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 from operator import itemgetter
-from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm
+from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm, \
+     parse_rule
+
+
+def process_raw(raw, rule):
+    # filter = rule['filter']
+    reducer = rule['reducer']
+
+    if reducer == 'percentile_80':
+        return np.percentile(raw, 80)
+    elif reducer == 'mean':
+        return np.mean(raw)
+    elif reducer == 'median':
+        return np.median(raw)
 
 
 def normalize_routine(routine):
@@ -150,7 +163,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
                         for d in routine['config']['variables']])
     obj_names = [next(iter(d)) for d in routine['config']['objectives']]
     rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-    pf = ParetoFront(rules)
+    directions = [parse_rule(rule)['direction'] for rule in rules]
+    pf = ParetoFront(directions)
     if pf_ready:
         pf_ready(pf)
     if routine['config']['constraints']:
@@ -218,8 +232,13 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             obses_raw = []
             for i, obj_name in enumerate(obj_names):
                 rule = rules[i]
-                obs = float(env.get_obs(obj_name))
-                if rule == 'MAXIMIZE':
+                rule_dict = parse_rule(rule)
+                obs_raw = env.get_obs(obj_name)
+                try:
+                    obs = float(obs_raw)
+                except:  # obs_raw is a list
+                    obs = process_raw(obs_raw, rule_dict)
+                if rule_dict['direction'] == 'MAXIMIZE':
                     obses.append(-obs)
                 else:
                     obses.append(obs)
