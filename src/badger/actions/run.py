@@ -1,6 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 import time
+import signal
 import pandas as pd
 from coolname import generate_slug
 from ..utils import load_config, merge_params
@@ -33,17 +34,16 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     status = {}
     status['paused'] = False
 
-    def handler(*args): 
-        if status['paused'] == True:   
+    def handler(*args):
+        if status['paused'] == True:
             raise Exception('Optimization run has been terminated!')
-            exit(1)
         status['paused'] = True
-        
+
     signal.signal(signal.SIGINT, handler)
 
     def before_evaluate(vars):
-        if status['paused'] == True: 
-            res = input(' Press enter to resume or ctrl+c to terminate:  ') 
+        if status['paused'] == True:
+            res = input(' Press enter to resume or ctrl+c to terminate:  ')
             while res != '':
                 res = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate:   ')
         status['paused'] =  False
