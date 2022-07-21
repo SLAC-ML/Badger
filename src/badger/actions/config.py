@@ -2,7 +2,7 @@ from ..settings import list_settings, read_value, write_value, BADGER_PATH_DICT,
 import os
 import logging
 logger = logging.getLogger(__name__)
-from ..utils import yprint
+from ..utils import yprint, convert_str_to_value
 
 
 def config_settings(args):
@@ -110,5 +110,5 @@ def _config_core_var(var_name):
         write_value(var_name, default)
         print(f'You reset the {display_name} setting')
     elif res != 'S':
-        write_value(var_name, float(res))
+        write_value(var_name, convert_str_to_value(res))
         print(f'You set {display_name} to {res}')
