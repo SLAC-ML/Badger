@@ -211,3 +211,22 @@ def run_names_to_dict(run_names):
         day_list.append(name)
 
     return runs
+
+
+def convert_str_to_value(str):
+    try:
+        return int(str)
+    except ValueError:
+        pass
+
+    try:
+        return float(str)
+    except ValueError:
+        pass
+
+    try:
+        return bool(str)
+    except ValueError:
+        pass
+
+    return str
