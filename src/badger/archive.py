@@ -41,6 +41,10 @@ def archive_run(routine, data, states=None):
     with open(os.path.join(path, fname), 'w') as f:
         f.write(ystring(run))
 
+    # Temporarily add path information
+    # Do not save this info in database or on disk
+    run['path'] = path
+
     return run
 
 

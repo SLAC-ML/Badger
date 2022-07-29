@@ -148,6 +148,11 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         configs_env, {'params': routine['env_params']})
 
     env = instantiate_env(Environment, _configs_env)
+
+    # Start recording the opt logs
+    if env.interface:
+        env.interface.start_recording()
+
     if env_ready:
         env_ready(env)
 

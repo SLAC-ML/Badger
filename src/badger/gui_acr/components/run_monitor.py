@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
@@ -649,6 +650,12 @@ class BadgerOptMonitor(QWidget):
             run = archive_run(self.routine_runner.routine, self.routine_runner.data,
                 self.routine_runner.states)
             self.routine_runner.run_filename = run['filename']
+            try:
+                path = run['path']
+                filename = run['filename'][:-4] + 'pickle'
+                self.env.interface.stop_recording(os.path.join(path, filename))
+            except:
+                pass
             self.sig_run_name.emit(run['filename'])
 
             QMessageBox.information(
