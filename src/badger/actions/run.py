@@ -66,7 +66,10 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
     try:
         run(routine, yes, save, verbose, before_evaluate=before_evaluate, after_evaluate=after_evaluate, states_ready=states_ready)
     except Exception as e:
-        logger.error(e)
+        if str(e) == 'Optimization run has been terminated!':
+            logger.info(e)
+        else:
+            logger.error(e)
 
     if solutions:  # only save the run when at least one solution has been evaluated
         df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
