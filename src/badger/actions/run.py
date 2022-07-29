@@ -1,5 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
+import sys
 import time
 import signal
 import pandas as pd
@@ -11,7 +12,7 @@ from ..core import normalize_routine
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,
-                  fmt='lcls-log-full', sleep=0):
+                  fmt='lcls-log-full', sleep=0, flush_prompt=False):
     try:
         from ..archive import archive_run
     except Exception as e:
@@ -36,6 +37,9 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
     def handler(*args):
         if status['paused'] == True:
+            print('')  # start a new line
+            if flush_prompt:  # erase the last prompt
+                sys.stdout.write('\033[F')
             raise Exception('Optimization run has been terminated!')
         status['paused'] = True
 
@@ -43,9 +47,13 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
     def before_evaluate(vars):
         if status['paused'] == True:
-            res = input(' Press enter to resume or ctrl+c to terminate:  ')
+            res = input('Optimization paused. Press Enter to resume or Ctrl/Cmd + C to terminate: ')
             while res != '':
-                res = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate:   ')
+                if flush_prompt:
+                    sys.stdout.write('\033[F')
+                res = input(f'Invalid choice: {res}. Please press Enter to resume or Ctrl/Cmd + C to terminate: ')
+            if flush_prompt:
+                sys.stdout.write('\033[F')
         status['paused'] =  False
 
     def after_evaluate(vars, obses, cons, stas):
