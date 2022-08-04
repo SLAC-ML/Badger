@@ -12,6 +12,7 @@ def install_plugin(args):
 
     if args.install_1 is None:
         print('Please specify what you wish to install')
+        return
     
     url = ''
     arg = ''
@@ -39,4 +40,5 @@ def install_plugin(args):
             f.write(r.content)
     else: 
         print("A server with this url does not exist")
+        return
 
