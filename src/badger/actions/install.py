@@ -32,7 +32,7 @@ def plugin_install(args):
         url = f'http://localhost:3000/api/{full_word}'
         r = requests.get(url)
         for elem in r.json():
-            if exists(os.path.join(tmp_path, f'{elem}.tar.gz')): 
+            if exists(f'{BADGER_PLUGIN_ROOT}/{full_word}/{elem}'): 
                 print(elem, '  (Already installed)')
             else:
                 print(elem)
