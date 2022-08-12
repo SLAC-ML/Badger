@@ -1,131 +1,64 @@
 import requests
+import tarfile
 import json
 import os
 from os.path import exists
+try:
+    from ..factory import BADGER_PLUGIN_ROOT
+except:
+    BADGER_PLUGIN_ROOT = None
 
 # !!!!!!!!  Need prep for port not being 3000 
 
 current_path = os.getcwd()
 if not exists(f'{current_path}/.tmp'):
     os.mkdir('.tmp')
-full_path = f'{current_path}/.tmp'
+tmp_path = f'{current_path}/.tmp'
+
+lst = ['algorithms', 'environments', 'extensions', 'interfaces']
 
 
-def install_only(args): 
-    print("Please specify further what you wish to install!")
-    
+def plugin_install(args): 
+    if args.plugin_type is None: 
+        print("Please specify further what you wish to install!")
+        return
 
+    full_word = ''
+    for word in lst: 
+        if args.plugin_type[:3] == word[:3]:
+            full_word += word
 
-def install_algo(args):
-    if args.algo_plugin is None:
-        url = 'http://localhost:3000/api/algorithms'
+    if args.plugin_specific is None: 
+        url = f'http://localhost:3000/api/{full_word}'
         r = requests.get(url)
         for elem in r.json():
-            if exists(os.path.join(full_path, f'{elem}.tar.gz')): 
+            if exists(os.path.join(tmp_path, f'{elem}.tar.gz')): 
                 print(elem, '  (Already installed)')
             else:
                 print(elem)
         return
 
-    completePath = os.path.join(full_path, f'{args.algo_plugin}.tar.gz')
-    r_d = requests.get(f'http://localhost:3000/api/url/{args.algo_plugin}')
+    targz_path = os.path.join(tmp_path, f'{args.plugin_specific}.tar.gz')
+
+    r_d = requests.get(f'http://localhost:3000/api/url/{args.plugin_specific}')
     download_url = r_d.text
 
     r = requests.get(download_url)
     if r.status_code == 200:
-         if exists(completePath): 
-            print('This algorithm plugin is already installed!')
+        with open(targz_path, 'wb') as f:
+            f.write(r.content)
+        os.chdir(tmp_path)
+        tar = tarfile.open(f'{args.plugin_specific}.tar.gz', 'r:gz')  
+        plugin_path = f'{BADGER_PLUGIN_ROOT}/{full_word}/{args.plugin_specific}'
+        if exists(plugin_path): 
+            print('This plugin is already installed!')
             return
-         with open(completePath, 'wb') as f:
-             f.write(r.content)
+        tar.extractall(f'{BADGER_PLUGIN_ROOT}/{full_word}')
+        tar.close()
     else: 
-        print("A server with this url does not exist")
+        print("The server does not have this plugin!")
         return
 
-
-
-def install_env(args):
-    if args.env_plugin is None:
-        url = 'http://localhost:3000/api/environments'
-        r = requests.get(url)
-        for elem in r.json():
-            if exists(os.path.join(full_path, f'{elem}.tar.gz')): 
-                print(elem, '  (Already installed)')
-            else:
-                print(elem)
-        return
-
-    completePath = os.path.join(full_path, f'{args.env_plugin}.tar.gz')
-    r_d = requests.get(f'http://localhost:3000/api/url/{args.env_plugin}')
-    download_url = r_d.text
-
-    r = requests.get(download_url)
-    if r.status_code == 200:
-         if exists(completePath): 
-            print('This environment plugin is already installed!')
-            return
-         with open(completePath, 'wb') as f:
-             f.write(r.content)
-    else: 
-        print("A server with this url does not exist")
-        return
-
-
-
-def install_ext(args):
-    if args.ext_plugin is None:
-        url = 'http://localhost:3000/api/extensions'
-        r = requests.get(url)
-        for elem in r.json():
-            if exists(os.path.join(full_path, f'{elem}.tar.gz')): 
-                print(elem, '  (Already installed)')
-            else:
-                print(elem)
-        return
-
-    completePath = os.path.join(full_path, f'{args.ext_plugin}.tar.gz')
-    r_d = requests.get(f'http://localhost:3000/api/url/{args.ext_plugin}')
-    download_url = r_d.text
-
-    r = requests.get(download_url)
-    if r.status_code == 200:
-         if exists(completePath): 
-            print('This extension plugin is already installed!')
-            return
-         with open(completePath, 'wb') as f:
-             f.write(r.content)
-    else: 
-        print("A server with this url does not exist")
-        return
-
-
-
-def install_int(args):
-    if args.int_plugin is None:
-        url = 'http://localhost:3000/api/interfaces'
-        r = requests.get(url)
-        for elem in r.json():
-            if exists(os.path.join(full_path, f'{elem}.tar.gz')): 
-                print(elem, '  (Already installed)')
-            else:
-                print(elem)
-        return
-
-    completePath = os.path.join(full_path, f'{args.int_plugin}.tar.gz')
-    r_d = requests.get(f'http://localhost:3000/api/url/{args.int_plugin}')
-    download_url = r_d.text
-
-    r = requests.get(download_url)
-    if r.status_code == 200:
-         if exists(completePath): 
-            print('This interfaces plugin is already installed!')
-            return
-         with open(completePath, 'wb') as f:
-             f.write(r.content)
-    else: 
-        print("A server with this url does not exist")
-        return
-    
 
 
 

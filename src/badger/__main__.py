@@ -7,7 +7,7 @@ from .actions.doctor import self_check
 from .actions.routine import show_routine
 from .actions.algo import show_algo
 from .actions.env import show_env
-from .actions.install import install_only, install_algo, install_env, install_ext, install_int
+from .actions.install import plugin_install
 from .actions.intf import show_intf
 from .actions.run import run_routine
 from .actions.config import config_settings
@@ -61,29 +61,11 @@ def main():
 
     # Parser for the 'install' command     
     parser_inst = subparsers.add_parser('install', help='Badger install')
-    parser_inst.set_defaults(func=install_only)
+    parser_inst.add_argument('plugin_type', nargs='?', type=str, default=None)
+    parser_inst.add_argument('plugin_specific', nargs='?', type=str, default=None)
+    parser_inst.set_defaults(func=plugin_install)
 
-    # Subparser for the 'install' command
-    inst_subparser = parser_inst.add_subparsers(help='Badger install')
-
-    parser_inst_algo = inst_subparser.add_parser('algo', help='Badger install')
-    parser_inst_algo.add_argument('algo_plugin', nargs='?', type=str, default=None)
-    parser_inst_algo.set_defaults(func=install_algo)
-
-    parser_inst_env = inst_subparser.add_parser('env', help='Badger install')
-    parser_inst_env.add_argument('env_plugin', nargs='?', type=str, default=None)
-    parser_inst_env.set_defaults(func=install_env)
-
-    parser_inst_ext = inst_subparser.add_parser('ext', help='Badger install')
-    parser_inst_ext.add_argument('ext_plugin', nargs='?', type=str, default=None)
-    parser_inst_ext.set_defaults(func=install_ext)
-
-    parser_inst_int = inst_subparser.add_parser('int', help='Badger install')
-    parser_inst_int.add_argument('int_plugin', nargs='?', type=str, default=None)
-    parser_inst_int.set_defaults(func=install_int)
-
-
-
+    
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='run routines')
     parser_run.add_argument('-a', '--algo', required=True,
