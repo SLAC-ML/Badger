@@ -15,7 +15,10 @@ if not exists(f'{current_path}/.tmp'):
     os.mkdir('.tmp')
 tmp_path = f'{current_path}/.tmp'
 
-lst = ['algorithms', 'environments', 'extensions', 'interfaces']
+hist = {'algo': 'algorithms',
+        'env' : 'environments',
+        'ext' : 'extensions',
+        'int' : 'interfaces'}
 
 
 def plugin_install(args): 
@@ -23,10 +26,7 @@ def plugin_install(args):
         print("Please specify further what you wish to install!")
         return
 
-    full_word = ''
-    for word in lst: 
-        if args.plugin_type[:3] == word[:3]:
-            full_word += word
+    full_word = hist[f'{args.plugin_type}']
 
     if args.plugin_specific is None: 
         url = f'http://localhost:3000/api/{full_word}'
