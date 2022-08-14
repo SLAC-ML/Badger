@@ -3,12 +3,11 @@ import tarfile
 import json
 import os
 from os.path import exists
+from .settings import list_settings
 try:
     from ..factory import BADGER_PLUGIN_ROOT
 except:
     BADGER_PLUGIN_ROOT = None
-
-# !!!!!!!!  Need prep for port not being 3000 
 
 current_path = os.getcwd()
 if not exists(f'{current_path}/.tmp'):
@@ -20,27 +19,31 @@ hist = {'algo': 'algorithms',
         'ext' : 'extensions',
         'int' : 'interfaces'}
 
+plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']
 
 def plugin_install(args): 
     if args.plugin_type is None: 
         print("Please specify further what you wish to install!")
         return
 
+    if args.plugin_type not in hist: 
+        print("Specify one of the existing plugin types:   algo, env, ext, int")
+        return
     full_word = hist[f'{args.plugin_type}']
 
     if args.plugin_specific is None: 
-        url = f'http://localhost:3000/api/{full_word}'
+        url = f'{plugins_url}/api/{full_word}'
         r = requests.get(url)
         for elem in r.json():
             if exists(f'{BADGER_PLUGIN_ROOT}/{full_word}/{elem}'): 
-                print(elem, '  (Already installed)')
+                print(elem, '       (Already installed)')
             else:
                 print(elem)
         return
 
     targz_path = os.path.join(tmp_path, f'{args.plugin_specific}.tar.gz')
 
-    r_d = requests.get(f'http://localhost:3000/api/url/{args.plugin_specific}')
+    r_d = requests.get(f'{plugins_url}/api/url/{full_word}/{args.plugin_specific}')
     download_url = r_d.text
 
     r = requests.get(download_url)

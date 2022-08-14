@@ -36,6 +36,11 @@ BADGER_CORE_DICT = {
         'description': 'Maximum waiting time before giving up check var if takes too long time, unit is second',
         'default value': 3,
     },
+    'BADGER_PLUGINS_URL': {
+        'display name': 'badger plugins url',
+        'description': 'URL for badger plugins server',
+        'default value': 'http://teeport.ml/badger-plugins'
+    }
 }
 
 
