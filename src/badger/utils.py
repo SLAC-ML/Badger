@@ -211,3 +211,51 @@ def run_names_to_dict(run_names):
         day_list.append(name)
 
     return runs
+
+
+def convert_str_to_value(str):
+    try:
+        return int(str)
+    except ValueError:
+        pass
+
+    try:
+        return float(str)
+    except ValueError:
+        pass
+
+    try:
+        return bool(str)
+    except ValueError:
+        pass
+
+    return str
+
+
+def parse_rule(rule):
+    if type(rule) is str:
+        return {
+            'direction': rule,
+            'filter': 'ignore_nan',
+            'reducer': 'percentile_80',
+        }
+
+    # rule is a dict
+    try:
+        direction = rule['direction']
+    except:
+        direction = 'MINIMIZE'
+    try:
+        filter = rule['filter']
+    except:
+        filter = 'ignore_nan'
+    try:
+        reducer = rule['reducer']
+    except:
+        reducer = 'percentile_80'
+
+    return {
+        'direction': direction,
+        'filter': filter,
+        'reducer': reducer,
+    }

@@ -1,0 +1,9 @@
+variables:
+  - x
+  - y
+  - z
+objectives:
+  - norm_raw:
+      direction: MAXIMIZE
+      filter: ignore_nan
+      reducer: percentile_80

@@ -1,5 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
+import os
+import sys
 import time
 import signal
 import pandas as pd
@@ -11,7 +13,7 @@ from ..core import normalize_routine
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,
-                  fmt='lcls-log-full', sleep=0):
+                  fmt='lcls-log-full', sleep=0, flush_prompt=False):
     try:
         from ..archive import archive_run
     except Exception as e:
@@ -36,6 +38,9 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
     def handler(*args):
         if status['paused'] == True:
+            print('')  # start a new line
+            if flush_prompt:  # erase the last prompt
+                sys.stdout.write('\033[F')
             raise Exception('Optimization run has been terminated!')
         status['paused'] = True
 
@@ -43,9 +48,13 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
     def before_evaluate(vars):
         if status['paused'] == True:
-            res = input(' Press enter to resume or ctrl+c to terminate:  ')
+            res = input('Optimization paused. Press Enter to resume or Ctrl/Cmd + C to terminate: ')
             while res != '':
-                res = input(f'Invalid choice: {res} Please press enter to resume or ctrl+c to terminate:   ')
+                if flush_prompt:
+                    sys.stdout.write('\033[F')
+                res = input(f'Invalid choice: {res}. Please press Enter to resume or Ctrl/Cmd + C to terminate: ')
+            if flush_prompt:
+                sys.stdout.write('\033[F')
         status['paused'] =  False
 
     def after_evaluate(vars, obses, cons, stas):
@@ -58,19 +67,36 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         solutions.append(solution)
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
-    # Store system states
-    storage = {'states': None}
+
+    # Store system states and other stuff
+    storage = {'states': None, 'env': None}
+
     def states_ready(states):
         storage['states'] = states
 
+    def env_ready(env):
+        storage['env'] = env
+
     try:
-        run(routine, yes, save, verbose, before_evaluate=before_evaluate, after_evaluate=after_evaluate, states_ready=states_ready)
+        run(routine, yes, save, verbose,
+            before_evaluate=before_evaluate, after_evaluate=after_evaluate,
+            states_ready=states_ready, env_ready=env_ready)
     except Exception as e:
-        logger.error(e)
+        if str(e) == 'Optimization run has been terminated!':
+            logger.info(e)
+        else:
+            logger.error(e)
 
     if solutions:  # only save the run when at least one solution has been evaluated
         df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
-        archive_run(routine, df, storage['states'])
+        _run = archive_run(routine, df, storage['states'])
+        # Try dump the interface logs
+        try:
+            path = _run['path']
+            filename = _run['filename'][:-4] + 'pickle'
+            storage['env'].interface.stop_recording(os.path.join(path, filename))
+        except:
+            pass
 
 
 def run_routine(args):

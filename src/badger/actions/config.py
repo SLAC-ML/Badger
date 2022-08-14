@@ -1,8 +1,8 @@
-from ..settings import list_settings, read_value, write_value, BADGER_PATH_DICT
+from ..settings import list_settings, read_value, write_value, BADGER_PATH_DICT, BADGER_CORE_DICT
 import os
 import logging
 logger = logging.getLogger(__name__)
-from ..utils import yprint
+from ..utils import yprint, convert_str_to_value
 
 
 def config_settings(args):
@@ -14,7 +14,12 @@ def config_settings(args):
 
     try:
         print('')
-        return _config_path_var(key)
+        try:
+            return _config_path_var(key)
+        except KeyError:
+            return _config_core_var(key)
+    except KeyError:
+        pass
     except IndexError:
         pass
     except KeyboardInterrupt:
@@ -74,3 +79,36 @@ def _config_path_var(var_name):
     elif res != 'S':
         write_value(var_name, res)
         print(f'You set the Badger {display_name} folder to {res}')
+
+
+def _config_core_var(var_name):
+    display_name = BADGER_CORE_DICT[var_name]['display name']
+    desc = BADGER_CORE_DICT[var_name]['description']
+    default = BADGER_CORE_DICT[var_name]['default value']
+
+    print(f'=== Configure {display_name} ===')
+    print(f'*** {desc} ***\n')
+    while True:
+        res = input(
+            f'Please type in the new value for {display_name} (S to skip, R to reset): \n')
+        if res == 'S':
+            break
+        if res == 'R':
+            _res = input(
+                f'The current value {read_value(var_name)} will be reset to {default}, proceed (y/[n])? ')
+            if _res == 'y':
+                break
+            elif (not _res) or (_res == 'n'):
+                print('')
+                continue
+            else:
+                print(f'Invalid choice: {_res}')
+        else:
+            break
+
+    if res == 'R':
+        write_value(var_name, default)
+        print(f'You reset the {display_name} setting')
+    elif res != 'S':
+        write_value(var_name, convert_str_to_value(res))
+        print(f'You set {display_name} to {res}')
