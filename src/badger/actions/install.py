@@ -64,7 +64,7 @@ def plugin_install(args):
         tar.close()
         print('Plugin installation complete!')
 
-        os.chdir(f'{BADGER_PLUGIN_ROOT}/{full_word}/{args.plugin_specific}')
+        os.chdir(plugin_path)
         with open("configs.yaml", "r") as stream:
             try:
                 configs = yaml.safe_load(stream)
