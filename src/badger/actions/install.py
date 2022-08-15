@@ -23,7 +23,6 @@ hist = {'algo': 'algorithms',
         'int' : 'interfaces'}
 
 plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']
-# local_url = 'http://localhost:3000'
 
 def plugin_install(args): 
     if args.plugin_type is None: 
@@ -36,7 +35,7 @@ def plugin_install(args):
     full_word = hist[f'{args.plugin_type}']
 
     if args.plugin_specific is None: 
-        url = f'{plugins_url}/api/{full_word}'     # switch to plugin_url after finish testing
+        url = f'{plugins_url}/api/{full_word}'     
         r = requests.get(url)
         for elem in r.json():
             if exists(f'{BADGER_PLUGIN_ROOT}/{full_word}/{elem}'): 
@@ -47,7 +46,7 @@ def plugin_install(args):
 
     targz_path = os.path.join(tmp_path, f'{args.plugin_specific}.tar.gz')
 
-    r_d = requests.get(f'{plugins_url}/api/url/{full_word}/{args.plugin_specific}')     # switch to plugin url after finish testing
+    r_d = requests.get(f'{plugins_url}/api/url/{full_word}/{args.plugin_specific}')     
     download_url = r_d.text
 
     r = requests.get(download_url)
