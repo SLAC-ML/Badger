@@ -31,8 +31,8 @@ identify = {'optimize'    :  'algorithms',
             'Interface'   :  'interfaces'}
     
 
-plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
-# plugins_url = 'http://localhost:3000'
+# plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
+plugins_url = 'http://localhost:3000'
 
 def plugin_install(args): 
     plugin_path = ''
@@ -46,8 +46,9 @@ def plugin_install(args):
 
     if args.plugin_specific is None: 
         if args.plugin_type == 'local': 
-            print('Please specify further what plugin you wish to install')
+            print('Please provide the path to the local tarball for the plugin you wish to install')
             return
+        full_word = hist[f'{args.plugin_type}']
         url = f'{plugins_url}/api/{full_word}'     
         r = requests.get(url)
         for elem in r.json():
@@ -58,6 +59,9 @@ def plugin_install(args):
         return
 
     if args.plugin_type == 'local': 
+        if not exists(args.plugin_specific): 
+            print('This local tarball does not exist!')
+            return
         tarname = os.path.basename(os.path.normpath(args.plugin_specific))
         plugin_name = tarname[:-7]
         local_path = os.path.dirname(args.plugin_specific)
