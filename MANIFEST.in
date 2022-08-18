@@ -1,6 +1,7 @@
 include versioneer.py
 include src/badger/_version.py
 include src/badger/gui/images/*.png
+include src/badger/gui_acr/images/*.png
 graft src/badger/tests
 prune src/badger/tests/**/__pycache__
 recursive-exclude src/badger/tests **/.DS_Store
