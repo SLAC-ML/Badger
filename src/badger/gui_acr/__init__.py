@@ -7,6 +7,7 @@ from PyQt5 import QtCore
 import sys
 # import ctypes
 from qdarkstyle import load_stylesheet, LightPalette, DarkPalette
+from ..settings import read_value
 from .windows.main_window import BadgerMainWindow
 
 # Fix the scaling issue on multiple monitors w/ different scaling settings
@@ -60,14 +61,8 @@ def launch_gui():
     # font.setWeight(QFont.DemiBold)
     app.setFont(font)
 
-    # Configure app settings
-    settings = QtCore.QSettings('SLAC-ML', 'Badger')
-    theme = settings.value('theme')
-    if not theme:
-        settings.setValue('theme', 'dark')
-        theme = settings.value('theme')
-
     # Set up stylesheet
+    theme = read_value('BADGER_THEME')
     if theme == 'dark':
         app.setStyleSheet(load_stylesheet(palette=DarkPalette))
     elif theme == 'light':
