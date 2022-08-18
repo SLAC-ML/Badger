@@ -31,8 +31,8 @@ identify = {'optimize'    :  'algorithms',
             'Interface'   :  'interfaces'}
     
 
-# plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
-plugins_url = 'http://localhost:3000'
+plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
+# plugins_url = 'http://localhost:3000'
 
 def plugin_install(args): 
     plugin_path = ''
