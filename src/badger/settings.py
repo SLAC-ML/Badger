@@ -39,6 +39,15 @@ BADGER_CORE_DICT = {
 }
 
 
+BADGER_GUI_DICT = {
+    'BADGER_THEME': {
+        'display name': 'theme',
+        'description': 'Theme for the Badger GUI',
+        'default value': 'dark',
+    },
+}
+
+
 def init_settings():
     settings = QSettings('SLAC-ML', 'Badger')
 
@@ -48,6 +57,9 @@ def init_settings():
     for key in BADGER_CORE_DICT.keys():
         if settings.value(key) is None:
             settings.setValue(key, BADGER_CORE_DICT[key]['default value'])
+    for key in BADGER_GUI_DICT.keys():
+        if settings.value(key) is None:
+            settings.setValue(key, BADGER_GUI_DICT[key]['default value'])
 
 
 def list_settings():
@@ -65,6 +77,8 @@ def list_settings():
     for key in BADGER_PATH_DICT.keys():
         result[key] = settings.value(key)
     for key in BADGER_CORE_DICT.keys():
+        result[key] = settings.value(key)
+    for key in BADGER_GUI_DICT.keys():
         result[key] = settings.value(key)
 
     return result
