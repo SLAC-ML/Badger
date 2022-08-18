@@ -2,6 +2,7 @@ from pkg_resources import get_distribution
 from .doctor import check_n_config_paths
 from ..utils import yprint
 from ..log import set_log_level
+from ..settings import list_settings, BADGER_CORE_DICT
 
 
 def show_info(args):
@@ -42,6 +43,7 @@ def show_info(args):
             'database root': BADGER_DB_ROOT,
             'logbook root': BADGER_LOGBOOK_ROOT,
             'archive root': BADGER_ARCHIVE_ROOT,
+            'plugin installation URL': BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
         }
 
         if BADGER_EXTENSIONS:

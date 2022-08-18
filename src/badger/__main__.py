@@ -9,6 +9,7 @@ from .actions.routine import show_routine
 from .actions.algo import show_algo
 from .actions.env import show_env
 from .actions.install import plugin_install
+from .actions.uninstall import plugin_remove
 from .actions.intf import show_intf
 from .actions.run import run_routine
 from .actions.config import config_settings
@@ -64,10 +65,16 @@ def main():
     parser_env.set_defaults(func=show_env)
 
     # Parser for the 'install' command     
-    parser_inst = subparsers.add_parser('install', help='Badger install')
+    parser_inst = subparsers.add_parser('install', help='Badger install plugin')
     parser_inst.add_argument('plugin_type', nargs='?', type=str, default=None)
     parser_inst.add_argument('plugin_specific', nargs='?', type=str, default=None)
     parser_inst.set_defaults(func=plugin_install)
+
+    # Parser for the 'remove' command     
+    parser_remove = subparsers.add_parser('remove', help='Badger remove plugin')
+    parser_remove.add_argument('plugin_type', nargs='?', type=str, default=None)
+    parser_remove.add_argument('plugin_specific', nargs='?', type=str, default=None)
+    parser_remove.set_defaults(func=plugin_remove)
 
     
     # Parser for the 'run' command
