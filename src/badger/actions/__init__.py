@@ -43,7 +43,7 @@ def show_info(args):
             'database root': BADGER_DB_ROOT,
             'logbook root': BADGER_LOGBOOK_ROOT,
             'archive root': BADGER_ARCHIVE_ROOT,
-            'plugin installation URL': read_value('BADGER_PLUGINS_URL')
+            'plugin installation url': read_value('BADGER_PLUGINS_URL')
         }
 
         if BADGER_EXTENSIONS:
