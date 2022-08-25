@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 from conda.cli.python_api import run_command, Commands
 import shutil
 from os.path import exists
-from ..settings import list_settings, BADGER_CORE_DICT
+from ..settings import list_settings, BADGER_CORE_DICT, read_value
 try:
     from ..factory import BADGER_PLUGIN_ROOT
 except:
@@ -31,7 +31,7 @@ identify = {'optimize'    :  'algorithms',
             'Interface'   :  'interfaces'}
     
 
-plugins_url = BADGER_CORE_DICT['BADGER_PLUGINS_URL']['default value']
+plugins_url = read_value('BADGER_PLUGINS_URL')
 # plugins_url = 'http://localhost:3000'
 
 def plugin_install(args): 
@@ -89,7 +89,7 @@ def plugin_install(args):
         full_word = hist[f'{args.plugin_type}']
         targz_path = os.path.join(tmp_path, f'{args.plugin_specific}.tar.gz')
 
-        r_d = requests.get(f'{plugins_url}/api/url/{full_word}/{args.plugin_specific}')     
+        r_d = requests.get(f'{plugins_url}/api/url/{full_word}/{args.plugin_specific}')    
         download_url = r_d.text
 
         r = requests.get(download_url)
