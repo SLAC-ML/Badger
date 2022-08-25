@@ -53,6 +53,19 @@ def maybe_create_runs_db(func):
     return func_safe
 
 
+def filter_routines(records, tags):
+    records_filtered = []
+    for record in records:
+        try:
+            _tags = yaml.safe_load(record[1])['config']['tags']
+            if tags.items() <= _tags.items():
+                records_filtered.append(record)
+        except:
+            pass
+
+    return records_filtered
+
+
 @maybe_create_routines_db
 def save_routine(routine):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
@@ -116,17 +129,26 @@ def load_routine(name):
 
 
 @maybe_create_routines_db
-def list_routine(keyword=''):
+def list_routine(keyword='', tags={}):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
+    if not tags:
+        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
 
-    records = cur.fetchall()
-    names = [record[0] for record in records]
-    timestamps = [record[1] for record in records]
-    con.close()
+        records = cur.fetchall()
+        names = [record[0] for record in records]
+        timestamps = [record[1] for record in records]
+        con.close()
+    else:
+        cur.execute(f'select name, config, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
+
+        records = cur.fetchall()
+        records = filter_routines(records, tags)
+        names = [record[0] for record in records]
+        timestamps = [record[2] for record in records]
+        con.close()
 
     return names, timestamps
 

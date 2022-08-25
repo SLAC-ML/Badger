@@ -87,7 +87,7 @@ class BadgerHomePage(QWidget):
         routine_list.setAlternatingRowColors(True)
         routine_list.setSpacing(1)
         routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
-        self.build_routine_list()
+        self.refresh_routine_list()
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
 
@@ -165,11 +165,15 @@ class BadgerHomePage(QWidget):
         self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
 
-        self.sbar.textChanged.connect(self.build_routine_list)
+        self.sbar.textChanged.connect(self.refresh_routine_list)
         self.btn_new.clicked.connect(self.create_new_routine)
         self.routine_list.itemClicked.connect(self.select_routine)
         self.run_table.cellClicked.connect(self.solution_selected)
         self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
+
+        self.filter_box.cb_obj.currentIndexChanged.connect(self.refresh_routine_list)
+        self.filter_box.cb_reg.currentIndexChanged.connect(self.refresh_routine_list)
+        self.filter_box.cb_gain.currentIndexChanged.connect(self.refresh_routine_list)
 
         self.cb_history.currentIndexChanged.connect(self.go_run)
         self.btn_prev.clicked.connect(self.go_prev_run)
@@ -238,9 +242,7 @@ class BadgerHomePage(QWidget):
 
         self.routine_list.itemWidget(item).activate()
 
-    def build_routine_list(self, keyword=''):
-        routines, timestamps = list_routine(keyword)
-
+    def build_routine_list(self, routines, timestamps):
         try:
             selected_routine = self.prev_routine.routine
         except:
@@ -257,6 +259,19 @@ class BadgerHomePage(QWidget):
             if routine == selected_routine:
                 _item.activate()
                 self.prev_routine = item
+
+    def refresh_routine_list(self):
+        keyword = self.sbar.text()
+        tag_obj = self.filter_box.cb_obj.currentText()
+        tag_reg = self.filter_box.cb_reg.currentText()
+        tag_gain = self.filter_box.cb_gain.currentText()
+        tags = {}
+        if tag_obj: tags['objective'] = tag_obj
+        if tag_reg: tags['region'] = tag_reg
+        if tag_gain: tags['gain'] = tag_gain
+        routines, timestamps = list_routine(keyword, tags)
+
+        self.build_routine_list(routines, timestamps)
 
     def go_run(self, i):
         if self.cb_history.itemText(0) == 'Optimization in progress...':
@@ -361,8 +376,7 @@ class BadgerHomePage(QWidget):
             self.go_run(-1)  # sometimes we need to trigger this manually
 
     def routine_saved(self):
-        keyword = self.sbar.text()
-        self.build_routine_list(keyword)
+        self.refresh_routine_list()
         self.select_routine(self.routine_list.item(0))
         self.tab_state = 0  # force jump to run monitor
         self.done_create_routine()
@@ -395,5 +409,4 @@ class BadgerHomePage(QWidget):
                     self.go_run(-1)  # sometimes we need to trigger this manually
                 self.sig_routine_activated.emit(False)
 
-        keyword = self.sbar.text()
-        self.build_routine_list(keyword)
+        self.refresh_routine_list()
