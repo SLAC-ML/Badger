@@ -1,0 +1,10 @@
+variables:
+  - q1
+  - q2: [-1, 0.5]
+  - q4: [0, 1]
+objectives:
+  - l2
+tags:
+  objective: HXR
+  region: LI21:201, 211, 271, 278
+  gain: 4
