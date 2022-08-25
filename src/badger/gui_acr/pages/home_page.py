@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QComboBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
@@ -11,6 +11,7 @@ from ..components.history_navigator import HistoryNavigator
 from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
+from ..components.filter_cbox import BadgerFilterBox
 from ...db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ...archive import load_run, delete_run
 from ...utils import get_header
@@ -76,6 +77,10 @@ class BadgerHomePage(QWidget):
         hbox_search.addWidget(sbar)
         hbox_search.addWidget(btn_new)
         vbox_routine.addWidget(panel_search)
+
+        # Filters
+        self.filter_box = filter_box = BadgerFilterBox(self)
+        vbox_routine.addWidget(filter_box)
 
         # Routine list
         self.routine_list = routine_list = QListWidget()

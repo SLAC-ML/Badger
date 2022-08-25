@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox
+from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout, QFrame
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QComboBox, QStyledItemDelegate
 from PyQt5.QtCore import QSize
 import sqlite3
 from coolname import generate_slug
@@ -46,12 +46,83 @@ class BadgerRoutinePage(QWidget):
 
         # Meta group
         group_meta = QGroupBox('Metadata')
-        hbox_meta = QHBoxLayout(group_meta)
-        label_name = QLabel('Routine Name')
+        vbox_meta = QVBoxLayout(group_meta)
+
+        # Name
+        name = QWidget()
+        hbox_name = QHBoxLayout(name)
+        hbox_name.setContentsMargins(0, 0, 0, 0)
+        label = QLabel('Name')
+        label.setFixedWidth(64)
         self.edit_save = edit_save = QLineEdit()
         edit_save.setPlaceholderText(generate_slug(2))
-        hbox_meta.addWidget(label_name)
-        hbox_meta.addWidget(edit_save, 1)
+        hbox_name.addWidget(label)
+        hbox_name.addWidget(edit_save, 1)
+        vbox_meta.addWidget(name)
+
+        seperator = QFrame()
+        seperator.setFrameShape(QFrame.HLine)
+        seperator.setFrameShadow(QFrame.Sunken)
+        seperator.setLineWidth(0)
+        seperator.setMidLineWidth(0)
+        vbox_meta.addWidget(seperator)
+
+        # Obj tag
+        obj = QWidget()
+        hbox_obj = QHBoxLayout(obj)
+        hbox_obj.setContentsMargins(0, 0, 0, 0)
+        lbl = QLabel('Objective')
+        lbl.setFixedWidth(64)
+        self.cb_obj = cb_obj = QComboBox()
+        cb_obj.setItemDelegate(QStyledItemDelegate())
+        cb_obj.addItems(['', 'HXR', 'SXR'])
+        cb_obj.setCurrentIndex(-1)
+        hbox_obj.addWidget(lbl)
+        hbox_obj.addWidget(cb_obj, 1)
+        vbox_meta.addWidget(obj)
+
+        # Region tag
+        region = QWidget()
+        hbox_reg = QHBoxLayout(region)
+        hbox_reg.setContentsMargins(0, 0, 0, 0)
+        lbl = QLabel('Region')
+        lbl.setFixedWidth(64)
+        self.cb_reg = cb_reg = QComboBox()
+        cb_reg.setItemDelegate(QStyledItemDelegate())
+        cb_reg.addItems([
+            '',
+            'LI21:201, 211, 271, 278',
+            'LI26:201, 301, 401, 501',
+            'LI26:601, 701, 801, 901',
+            'IN20:361, 371, 425, 441, 511, 525',
+            'LTUH:620, 640, 660, 680',
+            'LTUS:620, 640, 660, 680',
+        ])
+        cb_reg.setCurrentIndex(-1)
+        hbox_reg.addWidget(lbl)
+        hbox_reg.addWidget(cb_reg, 1)
+        vbox_meta.addWidget(region)
+
+        # Gain tag
+        gain = QWidget()
+        hbox_gain = QHBoxLayout(gain)
+        hbox_gain.setContentsMargins(0, 0, 0, 0)
+        lbl = QLabel('Gain')
+        lbl.setFixedWidth(64)
+        self.cb_gain = cb_gain = QComboBox()
+        cb_gain.setItemDelegate(QStyledItemDelegate())
+        cb_gain.addItems([
+            '',
+            '1',
+            '2',
+            '4',
+            '8',
+        ])
+        cb_gain.setCurrentIndex(-1)
+        hbox_gain.addWidget(lbl)
+        hbox_gain.addWidget(cb_gain, 1)
+        vbox_meta.addWidget(gain)
+
         # hbox_meta.addStretch(2)
         vbox.addWidget(group_meta)
 
