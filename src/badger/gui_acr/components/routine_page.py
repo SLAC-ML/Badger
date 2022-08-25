@@ -260,10 +260,26 @@ class BadgerRoutinePage(QWidget):
             for name_sta in config_states:
                 self.add_state(name_sta)
 
-        # Config the save settings
+        # Config the metadata
         name = routine['name']
         self.edit_save.setPlaceholderText(generate_slug(2))
         self.edit_save.setText(name)
+        try:
+            tags = routine['config']['tags']
+        except:
+            tags = {}
+        try:
+            self.cb_obj.setCurrentText(tags['objective'])
+        except:
+            self.cb_obj.setCurrentIndex(0)
+        try:
+            self.cb_reg.setCurrentText(tags['region'])
+        except:
+            self.cb_reg.setCurrentIndex(0)
+        try:
+            self.cb_gain.setCurrentText(tags['gain'])
+        except:
+            self.cb_gain.setCurrentIndex(0)
 
         self.algo_box.check_use_script.setChecked(not not self.script)
 
@@ -687,6 +703,7 @@ class BadgerRoutinePage(QWidget):
             sta_name = item_widget.cb_sta.currentText()
             states.append(sta_name)
 
+        # Domain scaling
         try:
             scaling = self.algo_box.cb_scaling.currentText()
             scaling_params = load_config(self.algo_box.edit_scaling.toPlainText())
@@ -694,12 +711,23 @@ class BadgerRoutinePage(QWidget):
         except:
             domain_scaling = None
 
+        # Tags
+        tag_obj = self.cb_obj.currentText()
+        tag_reg = self.cb_reg.currentText()
+        tag_gain = self.cb_gain.currentText()
+        tags = {}
+        if tag_obj: tags['objective'] = tag_obj
+        if tag_reg: tags['region'] = tag_reg
+        if tag_gain: tags['gain'] = tag_gain
+        if not tags: tags = None
+
         configs = {
             'variables': variables,
             'objectives': objectives,
             'constraints': constraints,
             'states': states,
             'domain_scaling': domain_scaling,
+            'tags': tags,
         }
         if self.algo_box.check_use_script.isChecked():
             configs['script'] = self.script
