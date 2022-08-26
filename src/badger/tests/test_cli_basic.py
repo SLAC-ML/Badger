@@ -20,7 +20,7 @@ def test_cli_main():
 
     # Check output lines
     outlines = out.split('\n')
-    assert len(outlines) == 7
+    assert len(outlines) == 8
 
     # Check name
     assert outlines[0] == 'name: Badger the optimizer'
