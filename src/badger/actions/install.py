@@ -9,15 +9,20 @@ from conda.cli.python_api import run_command, Commands
 import shutil
 from os.path import exists
 from ..settings import read_value
-from ..factory import BADGER_PLUGIN_ROOT
 
 
 def plugin_install(args):
+    try:
+        from ..factory import BADGER_PLUGIN_ROOT
+    except Exception as e:
+        logger.error(e)
+        return
+
     hist = {
         'algo': 'algorithms',
         'env': 'environments',
         'ext': 'extensions',
-        'int': 'interfaces'
+        'intf': 'interfaces'
     }
 
     identify = {
@@ -32,7 +37,7 @@ def plugin_install(args):
         return
 
     if args.plugin_type != 'local' and args.plugin_type not in hist:
-        print(f"{args.plugin_type} is an invalid option. Choose one of the following:  algo, env, ext, int, local")
+        print(f"{args.plugin_type} is an invalid option. Choose one of the following:  algo, env, ext, intf, local")
         return
 
     plugins_url = read_value('BADGER_PLUGINS_URL')
