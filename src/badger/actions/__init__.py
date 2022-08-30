@@ -2,7 +2,7 @@ from pkg_resources import get_distribution
 from .doctor import check_n_config_paths
 from ..utils import yprint
 from ..log import set_log_level
-from ..settings import list_settings, BADGER_CORE_DICT, read_value
+from ..settings import read_value
 
 
 def show_info(args):
