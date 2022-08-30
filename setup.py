@@ -21,7 +21,8 @@ setup(
         'pyqtgraph',
         'qdarkstyle',
         'pillow',
-        'requests'
+        'requests',
+        'tqdm'
     ],
     extras_require={
         'dev': [

@@ -5,7 +5,6 @@ import tarfile
 import os
 import yaml
 from tqdm.auto import tqdm
-from conda.cli.python_api import run_command, Commands
 import shutil
 from os.path import exists
 from ..settings import read_value
@@ -17,6 +16,11 @@ def plugin_install(args):
     except Exception as e:
         logger.error(e)
         return
+
+    # We will not make conda as a dependency of Badger
+    # This is just a temp solution
+    # Should tell the users to use the install command a conda env is needed
+    from conda.cli.python_api import run_command, Commands
 
     hist = {
         'algo': 'algorithms',
