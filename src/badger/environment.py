@@ -4,6 +4,11 @@ from abc import ABC, abstractmethod
 from typing import List
 from .interface import Interface
 from .utils import merge_params
+from .settings import read_value
+
+
+BADGER_CHECK_VAR_INTERVAL = float(read_value('BADGER_CHECK_VAR_INTERVAL'))
+BADGER_CHECK_VAR_TIMEOUT = float(read_value('BADGER_CHECK_VAR_TIMEOUT'))
 
 
 class Environment(ABC):
@@ -117,9 +122,13 @@ class Environment(ABC):
 
         # Wait until check_var returns 0
         status = 1
+        time_start = time.time()
         while status:
+            time_elapsed = time.time() - time_start
+            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
+                raise Exception(f'Set variable {var} timeout!')
             status = self._check_var(var)
-            time.sleep(0.1)
+            time.sleep(BADGER_CHECK_VAR_INTERVAL)
 
     # Safe version of _get_obs
     def get_obs(self, obs: str):
@@ -160,10 +169,14 @@ class Environment(ABC):
 
         # Wait until all check_var calls return 0
         status = np.ones(len(vars))
+        time_start = time.time()
         while np.any(status):
+            time_elapsed = time.time() - time_start
+            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
+                raise Exception(f'Set variable {vars[np.argmax(status)]} timeout!')
             for idx, var in enumerate(vars):
                 status[idx] = self._check_var(var)
-            time.sleep(0.1)
+            time.sleep(BADGER_CHECK_VAR_INTERVAL)
 
     # Unsafe version of set_vars
     def _set_vars(self, vars: List[str], values: list):
@@ -175,10 +188,14 @@ class Environment(ABC):
 
         # Wait until all check_var calls return 0
         status = np.ones(len(vars))
+        time_start = time.time()
         while np.any(status):
+            time_elapsed = time.time() - time_start
+            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
+                raise Exception(f'Set variable {vars[np.argmax(status)]} timeout!')
             for idx, var in enumerate(vars):
                 status[idx] = self._check_var(var)
-            time.sleep(0.1)
+            time.sleep(BADGER_CHECK_VAR_INTERVAL)
 
     def set_vars_dict(self, book: dict):
         for var, val in book.items():
@@ -186,10 +203,14 @@ class Environment(ABC):
 
         # Wait until all check_var calls return 0
         status = np.ones(len(book))
+        time_start = time.time()
         while np.any(status):
+            time_elapsed = time.time() - time_start
+            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
+                raise Exception(f'Set variable {list(book.keys())[np.argmax(status)]} timeout!')
             for idx, var in enumerate(book.keys()):
                 status[idx] = self._check_var(var)
-            time.sleep(0.1)
+            time.sleep(BADGER_CHECK_VAR_INTERVAL)
 
     # Unsafe version of set_vars_dict
     def _set_vars_dict(self, book: dict):
@@ -198,10 +219,14 @@ class Environment(ABC):
 
         # Wait until all check_var calls return 0
         status = np.ones(len(book))
+        time_start = time.time()
         while np.any(status):
+            time_elapsed = time.time() - time_start
+            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
+                raise Exception(f'Set variable {list(book.keys())[np.argmax(status)]} timeout!')
             for idx, var in enumerate(book.keys()):
                 status[idx] = self._check_var(var)
-            time.sleep(0.1)
+            time.sleep(BADGER_CHECK_VAR_INTERVAL)
 
     def get_obses(self, obses: List[str]) -> list:
         values = []
