@@ -7,9 +7,9 @@ from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from .routine_runner import BadgerRoutineRunner
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
-from ...utils import norm, ParetoFront
-from ...logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
-from ...archive import archive_run, BADGER_ARCHIVE_ROOT
+from ....utils import norm, ParetoFront
+from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
+from ....archive import archive_run, BADGER_ARCHIVE_ROOT
 
 
 stylesheet_del = '''

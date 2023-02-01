@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import QModelIndex, Qt
-from ...utils import run_names_to_dict
+from ....utils import run_names_to_dict
 
 
 # Modified based on the following solution

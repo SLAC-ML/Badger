@@ -12,9 +12,9 @@ from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
 from ..components.filter_cbox import BadgerFilterBox
-from ...db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
-from ...archive import load_run, delete_run
-from ...utils import get_header
+from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
+from ....archive import load_run, delete_run
+from ....utils import get_header
 
 
 stylesheet = '''

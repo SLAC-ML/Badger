@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QTextEdit, QStackedWidget, QScrollArea
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from .routine_page import BadgerRoutinePage
-from ...utils import ystring
+from ....utils import ystring
 
 
 class BadgerRoutineEditor(QWidget):

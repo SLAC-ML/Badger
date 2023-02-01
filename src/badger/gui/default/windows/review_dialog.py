@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QTextBrowser, QVBoxLayout
-from ...utils import ystring
+from ....utils import ystring
 
 
 class BadgerReviewDialog(QDialog):

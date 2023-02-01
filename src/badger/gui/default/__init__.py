@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 import sys
 # import ctypes
 from qdarkstyle import load_stylesheet, LightPalette, DarkPalette
-from ..settings import read_value
+from ...settings import read_value
 from .windows.main_window import BadgerMainWindow
 
 # Fix the scaling issue on multiple monitors w/ different scaling settings

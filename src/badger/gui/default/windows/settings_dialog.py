@@ -3,7 +3,7 @@ from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QVBoxLayout, QWidget, QLabel, QLineEdit
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication, QStyledItemDelegate
 from qdarkstyle import load_stylesheet, DarkPalette, LightPalette
-from ...settings import list_settings, read_value, write_value
+from ....settings import list_settings, read_value, write_value
 
 
 class BadgerSettingsDialog(QDialog):
