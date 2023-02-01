@@ -10,7 +10,8 @@ def show_info(args):
     set_log_level(args.log)
 
     if args.gui:
-        from ..gui import launch_gui
+        # from ..gui import launch_gui
+        from ..gui_acr import launch_gui
 
         launch_gui()
     elif args.gui_acr:
