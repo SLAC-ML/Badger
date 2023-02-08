@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit, QLineEdit
 from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame
+from PyQt5.QtCore import QRegExp
 from .collapsible_box import CollapsibleBox
+from .var_table import VariableTable
 
 
 class BadgerEnvBox(CollapsibleBox):
@@ -69,7 +71,7 @@ class BadgerEnvBox(CollapsibleBox):
         seperator.setMidLineWidth(0)
         vbox.addWidget(seperator)
 
-        # Variables config
+        # Variables config (table style)
         var_panel = QWidget()
         vbox.addWidget(var_panel, 1)
         hbox_var = QHBoxLayout(var_panel)
@@ -86,29 +88,25 @@ class BadgerEnvBox(CollapsibleBox):
         edit_var_col = QWidget()
         vbox_var_edit = QVBoxLayout(edit_var_col)
         vbox_var_edit.setContentsMargins(0, 0, 0, 0)
+
         action_var = QWidget()
         hbox_action_var = QHBoxLayout(action_var)
         hbox_action_var.setContentsMargins(0, 0, 0, 0)
         vbox_var_edit.addWidget(action_var)
-        self.btn_all_var = btn_all_var = QPushButton('Check All')
-        self.btn_un_all_var = btn_un_all_var = QPushButton('Uncheck All')
-        btn_all_var.setFixedSize(96, 24)
-        btn_un_all_var.setFixedSize(96, 24)
+        self.edit_name = edit_name = QLineEdit()
+        edit_name.setPlaceholderText('Filter variables...')
         self.btn_add_var = btn_add_var = QPushButton('Add')
         btn_add_var.setFixedSize(96, 24)
         btn_add_var.setDisabled(True)
         self.check_only_var = check_only_var = QCheckBox('Show Checked Only')
         check_only_var.setChecked(False)
-        hbox_action_var.addWidget(btn_all_var)
-        hbox_action_var.addWidget(btn_un_all_var)
+        hbox_action_var.addWidget(edit_name)
         hbox_action_var.addWidget(btn_add_var)
         hbox_action_var.addStretch()
         hbox_action_var.addWidget(check_only_var)
-        self.list_var = QListWidget()
-        self.list_var.setViewportMargins(2, 2, 17, 2)
-        # self.list_var.setFixedHeight(128)
-        vbox_var_edit.addWidget(self.list_var)
-        # vbox_var_edit.addStretch()
+
+        self.var_table = VariableTable()
+        vbox_var_edit.addWidget(self.var_table)
         hbox_var.addWidget(edit_var_col)
 
         # Objectives config
@@ -221,6 +219,25 @@ class BadgerEnvBox(CollapsibleBox):
         self.dict_var = {}
         self.dict_obj = {}
         self.dict_con = {}
+
+        # self.edit_name.editingFinished.connect(self.filter_var)
+        self.edit_name.textChanged.connect(self.filter_var)
+        self.check_only_var.stateChanged.connect(self.toggle_show_mode)
+
+    def toggle_show_mode(self, _):
+        self.var_table.toggle_show_mode(self.check_only_var.isChecked())
+
+    def filter_var(self):
+        keyword = self.edit_name.text()
+        rx = QRegExp(keyword)
+
+        _variables = []
+        for var in self.var_table.all_variables:
+            vname = next(iter(var))
+            if rx.indexIn(vname, 0) != -1:
+                _variables.append(var)
+
+        self.var_table.update_variables(_variables, 1)
 
     def _fit_content(self, list):
         height = list.sizeHintForRow(0) * list.count() + 2 * list.frameWidth() + 4
