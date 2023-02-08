@@ -439,28 +439,18 @@ class BadgerRoutinePage(QWidget):
         dlg = BadgerVariableDialog(self, self.env, configs, self.add_var_to_list)
         dlg.exec()
 
-    def add_var_to_list(self, name, min, max):
-        return
+    def add_var_to_list(self, name, lb, ub):
         # Check if already in the list
         ok = False
         try:
-            self.env_box.dict_var[name]
-        except:
+            self.env_box.var_table.bounds[name]
+        except KeyError:
             ok = True
-
         if not ok:
             QMessageBox.warning(self, 'Variable already exists!', f'Variable {name} already exists!')
             return 1
 
-        item = QListWidgetItem(self.env_box.list_var)
-        var_item = variable_item(name, [min, max], self.toggle_var)
-        var_item.check_name.setChecked(True)
-        item.setSizeHint(var_item.sizeHint())
-        self.env_box.list_var.addItem(item)
-        self.env_box.list_var.setItemWidget(item, var_item)
-        self.env_box.dict_var[name] = item
-        self.env_box.fit_content()
-
+        self.env_box.add_var(name, lb, ub)
         return 0
 
     def check_all_obj(self):

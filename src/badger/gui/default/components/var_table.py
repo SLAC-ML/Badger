@@ -188,6 +188,13 @@ class VariableTable(QTableWidget):
         # header.setSectionResizeMode(0, QHeaderView.Interactive)
         header.setVisible(True)
 
+    def add_variable(self, name, lb, ub):
+        var = {}
+        var[name] = [lb, ub]
+
+        self.all_variables.append(var)
+        self.bounds[name] = [lb, ub]
+
     def export_variables(self):
         variables_exported = []
         for var in self.all_variables:

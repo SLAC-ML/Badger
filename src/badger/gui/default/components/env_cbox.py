@@ -227,6 +227,10 @@ class BadgerEnvBox(CollapsibleBox):
     def toggle_show_mode(self, _):
         self.var_table.toggle_show_mode(self.check_only_var.isChecked())
 
+    def add_var(self, name, lb, ub):
+        self.var_table.add_variable(name, lb, ub)
+        self.filter_var()
+
     def filter_var(self):
         keyword = self.edit_name.text()
         rx = QRegExp(keyword)
@@ -246,7 +250,6 @@ class BadgerEnvBox(CollapsibleBox):
 
     def fit_content(self):
         return
-        self._fit_content(self.list_var)
         self._fit_content(self.list_obj)
         self._fit_content(self.list_con)
         self._fit_content(self.list_sta)
