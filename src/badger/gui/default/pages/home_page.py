@@ -59,7 +59,7 @@ class BadgerHomePage(QWidget):
 
         # Routine panel
         self.panel_routine = panel_routine = QWidget()
-        panel_routine.setMinimumWidth(320)
+        panel_routine.setMinimumWidth(360)
         vbox_routine = QVBoxLayout(panel_routine)
 
         # Search bar
