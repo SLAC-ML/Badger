@@ -42,7 +42,7 @@ class CollapsibleBox(QtWidgets.QWidget):
         self.toggle_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.toggle_button.setIconSize(QtCore.QSize(11, 11))
         self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
-        self.toggle_button.pressed.connect(self.on_pressed)
+        self.toggle_button.clicked.connect(self.start_animation)
         # self.toggle_button.setText(f'+ {title}')
 
         self.toggle_animation = QtCore.QParallelAnimationGroup(self)
@@ -71,14 +71,14 @@ class CollapsibleBox(QtWidgets.QWidget):
         )
 
     @QtCore.pyqtSlot()
-    def on_pressed(self):
+    def start_animation(self):
         checked = self.toggle_button.isChecked()
-        arrow_type = QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
+        arrow_type = QtCore.Qt.DownArrow if checked else QtCore.Qt.RightArrow
         self.toggle_button.setArrowType(arrow_type)
         # self.toggle_button.setText(f'- {self.title}' if not checked else f'+ {self.title}')
         direction = (
             QtCore.QAbstractAnimation.Forward
-            if not checked
+            if checked
             else QtCore.QAbstractAnimation.Backward
         )
         self.toggle_animation.setDirection(direction)
