@@ -1,20 +1,30 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-stylesheet_toolbutton = '''
+stylesheet_toolbutton = """
 QToolButton
 {
     border: none;
 }
-'''
+"""
+
+
+# https://stackoverflow.com/a/56293688
+class ScrollArea(QtWidgets.QScrollArea):
+    resized = QtCore.pyqtSignal()
+
+    def resizeEvent(self, e):
+        self.resized.emit()
+        return super(ScrollArea, self).resizeEvent(e)
+
 
 # https://stackoverflow.com/a/52617714/4263605
 class CollapsibleBox(QtWidgets.QWidget):
-    def __init__(self, title="", parent=None):
+    def __init__(self, parent=None, title="", duration=100):
         super(CollapsibleBox, self).__init__(parent)
 
         self.title = title
-        self.duration = 100
+        self.duration = duration
 
         cool_font = QtGui.QFont()
         cool_font.setWeight(QtGui.QFont.DemiBold)
@@ -25,25 +35,24 @@ class CollapsibleBox(QtWidgets.QWidget):
         )
         self.toggle_button.setFont(cool_font)
         self.toggle_button.setFixedHeight(28)
-        self.toggle_button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.toggle_button.setStyleSheet(stylesheet_toolbutton)
-        self.toggle_button.setToolButtonStyle(
-            QtCore.Qt.ToolButtonTextBesideIcon
+        self.toggle_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
         )
+        self.toggle_button.setStyleSheet(stylesheet_toolbutton)
+        self.toggle_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.toggle_button.setIconSize(QtCore.QSize(11, 11))
         self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
-        # self.toggle_button.setText(f'+ {title}')
         self.toggle_button.pressed.connect(self.on_pressed)
+        # self.toggle_button.setText(f'+ {title}')
 
         self.toggle_animation = QtCore.QParallelAnimationGroup(self)
 
-        self.content_area = QtWidgets.QScrollArea(
-            maximumHeight=0, minimumHeight=0
-        )
+        self.content_area = ScrollArea(maximumHeight=0, minimumHeight=0)
         self.content_area.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
         )
         self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.content_area.resized.connect(self.updateContentLayout)
 
         lay = QtWidgets.QVBoxLayout(self)
         lay.setSpacing(0)
@@ -64,31 +73,44 @@ class CollapsibleBox(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def on_pressed(self):
         checked = self.toggle_button.isChecked()
-        self.toggle_button.setArrowType(
-            QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
-        )
-
+        arrow_type = QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
+        self.toggle_button.setArrowType(arrow_type)
         # self.toggle_button.setText(f'- {self.title}' if not checked else f'+ {self.title}')
-        self.toggle_animation.setDirection(
+        direction = (
             QtCore.QAbstractAnimation.Forward
             if not checked
             else QtCore.QAbstractAnimation.Backward
         )
+        self.toggle_animation.setDirection(direction)
         self.toggle_animation.start()
 
     def expand(self):
         if not self.toggle_button.isChecked():
             self.toggle_button.click()
 
+    def updateContentLayout(self):
+        if (
+            self.toggle_button.isChecked()
+            and self.toggle_animation.state() != self.toggle_animation.Running
+        ):
+            content_height = self.content_area.layout().sizeHint().height()
+            self.setMinimumHeight(self.collapsed_height + content_height)
+            self.setMaximumHeight(self.collapsed_height + content_height)
+            self.content_area.setMaximumHeight(content_height)
+        self.updateGeometry()
+        p = self.parent()
+        if isinstance(p, ScrollArea):
+            p.resized.emit()
+
     def setContentLayout(self, layout):
         lay = self.content_area.layout()
         del lay
         self.content_area.setLayout(layout)
-        collapsed_height = (
+        self.collapsed_height = collapsed_height = (
             self.sizeHint().height() - self.content_area.maximumHeight()
         )
         content_height = layout.sizeHint().height()
-        for i in range(self.toggle_animation.animationCount()):
+        for i in range(self.toggle_animation.animationCount() - 1):
             animation = self.toggle_animation.animationAt(i)
             animation.setDuration(self.duration)
             animation.setStartValue(collapsed_height)
