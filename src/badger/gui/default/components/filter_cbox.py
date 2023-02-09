@@ -4,8 +4,9 @@ from .collapsible_box import CollapsibleBox
 
 
 class BadgerFilterBox(CollapsibleBox):
-    def __init__(self, parent=None, title='Filters'):
-        super().__init__(f' {title}', parent)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.init_ui()
 

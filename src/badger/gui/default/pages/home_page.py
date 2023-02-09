@@ -80,7 +80,7 @@ class BadgerHomePage(QWidget):
         vbox_routine.addWidget(panel_search)
 
         # Filters
-        self.filter_box = filter_box = BadgerFilterBox(self)
+        self.filter_box = filter_box = BadgerFilterBox(self, title=' Filters')
         vbox_routine.addWidget(filter_box)
 
         # Routine list
