@@ -1,11 +1,13 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QFrame
+# from PyQt5.QtCore import Qt
 from .collapsible_box import CollapsibleBox
 
 
 class BadgerAlgoBox(CollapsibleBox):
-    def __init__(self, algos=[], scaling_functions=[], parent=None):
-        super().__init__(' Algorithm', parent)
+
+    def __init__(self, parent=None, algos=[], scaling_functions=[]):
+        super().__init__(parent, ' Algorithm')
 
         self.algos = algos
         self.scaling_functions = scaling_functions
@@ -44,7 +46,7 @@ class BadgerAlgoBox(CollapsibleBox):
 
         edit_params_col = QWidget()
         vbox_params_edit = QVBoxLayout(edit_params_col)
-        vbox_params_edit.setContentsMargins(0, 0, 0, 8)
+        vbox_params_edit.setContentsMargins(0, 0, 0, 0)
         script_bar = QWidget()
         hbox_script = QHBoxLayout(script_bar)
         hbox_script.setContentsMargins(0, 0, 0, 0)
@@ -57,10 +59,14 @@ class BadgerAlgoBox(CollapsibleBox):
         hbox_script.addWidget(check_use_script)
         hbox_script.addWidget(btn_edit_script)
         self.edit = edit = QPlainTextEdit()
-        edit.setFixedHeight(128)
+        edit.setMaximumHeight(80)
         vbox_params_edit.addWidget(edit)
         hbox_params.addWidget(edit_params_col)
         vbox.addWidget(params)
+
+        cbox_misc = CollapsibleBox(self, ' Domain Scaling')
+        vbox.addWidget(cbox_misc)
+        vbox_misc = QVBoxLayout()
 
         # Domain scaling
         scaling = QWidget()
@@ -69,24 +75,35 @@ class BadgerAlgoBox(CollapsibleBox):
         lbl_scaling_col = QWidget()
         vbox_lbl_scaling = QVBoxLayout(lbl_scaling_col)
         vbox_lbl_scaling.setContentsMargins(0, 0, 0, 0)
-        lbl_scaling = QLabel('Scaling')
+        lbl_scaling = QLabel('Type')
         lbl_scaling.setFixedWidth(64)
         vbox_lbl_scaling.addWidget(lbl_scaling)
         vbox_lbl_scaling.addStretch(1)
         hbox_scaling.addWidget(lbl_scaling_col)
-
-        edit_scaling_col = QWidget()
-        vbox_scaling_edit = QVBoxLayout(edit_scaling_col)
-        vbox_scaling_edit.setContentsMargins(0, 0, 0, 0)
         self.cb_scaling = cb_scaling = QComboBox()
         cb_scaling.setItemDelegate(QStyledItemDelegate())
         cb_scaling.addItems(self.scaling_functions)
         cb_scaling.setCurrentIndex(-1)
-        vbox_scaling_edit.addWidget(cb_scaling)
+        hbox_scaling.addWidget(cb_scaling, 1)
+        vbox_misc.addWidget(scaling)
+
+        params_s = QWidget()
+        hbox_params_s = QHBoxLayout(params_s)
+        hbox_params_s.setContentsMargins(0, 0, 0, 0)
+        lbl_params_s_col = QWidget()
+        vbox_lbl_params_s = QVBoxLayout(lbl_params_s_col)
+        vbox_lbl_params_s.setContentsMargins(0, 0, 0, 0)
+        lbl_params_s = QLabel('Params')
+        lbl_params_s.setFixedWidth(64)
+        vbox_lbl_params_s.addWidget(lbl_params_s)
+        vbox_lbl_params_s.addStretch(1)
+        hbox_params_s.addWidget(lbl_params_s_col)
         self.edit_scaling = edit_scaling = QPlainTextEdit()
-        edit_scaling.setFixedHeight(128)
-        vbox_scaling_edit.addWidget(edit_scaling)
-        hbox_scaling.addWidget(edit_scaling_col)
-        vbox.addWidget(scaling)
+        edit_scaling.setMaximumHeight(80)
+        hbox_params_s.addWidget(edit_scaling)
+        vbox_misc.addWidget(params_s)
+
+        cbox_misc.setContentLayout(vbox_misc)
 
         self.setContentLayout(vbox)
+        # vbox.addStretch()

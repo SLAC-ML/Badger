@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit, QLineEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame, QSizePolicy
 from PyQt5.QtCore import QRegExp
 from .collapsible_box import CollapsibleBox
 from .var_table import VariableTable
@@ -7,8 +7,8 @@ from .obj_table import ObjectiveTable
 
 
 class BadgerEnvBox(CollapsibleBox):
-    def __init__(self, envs=[], parent=None):
-        super().__init__(' Environment + VOCS', parent)
+    def __init__(self, parent=None, envs=[]):
+        super().__init__(parent, ' Environment + VOCS')
 
         self.envs = envs
 
@@ -50,20 +50,10 @@ class BadgerEnvBox(CollapsibleBox):
         vbox_params_edit = QVBoxLayout(edit_params_col)
         vbox_params_edit.setContentsMargins(0, 0, 0, 0)
         self.edit = edit = QPlainTextEdit()
-        edit.setFixedHeight(128)
+        edit.setMaximumHeight(80)
         vbox_params_edit.addWidget(edit)
         hbox_params.addWidget(edit_params_col)
         vbox.addWidget(params)
-
-        # action_bar = QWidget()
-        # hbox_action = QHBoxLayout(action_bar)
-        # hbox_action.setContentsMargins(0, 0, 0, 0)
-        # self.btn_env_play = btn_env_play = QPushButton('Open Playground')
-        # btn_env_play.setFixedSize(128, 24)
-        # btn_env_play.hide()  # hide for now to prevent confusions
-        # hbox_action.addStretch(1)
-        # hbox_action.addWidget(btn_env_play)
-        # vbox.addWidget(action_bar)
 
         seperator = QFrame()
         seperator.setFrameShape(QFrame.HLine)
@@ -74,7 +64,8 @@ class BadgerEnvBox(CollapsibleBox):
 
         # Variables config (table style)
         var_panel = QWidget()
-        vbox.addWidget(var_panel, 1)
+        var_panel.setMinimumHeight(280)
+        vbox.addWidget(var_panel, 2)
         hbox_var = QHBoxLayout(var_panel)
         hbox_var.setContentsMargins(0, 0, 0, 0)
         lbl_var_col = QWidget()
@@ -146,9 +137,13 @@ class BadgerEnvBox(CollapsibleBox):
         vbox_obj_edit.addWidget(self.obj_table)
         hbox_obj.addWidget(edit_obj_col)
 
+        cbox_more = CollapsibleBox(self, ' More')
+        vbox.addWidget(cbox_more)
+        vbox_more = QVBoxLayout()
+
         # Constraints config
         con_panel = QWidget()
-        vbox.addWidget(con_panel, 1)
+        vbox_more.addWidget(con_panel, 1)
         hbox_con = QHBoxLayout(con_panel)
         hbox_con.setContentsMargins(0, 0, 0, 0)
         lbl_con_col = QWidget()
@@ -173,6 +168,7 @@ class BadgerEnvBox(CollapsibleBox):
         hbox_action_con.addWidget(btn_add_con)
         hbox_action_con.addStretch()
         self.list_con = QListWidget()
+        self.list_con.setMaximumHeight(80)
         # self.list_con.setFixedHeight(64)
         self.list_con.setViewportMargins(2, 2, 17, 2)
         vbox_con_edit.addWidget(self.list_con)
@@ -181,7 +177,7 @@ class BadgerEnvBox(CollapsibleBox):
 
         # States config
         sta_panel = QWidget()
-        vbox.addWidget(sta_panel, 1)
+        vbox_more.addWidget(sta_panel, 1)
         hbox_sta = QHBoxLayout(sta_panel)
         hbox_sta.setContentsMargins(0, 0, 0, 0)
         lbl_sta_col = QWidget()
@@ -206,11 +202,13 @@ class BadgerEnvBox(CollapsibleBox):
         hbox_action_sta.addWidget(btn_add_sta)
         hbox_action_sta.addStretch()
         self.list_sta = QListWidget()
+        self.list_sta.setMaximumHeight(80)
         # self.list_sta.setFixedHeight(64)
         self.list_sta.setViewportMargins(2, 2, 17, 2)
         vbox_sta_edit.addWidget(self.list_sta)
         # vbox_sta_edit.addStretch()
         hbox_sta.addWidget(edit_sta_col)
+        cbox_more.setContentLayout(vbox_more)
 
         self.setContentLayout(vbox)
 

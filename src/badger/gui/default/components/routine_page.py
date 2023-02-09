@@ -1,18 +1,17 @@
-from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout, QFrame
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QComboBox, QStyledItemDelegate
-from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox
+from PyQt5.QtCore import Qt
 import sqlite3
 from coolname import generate_slug
 from ....factory import list_algo, list_env, get_algo, get_env
 from ....utils import ystring, load_config, config_list_to_dict
 from ....core import normalize_routine, instantiate_env, list_scaling_func, get_scaling_default_params
 from ....db import save_routine, remove_routine
-from .variable_item import variable_item
-from .objective_item import objective_item
 from .constraint_item import constraint_item
 from .state_item import state_item
 from .algo_cbox import BadgerAlgoBox
 from .env_cbox import BadgerEnvBox
+from .filter_cbox import BadgerFilterBox
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
@@ -58,81 +57,22 @@ class BadgerRoutinePage(QWidget):
         edit_save.setPlaceholderText(generate_slug(2))
         hbox_name.addWidget(label)
         hbox_name.addWidget(edit_save, 1)
-        vbox_meta.addWidget(name)
+        vbox_meta.addWidget(name, alignment=Qt.AlignTop)
 
-        seperator = QFrame()
-        seperator.setFrameShape(QFrame.HLine)
-        seperator.setFrameShadow(QFrame.Sunken)
-        seperator.setLineWidth(0)
-        seperator.setMidLineWidth(0)
-        vbox_meta.addWidget(seperator)
+        # Tags
+        self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
+        vbox_meta.addWidget(cbox_tags, alignment=Qt.AlignTop)
+        # vbox_meta.addStretch()
 
-        # Obj tag
-        obj = QWidget()
-        hbox_obj = QHBoxLayout(obj)
-        hbox_obj.setContentsMargins(0, 0, 0, 0)
-        lbl = QLabel('Objective')
-        lbl.setFixedWidth(64)
-        self.cb_obj = cb_obj = QComboBox()
-        cb_obj.setItemDelegate(QStyledItemDelegate())
-        cb_obj.addItems(['', 'HXR', 'SXR'])
-        cb_obj.setCurrentIndex(-1)
-        hbox_obj.addWidget(lbl)
-        hbox_obj.addWidget(cb_obj, 1)
-        vbox_meta.addWidget(obj)
-
-        # Region tag
-        region = QWidget()
-        hbox_reg = QHBoxLayout(region)
-        hbox_reg.setContentsMargins(0, 0, 0, 0)
-        lbl = QLabel('Region')
-        lbl.setFixedWidth(64)
-        self.cb_reg = cb_reg = QComboBox()
-        cb_reg.setItemDelegate(QStyledItemDelegate())
-        cb_reg.addItems([
-            '',
-            'LI21:201, 211, 271, 278',
-            'LI26:201, 301, 401, 501',
-            'LI26:601, 701, 801, 901',
-            'IN20:361, 371, 425, 441, 511, 525',
-            'LTUH:620, 640, 660, 680',
-            'LTUS:620, 640, 660, 680',
-        ])
-        cb_reg.setCurrentIndex(-1)
-        hbox_reg.addWidget(lbl)
-        hbox_reg.addWidget(cb_reg, 1)
-        vbox_meta.addWidget(region)
-
-        # Gain tag
-        gain = QWidget()
-        hbox_gain = QHBoxLayout(gain)
-        hbox_gain.setContentsMargins(0, 0, 0, 0)
-        lbl = QLabel('Gain')
-        lbl.setFixedWidth(64)
-        self.cb_gain = cb_gain = QComboBox()
-        cb_gain.setItemDelegate(QStyledItemDelegate())
-        cb_gain.addItems([
-            '',
-            '1',
-            '2',
-            '4',
-            '8',
-        ])
-        cb_gain.setCurrentIndex(-1)
-        hbox_gain.addWidget(lbl)
-        hbox_gain.addWidget(cb_gain, 1)
-        vbox_meta.addWidget(gain)
-
-        # hbox_meta.addStretch(2)
         vbox.addWidget(group_meta)
 
         # Algo box
-        self.algo_box = BadgerAlgoBox(self.algos, self.scaling_functions)
+        self.algo_box = BadgerAlgoBox(None, self.algos, self.scaling_functions)
         self.algo_box.expand()  # expand the box initially
         vbox.addWidget(self.algo_box)
 
         # Env box
-        self.env_box = BadgerEnvBox(self.envs)
+        self.env_box = BadgerEnvBox(None, self.envs)
         self.env_box.expand()  # expand the box initially
         vbox.addWidget(self.env_box)
 
@@ -245,17 +185,17 @@ class BadgerRoutinePage(QWidget):
         except:
             tags = {}
         try:
-            self.cb_obj.setCurrentText(tags['objective'])
+            self.cbox_tags.cb_obj.setCurrentText(tags['objective'])
         except:
-            self.cb_obj.setCurrentIndex(0)
+            self.cbox_tags.cb_obj.setCurrentIndex(0)
         try:
-            self.cb_reg.setCurrentText(tags['region'])
+            self.cbox_tags.cb_reg.setCurrentText(tags['region'])
         except:
-            self.cb_reg.setCurrentIndex(0)
+            self.cbox_tags.cb_reg.setCurrentIndex(0)
         try:
-            self.cb_gain.setCurrentText(tags['gain'])
+            self.cbox_tags.cb_gain.setCurrentText(tags['gain'])
         except:
-            self.cb_gain.setCurrentIndex(0)
+            self.cbox_tags.cb_gain.setCurrentIndex(0)
 
         self.algo_box.check_use_script.setChecked(not not self.script)
 
@@ -553,9 +493,9 @@ class BadgerRoutinePage(QWidget):
             domain_scaling = None
 
         # Tags
-        tag_obj = self.cb_obj.currentText()
-        tag_reg = self.cb_reg.currentText()
-        tag_gain = self.cb_gain.currentText()
+        tag_obj = self.cbox_tags.cb_obj.currentText()
+        tag_reg = self.cbox_tags.cb_reg.currentText()
+        tag_gain = self.cbox_tags.cb_gain.currentText()
         tags = {}
         if tag_obj: tags['objective'] = tag_obj
         if tag_reg: tags['region'] = tag_reg
