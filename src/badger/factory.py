@@ -106,6 +106,22 @@ def load_plugin(root, pname, ptype):
     return plugin
 
 
+def load_docs(root, pname, ptype):
+    assert ptype in ['algorithm', 'interface',
+                     'environment'], f'Invalid plugin type {ptype}'
+
+    proot = os.path.join(root, f'{ptype}s')
+
+    # Load the readme
+    readme = None
+    try:
+        with open(os.path.join(proot, pname, 'README.md'), 'r') as f:
+            readme = f.read()
+        return readme
+    except:
+        raise Exception(f'Error loading docs for {ptype} {pname}: docs not found')
+
+
 def get_plug(root, name, ptype):
     try:
         plug = BADGER_FACTORY[ptype][name]
@@ -162,6 +178,22 @@ def get_algo(name):
 
         raise Exception(
             f'Error loading plugin algorithm {name}: plugin not found')
+
+
+def get_algo_docs(name):
+    if name in BADGER_FACTORY['algorithm'].keys():
+        return load_docs(BADGER_PLUGIN_ROOT, name, 'algorithm')
+    else:
+        # for ext_name in BADGER_EXTENSIONS.keys():
+        #     ext = BADGER_EXTENSIONS[ext_name]
+        #     try:
+        #         if name in ext.list_algo():
+        #             return [ext, ext.get_algo_config(name)]
+        #     except ImportError as e:
+        #         logger.warning(
+        #             f'Failed to read algorithms from ext {ext_name}: {str(e)}')
+
+        raise Exception(f'Error loading docs for algorithm {name}: plugin not found')
 
 
 def get_intf(name):
