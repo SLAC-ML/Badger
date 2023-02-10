@@ -15,6 +15,7 @@ from .filter_cbox import BadgerFilterBox
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
+from ..windows.docs_window import BadgerDocsWindow
 
 
 CONS_RELATION_DICT = {
@@ -34,6 +35,7 @@ class BadgerRoutinePage(QWidget):
         self.routine = None
         self.script = ''
         self.scaling_functions = list_scaling_func()
+        self.window_docs = BadgerDocsWindow(self, '')
 
         self.init_ui()
         self.config_logic()
@@ -80,6 +82,7 @@ class BadgerRoutinePage(QWidget):
 
     def config_logic(self):
         self.algo_box.cb.currentIndexChanged.connect(self.select_algo)
+        self.algo_box.btn_docs.clicked.connect(self.open_algo_docs)
         self.algo_box.check_use_script.stateChanged.connect(self.toggle_use_script)
         self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
         self.algo_box.cb_scaling.currentIndexChanged.connect(self.select_scaling_func)
@@ -213,6 +216,9 @@ class BadgerRoutinePage(QWidget):
         try:
             _, configs = get_algo(name)
             self.algo_box.edit.setPlainText(ystring(configs['params']))
+
+            # Update the docs
+            self.window_docs.update_docs(name)
         except Exception as e:
             self.algo_box.cb.setCurrentIndex(-1)
             return QMessageBox.critical(self, 'Error!', str(e))
@@ -354,6 +360,9 @@ class BadgerRoutinePage(QWidget):
 
     def open_playground(self):
         pass
+
+    def open_algo_docs(self):
+        self.window_docs.show()
 
     def add_var(self):
         # TODO: Use a cached env

@@ -29,6 +29,9 @@ class BadgerAlgoBox(CollapsibleBox):
         cb.setCurrentIndex(-1)
         hbox_name.addWidget(lbl)
         hbox_name.addWidget(cb, 1)
+        self.btn_docs = btn_docs = QPushButton('Open Docs')
+        btn_docs.setFixedSize(128, 24)
+        hbox_name.addWidget(btn_docs)
         vbox.addWidget(name)
 
         # Algo params
@@ -54,7 +57,7 @@ class BadgerAlgoBox(CollapsibleBox):
         self.check_use_script = check_use_script = QCheckBox('Generate from Script')
         check_use_script.setChecked(False)
         self.btn_edit_script = btn_edit_script = QPushButton('Edit Script')
-        btn_edit_script.setFixedSize(96, 24)
+        btn_edit_script.setFixedSize(128, 24)
         btn_edit_script.hide()
         hbox_script.addWidget(check_use_script)
         hbox_script.addWidget(btn_edit_script)
