@@ -1,9 +1,8 @@
-import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QComboBox
+from PyQt5.QtWidgets import QLabel, QAbstractItemView
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QHoverEvent, QPaintEvent
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
 from ..components.routine_item import BadgerRoutineItem
@@ -12,6 +11,8 @@ from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
 from ..components.filter_cbox import BadgerFilterBox
+from ..components.widget_list import BadgerWidgetList
+from ..components.widget_list_item import BadgerWidgetListItem
 from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ....archive import load_run, delete_run
 from ....utils import get_header
@@ -84,11 +85,12 @@ class BadgerHomePage(QWidget):
         vbox_routine.addWidget(filter_box)
 
         # Routine list
-        self.routine_list = routine_list = QListWidget()
+        self.routine_list = routine_list = BadgerWidgetList()
         routine_list.setAlternatingRowColors(True)
         routine_list.setSpacing(1)
         routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
         self.refresh_routine_list()
+        routine_list.set_drag_and_drop(True)
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
 
@@ -169,6 +171,8 @@ class BadgerHomePage(QWidget):
         self.sbar.textChanged.connect(self.refresh_routine_list)
         self.btn_new.clicked.connect(self.create_new_routine)
         self.routine_list.itemClicked.connect(self.select_routine)
+        self.routine_list.currentItemChanged.connect(self.set_items)
+        self.routine_list.model().rowsMoved.connect(self.drag_and_drop_item)
         self.run_table.cellClicked.connect(self.solution_selected)
         self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
 
@@ -195,6 +199,22 @@ class BadgerHomePage(QWidget):
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
         self.shortcut_go_search.activated.connect(self.go_search)
 
+    def eventFilter(self, source, event):
+        if not type(event) in [QHoverEvent, QPaintEvent]:
+            print("-"*5)
+            print(event)
+            print(">"*3)
+            print(source)
+            print("-"*5)
+        return super().eventFilter(source, event)
+
+    def set_items(self, curr, prev):
+        print("item changed!")
+
+    def drag_and_drop_item(self):
+        print("drag_and_drop")
+
+
     def go_search(self):
         self.sbar.setFocus()
 
@@ -212,13 +232,18 @@ class BadgerHomePage(QWidget):
         self.toggle_lock(True, 0)
 
     def select_routine(self, item):
+        if item.checkState() == Qt.CheckState.Checked:
+            item.setCheckState(Qt.CheckState.Unchecked)
+        else: 
+            item.setCheckState(Qt.CheckState.Checked)
+
         if self.prev_routine:
             try:
                 self.routine_list.itemWidget(self.prev_routine).deactivate()
             except:
                 pass
 
-            if self.prev_routine.routine == item.routine:  # click a routine again to deselect
+            if self.prev_routine.has_same_routine_name(item.get_routine_name()):  # click a routine again to deselect
                 self.prev_routine = None
                 self.current_routine = None
                 self.load_all_runs()
@@ -226,11 +251,10 @@ class BadgerHomePage(QWidget):
                     self.go_run(-1)  # sometimes we need to trigger this manually
                 self.sig_routine_activated.emit(False)
                 return
-
         self.prev_routine = item  # note that prev_routine is an item!
         self.sig_routine_activated.emit(True)
 
-        routine, timestamp = load_routine(item.routine)
+        routine, timestamp = load_routine(item.get_routine_name())
         self.current_routine = routine
         self.routine_editor.set_routine(routine)
         runs = get_runs_by_routine(routine['name'])
@@ -252,8 +276,7 @@ class BadgerHomePage(QWidget):
         for i, routine in enumerate(routines):
             _item = BadgerRoutineItem(routine, timestamps[i])
             _item.sig_del.connect(self.delete_routine)
-            item = QListWidgetItem(self.routine_list)
-            item.routine = routine  # dirty trick
+            item = BadgerWidgetListItem(self.routine_list, routine, timestamps[i])
             item.setSizeHint(_item.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, _item)
@@ -402,7 +425,7 @@ class BadgerHomePage(QWidget):
 
     def routine_deleted(self, name=None):
         if self.prev_routine:
-            if self.prev_routine.routine == name:
+            if self.prev_routine.has_same_routine_name(name):
                 self.prev_routine = None
                 self.current_routine = None
                 self.load_all_runs()
