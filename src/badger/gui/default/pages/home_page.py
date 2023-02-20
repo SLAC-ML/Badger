@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QCheckBox
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
-from PyQt5.QtWidgets import QLabel, QAbstractItemView
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtCore import Qt, pyqtSignal, QThreadPool, QObject
 from PyQt5.QtGui import QKeySequence, QHoverEvent, QPaintEvent
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
@@ -12,7 +12,6 @@ from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
 from ..components.filter_cbox import BadgerFilterBox
 from ..components.widget_list import BadgerWidgetList
-from ..components.widget_list_item import BadgerWidgetListItem
 from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ....archive import load_run, delete_run
 from ....utils import get_header
@@ -32,6 +31,60 @@ QPushButton
     background-color: #A9444E;
 }
 '''
+class SequenceRunner(QObject):
+    finished = pyqtSignal()
+    def __init__(self, run_monitor: BadgerOptMonitor, editor, seq) -> None:
+        super().__init__(parent = None)
+        self.run_monitor = run_monitor
+        self.routine_editor = editor
+        self.seq_gen = iter(seq)
+        self.run_monitor.sig_routine_finished.connect(self._run_next)
+
+    def start(self):
+        print("called start()")
+        first_item = next(self.seq_gen, None)
+        if first_item is None:
+            print("first item is none")
+            return
+        curr_routine, _ = first_item.data(Qt.UserRole)
+        routine, _ = load_routine(curr_routine)
+        self.run_monitor.init_plots(routine)
+        self.run_monitor.start()
+
+    def _run_next(self):
+        print("called _run_next")
+        next_item = next(self.seq_gen, None)
+        if next_item is None:
+            self.run_monitor.sig_routine_finished.disconnect(self._run_next)
+            self.finished.emit()
+            return
+        curr_routine, _ = next_item.data(Qt.UserRole)
+        routine, _ = load_routine(curr_routine)
+        self.run_monitor.init_plots(routine)
+        self.run_monitor.start()
+
+
+class ExpertSettings(QWidget):
+    sig_seq_settings = pyqtSignal(bool)
+    def __init__(self) -> None:
+        super().__init__()
+        vbox_settings = QHBoxLayout(self)
+        self.seq_check_box = QCheckBox(text= "enable sequence")
+        self.sequence_run = QPushButton("sequence run")
+        self.sequence_run.setVisible(False)
+        vbox_settings.addWidget(self.seq_check_box)
+        vbox_settings.addWidget(self.sequence_run)
+        self.seq_check_box.stateChanged.connect(self.enable_settings)
+        
+
+    def enable_settings(self):
+        if self.seq_check_box.checkState() == Qt.CheckState.Checked:
+            self.sequence_run.setVisible(True)
+            self.sig_seq_settings.emit(True)
+        else:
+            self.sequence_run.setVisible(False)
+            self.sig_seq_settings.emit(False)
+
 
 class BadgerHomePage(QWidget):
     sig_routine_activated = pyqtSignal(bool)
@@ -90,9 +143,11 @@ class BadgerHomePage(QWidget):
         routine_list.setSpacing(1)
         routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
         self.refresh_routine_list()
-        routine_list.set_drag_and_drop(True)
+        #routine_list.set_drag_and_drop(True)
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
+        self.seq_setting = ExpertSettings()
+        vbox_routine.addWidget(self.seq_setting)
 
         # Info panel
         panel_info = QWidget()
@@ -195,9 +250,14 @@ class BadgerHomePage(QWidget):
         self.routine_editor.sig_canceled.connect(self.done_create_routine)
         self.routine_editor.sig_deleted.connect(self.routine_deleted)
 
+        self.seq_setting.seq_check_box.stateChanged.connect(self.set_sequence_run_mode)
+        self.seq_setting.sequence_run.clicked.connect(self.seq_run)
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
         self.shortcut_go_search.activated.connect(self.go_search)
+
+    def set_sequence_run_mode(self, enable):
+            self.routine_list.set_drag_and_drop(enable)
 
     def eventFilter(self, source, event):
         if not type(event) in [QHoverEvent, QPaintEvent]:
@@ -230,20 +290,20 @@ class BadgerHomePage(QWidget):
         self.mode = 'new routine'
         self.routine_editor.switch_mode(self.mode)
         self.toggle_lock(True, 0)
+ 
+    def seq_run(self):
+        print("seq run selected.")
+        self.sq_runner = SequenceRunner(self.run_monitor, self.routine_editor, self.routine_list.get_sequence())
+        self.sq_runner.start()
 
-    def select_routine(self, item):
-        if item.checkState() == Qt.CheckState.Checked:
-            item.setCheckState(Qt.CheckState.Unchecked)
-        else: 
-            item.setCheckState(Qt.CheckState.Checked)
-
+    def _select_routine(self, item):
         if self.prev_routine:
             try:
                 self.routine_list.itemWidget(self.prev_routine).deactivate()
             except:
                 pass
 
-            if self.prev_routine.has_same_routine_name(item.get_routine_name()):  # click a routine again to deselect
+            if self.routine_list.has_same_name(self.prev_routine, item):  # click a routine again to deselect
                 self.prev_routine = None
                 self.current_routine = None
                 self.load_all_runs()
@@ -254,7 +314,8 @@ class BadgerHomePage(QWidget):
         self.prev_routine = item  # note that prev_routine is an item!
         self.sig_routine_activated.emit(True)
 
-        routine, timestamp = load_routine(item.get_routine_name())
+        routine_name = self.routine_list.get_routine_name(item)
+        routine, timestamp = load_routine(routine_name)
         self.current_routine = routine
         self.routine_editor.set_routine(routine)
         runs = get_runs_by_routine(routine['name'])
@@ -267,19 +328,25 @@ class BadgerHomePage(QWidget):
 
         self.routine_list.itemWidget(item).activate()
 
+    def select_routine(self, item):
+        if self.routine_list.dragEnabled():
+            if item.checkState() == Qt.CheckState.Checked:
+                item.setCheckState(Qt.CheckState.Unchecked)
+            else: 
+                item.setCheckState(Qt.CheckState.Checked)
+        self._select_routine(item)
+
     def build_routine_list(self, routines, timestamps):
         try:
-            selected_routine = self.prev_routine.routine
+            selected_routine = self.routine_list.get_routine_name(self.prev_routine)
         except:
             selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
             _item = BadgerRoutineItem(routine, timestamps[i])
             _item.sig_del.connect(self.delete_routine)
-            item = BadgerWidgetListItem(self.routine_list, routine, timestamps[i])
-            item.setSizeHint(_item.sizeHint())
-            self.routine_list.addItem(item)
-            self.routine_list.setItemWidget(item, _item)
+            self.routine_list.add_routine_item(_item)
+
             if routine == selected_routine:
                 _item.activate()
                 self.prev_routine = item

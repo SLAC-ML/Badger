@@ -85,6 +85,7 @@ class BadgerOptMonitor(QWidget):
     sig_inspect = pyqtSignal(int)  # index of the inspector
     sig_progress = pyqtSignal(list, list, list, list)  # new evaluated solution
     sig_del = pyqtSignal()
+    sig_routine_finished = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -665,6 +666,8 @@ class BadgerOptMonitor(QWidget):
             self.sig_run_name.emit(None)
 
             QMessageBox.critical(self, 'Archive failed!', f'Archive failed: {str(e)}')
+        
+        self.sig_routine_finished.emit()
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
@@ -804,7 +807,6 @@ class BadgerOptMonitor(QWidget):
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
-
         self.env._set_vars(self.var_names, solution)
         # center around the inspector
         self.plot_var.setXRange(idx - 3, idx + 3)
