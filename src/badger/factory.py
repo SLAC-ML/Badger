@@ -184,14 +184,14 @@ def get_algo_docs(name):
     if name in BADGER_FACTORY['algorithm'].keys():
         return load_docs(BADGER_PLUGIN_ROOT, name, 'algorithm')
     else:
-        # for ext_name in BADGER_EXTENSIONS.keys():
-        #     ext = BADGER_EXTENSIONS[ext_name]
-        #     try:
-        #         if name in ext.list_algo():
-        #             return [ext, ext.get_algo_config(name)]
-        #     except ImportError as e:
-        #         logger.warning(
-        #             f'Failed to read algorithms from ext {ext_name}: {str(e)}')
+        for ext_name in BADGER_EXTENSIONS.keys():
+            ext = BADGER_EXTENSIONS[ext_name]
+            try:
+                if name in ext.list_algo():
+                    return ext.get_algo_docs(name)
+            except ImportError as e:
+                logger.warning(
+                    f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
         raise Exception(f'Error loading docs for algorithm {name}: plugin not found')
 
