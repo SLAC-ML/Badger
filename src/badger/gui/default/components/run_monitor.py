@@ -2,6 +2,7 @@ import os
 import numpy as np
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
+# from PyQt5.QtWidgets import QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
@@ -248,11 +249,24 @@ class BadgerOptMonitor(QWidget):
         btn_ctrl.setDisabled(True)
         btn_ctrl.setFixedSize(64, 32)
         btn_ctrl.setFont(cool_font)
+
         self.btn_stop = btn_stop = QPushButton('Run')
         btn_stop.setDisabled(True)
         btn_stop.setFixedSize(128, 32)
         btn_stop.setFont(cool_font)
         btn_stop.setStyleSheet(stylesheet_run)
+
+        # Create a menu and add options
+        # menu = QMenu(self)
+        # menu.setFixedWidth(128)
+        # run_action = QAction('Run', self)
+        # run_until_action = QAction('Run until...', self)
+        # menu.addAction(run_action)
+        # menu.addAction(run_until_action)
+
+        # Set the menu as the run button's dropdown menu
+        # btn_stop.setMenu(menu)
+
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
@@ -295,6 +309,13 @@ class BadgerOptMonitor(QWidget):
         self.cb_plot_x.currentIndexChanged.connect(self.select_x_axis)
         self.cb_plot_y.currentIndexChanged.connect(self.select_x_plot_y_axis)
         self.check_relative.stateChanged.connect(self.toggle_x_plot_y_axis_relative)
+
+    # def mousePressEvent(self, event):
+    #     print('Ho')
+    #     # Override the mousePressEvent to show the dropdown menu
+    #     if event.button() == Qt.RightButton:
+    #         print('Yo')
+    #         self.sender().showMenu()
 
     def init_plots(self, routine, data=None, run_filename=None):
         # Parse routine
@@ -770,9 +791,15 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_optimal(self):
         try:
-            pf = self.pf
+            in_a_run = not self.routine_runner.is_killed
         except:
+            in_a_run = False
+
+        if in_a_run:
             pf = self.routine_runner.pf
+        else:
+            pf = self.pf
+
         if pf is None:
             return
 
