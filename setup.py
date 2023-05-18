@@ -22,7 +22,8 @@ setup(
         'qdarkstyle',
         'pillow',
         'requests',
-        'tqdm'
+        'tqdm',
+        'xopt'
     ],
     extras_require={
         'dev': [
