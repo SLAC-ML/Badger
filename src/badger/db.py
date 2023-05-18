@@ -73,9 +73,17 @@ def save_routine(routine):
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    # Insert a record
-    cur.execute('insert into routine values (?, ?, ?)',
-                (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
+    cur.execute('select * from routine where name=:name', {'name': routine['name']})
+    record = cur.fetchone()
+
+    runs = get_runs_by_routine(routine['name'])
+
+    if record and len(runs) == 0:  # update the record
+        cur.execute('update routine set config = ?, savedAt = ? where name = ?',
+                    (yaml.dump(routine, sort_keys=False), datetime.now(), routine['name']))
+    else:  # insert a record
+        cur.execute('insert into routine values (?, ?, ?)',
+                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
 
     con.commit()
     con.close()
@@ -231,6 +239,56 @@ def remove_run_by_id(rid):
     cur = con.cursor()
 
     cur.execute(f'delete from run where id = {rid}')
+
+    con.commit()
+    con.close()
+
+
+def import_routines(filename):
+    con = sqlite3.connect(filename)
+    cur = con.cursor()
+
+    # Deal with empty db file
+    cur.execute('create table if not exists routine (name not null primary key, config, savedAt timestamp)')
+
+    db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
+    con_db = sqlite3.connect(db_routine)
+    cur_db = con_db.cursor()
+
+    cur.execute('select * from routine')
+    records = cur.fetchall()
+
+    failed_list = []
+    for record in records:
+        try:
+            cur_db.execute('insert into routine values (?, ?, ?)', record)
+        except:
+            failed_list.append(record[0])
+
+    con_db.commit()
+    con_db.close()
+
+    con.close()
+
+
+def export_routines(filename, routine_name_list):
+    con = sqlite3.connect(filename)
+    cur = con.cursor()
+
+    cur.execute('create table if not exists routine (name not null primary key, config, savedAt timestamp)')
+
+    db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
+    con_db = sqlite3.connect(db_routine)
+    cur_db = con_db.cursor()
+
+    for name in routine_name_list:
+        cur_db.execute('select * from routine where name=:name', {'name': name})
+        records = cur_db.fetchall()
+        record = records[0]  # should only have one hit
+
+        cur.execute('insert into routine values (?, ?, ?)', record)
+
+    con_db.close()
 
     con.commit()
     con.close()

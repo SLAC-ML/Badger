@@ -1,7 +1,7 @@
-import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate
+import os
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QComboBox
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QFileDialog
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from ..components.search_bar import search_bar
@@ -13,6 +13,7 @@ from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
 from ..components.filter_cbox import BadgerFilterBox
 from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
+from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
 from ....utils import get_header
 
@@ -91,6 +92,18 @@ class BadgerHomePage(QWidget):
         self.refresh_routine_list()
         self.prev_routine = None  # last selected routine
         vbox_routine.addWidget(routine_list)
+
+        # Action bar
+        action_bar = QWidget()
+        hbox_action = QHBoxLayout(action_bar)
+        hbox_action.setContentsMargins(0, 0, 0, 0)
+        self.btn_export = btn_export = QPushButton('Export')
+        self.btn_import = btn_import = QPushButton('Import')
+        btn_export.setFixedHeight(32)
+        btn_import.setFixedHeight(32)
+        hbox_action.addWidget(btn_export, 1)
+        hbox_action.addWidget(btn_import, 1)
+        vbox_routine.addWidget(action_bar)
 
         # Info panel
         panel_info = QWidget()
@@ -195,6 +208,10 @@ class BadgerHomePage(QWidget):
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
         self.shortcut_go_search.activated.connect(self.go_search)
 
+        # Export/import routines
+        self.btn_export.clicked.connect(self.export_routines)
+        self.btn_import.clicked.connect(self.import_routines)
+
     def go_search(self):
         self.sbar.setFocus()
 
@@ -261,7 +278,7 @@ class BadgerHomePage(QWidget):
                 _item.activate()
                 self.prev_routine = item
 
-    def refresh_routine_list(self):
+    def get_current_routines(self):
         keyword = self.sbar.text()
         tag_obj = self.filter_box.cb_obj.currentText()
         tag_reg = self.filter_box.cb_reg.currentText()
@@ -271,6 +288,11 @@ class BadgerHomePage(QWidget):
         if tag_reg: tags['region'] = tag_reg
         if tag_gain: tags['gain'] = tag_gain
         routines, timestamps = list_routine(keyword, tags)
+
+        return routines, timestamps
+
+    def refresh_routine_list(self):
+        routines, timestamps = self.get_current_routines()
 
         self.build_routine_list(routines, timestamps)
 
@@ -411,3 +433,46 @@ class BadgerHomePage(QWidget):
                 self.sig_routine_activated.emit(False)
 
         self.refresh_routine_list()
+
+    def export_routines(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename, _ = QFileDialog.getSaveFileName(self, 'Export Badger routines', '', 'Database Files (*.db)', options=options)
+
+        if not filename:
+            return
+
+        _, ext = os.path.splitext(filename)
+        if not ext:
+            filename = filename + '.db'
+
+        try:
+            routines, _ = self.get_current_routines()
+            export_routines(filename, routines)
+
+            QMessageBox.information(
+                self, 'Success!', f'Export succeeded: filtered routines exported to {filename}')
+        except Exception as e:
+            QMessageBox.critical(self, 'Export failed!', f'Export failed: {str(e)}')
+
+    def import_routines(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename, _ = QFileDialog.getOpenFileName(self, 'Import Badger routines',
+                                                  '', 'Database Files (*.db)',
+                                                  options=options)
+
+        if not filename:
+            return
+
+        _, ext = os.path.splitext(filename)
+        if not ext:
+            filename = filename + '.db'
+
+        try:
+            import_routines(filename)
+
+            QMessageBox.information(
+                self, 'Success!', f'Import succeeded: imported all routines from {filename}')
+        except Exception as e:
+            QMessageBox.warning(self, 'Heads-up!', f'Failed to import the following routines since they already existed: {str(e)}')
