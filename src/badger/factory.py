@@ -70,7 +70,7 @@ def load_plugin(root, pname, ptype):
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
-        params = module.Interface.get_default_params()
+        params = module.Interface.schema()['properties']['params']['default']
         configs['params'] = params
         plugin = [module.Interface, configs]
     elif ptype == 'environment':

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
+from pydantic import Field, BaseModel
 import pickle
-from .utils import merge_params, curr_ts
+from .utils import curr_ts
 
 
 def log(func):
@@ -44,23 +45,15 @@ def log(func):
     return func_log
 
 
-class Interface(ABC):
+class Interface(BaseModel, ABC):
 
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
+    # name: str = Field(..., allow_mutation=False)
+    name: str
+    params: Dict = Field({}, description='Interface parameters')
+    _logs: List[Dict] = []
 
-    @abstractmethod
-    def __init__(self, params=None):
-        self.params = merge_params(self.get_default_params(), params)
-        self._logs = []
-
-    # Get the default params of the interface
-    @staticmethod
-    @abstractmethod
-    def get_default_params() -> dict:
-        pass
+    class Config:
+        underscore_attrs_are_private = True
 
     @abstractmethod
     def get_value(self, channel: str):
