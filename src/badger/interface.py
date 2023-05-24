@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pydantic import Field, BaseModel
 import pickle
 from .utils import curr_ts
@@ -49,7 +49,7 @@ class Interface(BaseModel, ABC):
 
     # name: str = Field(..., allow_mutation=False)
     name: str
-    params: Dict = Field({}, description='Interface parameters')
+    params: Optional[Dict] = Field({}, description='Interface parameters')
     _logs: List[Dict] = []
 
     class Config:
