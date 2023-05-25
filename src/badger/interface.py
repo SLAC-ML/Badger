@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import Field, BaseModel
 import pickle
 from .utils import curr_ts
@@ -39,6 +39,27 @@ def log(func):
             })
 
             return value
+        elif func.__name__ == 'set_values':
+            if 'channel_inputs' in kwargs.keys():
+                channel_inputs = kwargs['channel_inputs']
+            else:
+                channel_inputs = args[1]
+            args[0]._logs.append({
+                'timestamp': curr_ts().timestamp(),
+                'action': 'set_values',
+                'channel_inputs': channel_inputs,
+            })
+
+            return func(*args, **kwargs)
+        elif func.__name__ == 'get_values':
+            channel_outputs = func(*args, **kwargs)
+            args[0]._logs.append({
+                'timestamp': curr_ts().timestamp(),
+                'action': 'get_values',
+                'channel_outputs': channel_outputs,
+            })
+
+            return channel_outputs
         else:
             return func(*args, **kwargs)
 
@@ -55,11 +76,9 @@ class Interface(BaseModel, ABC):
     class Config:
         underscore_attrs_are_private = True
 
-    @abstractmethod
     def get_value(self, channel: str):
         pass
 
-    @abstractmethod
     def set_value(self, channel: str, value):
         pass
 
@@ -78,16 +97,15 @@ class Interface(BaseModel, ABC):
 
         self._logs = []
 
-    def get_values(self, channels: List[str]) -> list:
-        values = []
-        for c in channels:
-            values.append(self.get_value(c))
+    # Environment should only call this method to get channels
+    def get_values(self, channel_names: List[str]) -> Dict[str, Any]:
+        channel_outputs = {}
+        for c in channel_names:
+            channel_outputs[c] = self.get_value(c)
 
-        return values
+        return channel_outputs
 
-    def set_values(self, channels: List[str], values: list):
-        assert len(channels) == len(
-            values), 'Channels and values number mismatch!'
-
-        for idx, c in enumerate(channels):
-            self.set_value(c, values[idx])
+    # Environment should only call this method to set channels
+    def set_values(self, channel_inputs: Dict[str, Any]):
+        for c, v in channel_inputs.items():
+            self.set_value(c, v)
