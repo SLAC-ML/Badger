@@ -92,7 +92,8 @@ class BadgerRoutineRunner(QRunnable):
 
     def env_ready(self, env):
         self.env = env
-        init_vars = env._get_vars(self.var_names)
+        var_dict = env._get_variables(self.var_names)
+        init_vars = [var_dict[v] for v in self.var_names]
         self.signals.env_ready.emit(init_vars)
 
     def pf_ready(self, pf):

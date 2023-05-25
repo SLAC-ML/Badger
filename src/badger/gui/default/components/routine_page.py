@@ -333,13 +333,12 @@ class BadgerRoutinePage(QWidget):
             vars_vocs = self.routine['config']['variables']
             var_names_vocs = [next(iter(var)) for var in vars_vocs]
             var_names_env = [next(iter(var)) for var in vars_env]
-            env_instance = instantiate_env(env, configs)
             for name in var_names_vocs:
                 if name in var_names_env:
                     continue
 
                 _var = {}
-                _var[name] = env_instance._get_vrange(name)
+                _var[name] = [-100, 100]  # TODO: how to get better default bounds?
                 vars_combine.append(_var)
         self.env_box.check_only_var.setChecked(False)
         self.env_box.var_table.update_variables(vars_combine)

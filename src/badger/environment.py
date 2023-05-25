@@ -168,7 +168,7 @@ class Environment(BaseModel, ABC):
     @final
     @validate_observable_names
     def _get_observables(self, observable_names: List[str]) -> Dict:
-        return self.get_variables(observable_names)
+        return self.get_observables(observable_names)
 
     # Optimizer will only call this method to get variable bounds
     # Lazy loading -- read the bounds only when they are needed

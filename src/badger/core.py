@@ -204,7 +204,8 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
         # Return current state if X is None
         # Do not do the evaluation due to possible high cost
         if X is None:
-            _x = np.array(env._get_vars(var_names))
+            var_dict = env._get_variables(var_names)
+            _x = np.array([var_dict[v] for v in var_names])
             x = norm(_x, vranges[:, 0], vranges[:, 1])
             X = x.reshape(1, -1)
             return None, None, None, X
@@ -221,10 +222,12 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
 
             # Use unsafe version to support temp vars
             # We have to trust the users...
-            env._set_vars(var_names, _x)
-            env.vars_changed(var_names, _x)
+            var_inputs = dict(zip(var_names, _x))
+            env._set_variables(var_inputs)
+            env.variables_changed(var_inputs)
 
-            _xo = np.array(env._get_vars(var_names), dtype=np.float64)
+            var_dict = env._get_variables(var_names)
+            _xo = np.array([var_dict[v] for v in var_names], dtype=np.float64)
             xo = norm(_xo, vranges[:, 0], vranges[:, 1])
             Xo.append(xo)
 
@@ -238,7 +241,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             for i, obj_name in enumerate(obj_names):
                 rule = rules[i]
                 rule_dict = parse_rule(rule)
-                obs_raw = env.get_obs(obj_name)
+                obs_raw = env._get_observables([obj_name])[obj_name]
                 try:
                     obs = float(obs_raw)
                 except:  # obs_raw is a list
@@ -258,7 +261,7 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             cons_raw = []
             for i, con_name in enumerate(con_names):
                 relation, thres = thresholds[i][:2]
-                con = float(env.get_obs(con_name))
+                con = float(env._get_observables([con_name])[con_name])
                 if relation == 'GREATER_THAN':
                     cons_i.append(con - thres)
                 elif relation == 'LESS_THAN':
@@ -277,9 +280,9 @@ def run_routine(routine, skip_review=False, save=None, verbose=2,
             for sta_name in sta_names:
                 # A state could be an observation or a variable
                 try:
-                    sta = env.get_obs(sta_name)
+                    sta = env._get_observables([sta_name])[sta_name]
                 except:
-                    sta = env.get_var(sta_name)
+                    sta = env._get_variables([sta_name])[sta_name]
                 states.append(sta)
 
             info['count'] += 1
@@ -358,7 +361,7 @@ def instantiate_env(env_class, configs, manager=None):
     else:
         intf = None
 
-    env = env_class(intf, configs['params'])
+    env = env_class(interface=intf, params=configs['params'])
 
     return env
 
