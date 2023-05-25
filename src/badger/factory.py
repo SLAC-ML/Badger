@@ -74,9 +74,9 @@ def load_plugin(root, pname, ptype):
         configs['params'] = params
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
-        vars = module.Environment.list_vars()
-        obses = module.Environment.list_obses()
-        params = module.Environment.get_default_params()
+        vars = module.Environment.schema()['properties']['variables']['default']
+        obses = module.Environment.schema()['properties']['observables']['default']
+        params = module.Environment.schema()['properties']['params']['default']
         # Get vranges by creating an env instance
         try:
             intf_name = configs['interface'][0]
@@ -87,19 +87,21 @@ def load_plugin(root, pname, ptype):
         except Exception as e:
             logger.warning(e)
             intf = None
-        env = module.Environment(intf, configs)
-        vranges = env.get_vranges()
+        env = module.Environment(interface=intf, params=configs)
+        var_bounds = env._get_bounds(vars)
 
         vars_info = []
-        for i, var in enumerate(vars):
+        for var in vars:
             var_info = {}
-            var_info[var] = vranges[i]
+            var_info[var] = var_bounds[var]
             vars_info.append(var_info)
 
         configs['params'] = params
         configs['variables'] = vars_info
         configs['observations'] = obses
         plugin = [module.Environment, configs]
+    else:  # TODO: raise an exception here instead?
+        return [None, None]
 
     BADGER_FACTORY[ptype][pname] = plugin
 
