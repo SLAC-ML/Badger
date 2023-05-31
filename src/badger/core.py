@@ -361,9 +361,10 @@ def instantiate_env(env_class, configs, manager=None):
     else:
         intf = None
 
-    env = env_class(interface=intf, params=configs['params'])
+    env = env_class(interface=intf, **configs['params'])
 
     return env
+
 
 # The following functions are related to domain scaling
 # TODO: consider combine them into a class and make it extensible
