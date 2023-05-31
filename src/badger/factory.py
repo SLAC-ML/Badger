@@ -74,9 +74,11 @@ def load_plugin(root, pname, ptype):
         configs['params'] = params
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
-        vars = module.Environment.schema()['properties']['variables']['default']
-        obses = module.Environment.schema()['properties']['observables']['default']
-        params = module.Environment.schema()['properties']['params']['default']
+        vars = module.Environment.variables
+        obses = module.Environment.observables
+        params = module.Environment.schema()['properties']
+        params = {name: info['default'] for name, info in params.items()
+                  if name != 'interface'}
         # Get vranges by creating an env instance
         try:
             intf_name = configs['interface'][0]
