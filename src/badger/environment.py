@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, final
-from pydantic import Field, BaseModel
+from typing import List, Dict, Optional, final, ClassVar
+from pydantic import BaseModel
 from .interface import Interface
-# from .utils import merge_params
 
 
 def validate_variable_names(func):
@@ -47,14 +46,15 @@ def validate_setpoints(func):
 
 class Environment(BaseModel, ABC):
 
-    name: str
-    variables: List[str]
-    observables: List[str]
-    interface: Optional[Interface] = None
-    params: Optional[Dict] = Field({}, description='Environment parameters')
+    # Class variables
+    name: ClassVar[str]
+    variables: ClassVar[Dict[str, List]]  # bounds list could be empty for var
+    observables: ClassVar[List[str]]
 
-    # Cache of variable bounds
-    _bounds: Optional[Dict[str, List[float]]] = None
+    # Interface
+    interface: Optional[Interface] = None
+    # Put all other env params here
+    # params: float = Field(..., description='Example env parameter')
 
     class Config:
         validate_assignment = True
@@ -78,13 +78,12 @@ class Environment(BaseModel, ABC):
     def get_observables(self, observable_names: List[str]) -> Dict:
         pass
 
-    @abstractmethod
-    def get_bounds(self, variable_names: List[str]) -> Dict[str, List[float]]:
-        pass
-
     ############################################################
     # Optional methods to inherit
     ############################################################
+
+    def get_bounds(self, variable_names: List[str]) -> Dict[str, List[float]]:
+        return {}
 
     # Actions to preform after changing vars and before reading vars/obj
     def variables_changed(self, variables_input: Dict[str, float]):
@@ -99,6 +98,11 @@ class Environment(BaseModel, ABC):
     ############################################################
     # Should never be overridden
     ############################################################
+
+    @final
+    @property
+    def variable_names(self):
+        return [k for k, _ in self.variables]
 
     # Optimizer will only call this method to get variable values
     @final
@@ -177,14 +181,11 @@ class Environment(BaseModel, ABC):
     @validate_variable_names
     def _get_bounds(self, variable_names: Optional[List[str]] = None) -> Dict[str, List[float]]:
         if variable_names is None:
-            variable_names = self.variables
+            variable_names = self.variable_names
 
-        if self._bounds is None:
-            self._bounds = self.get_bounds(variable_names)
-        else:
-            variable_names_new = [v for v in variable_names
-                                  if v not in self._bounds.keys()]
-            if len(variable_names_new):
-                self._bounds.update(self.get_bounds(variable_names_new))
+        variable_names_new = [name for name, bounds in variable_names
+                              if not len(bounds)]
+        if len(variable_names_new):
+            self.variables.update(self.get_bounds(variable_names_new))
 
-        return {k: self._bounds[k] for k in variable_names}
+        return {k: self.variables[k] for k in variable_names}
