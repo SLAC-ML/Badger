@@ -40,7 +40,9 @@ class Interface(BaseModel, ABC):
     # name: str = Field(..., allow_mutation=False)
     name: str
     params: Optional[Dict] = Field({}, description='Interface parameters')
-    _logs: List[Dict] = []
+
+    # Private variables
+    _logs: List[Dict] = []  # TODO: Add a property for it?
 
     class Config:
         underscore_attrs_are_private = True

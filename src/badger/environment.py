@@ -183,8 +183,8 @@ class Environment(BaseModel, ABC):
         if variable_names is None:
             variable_names = self.variable_names
 
-        variable_names_new = [name for name, bounds in variable_names
-                              if not len(bounds)]
+        variable_names_new = [name for name in variable_names
+                              if not len(self.variables[name])]
         if len(variable_names_new):
             self.variables.update(self.get_bounds(variable_names_new))
 
