@@ -102,7 +102,7 @@ class Environment(BaseModel, ABC):
     @final
     @property
     def variable_names(self):
-        return [k for k, _ in self.variables]
+        return [k for k in self.variables]
 
     # Optimizer will only call this method to get variable values
     @final
