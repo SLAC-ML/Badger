@@ -58,7 +58,7 @@ class BadgerRoutineRunner(QRunnable):
 
         self.signals.finished.emit()
         if error:
-            if str(error) == 'Optimization run has been terminated!':
+            if 'Optimization run has been terminated!' in str(error):
                 self.signals.info.emit(str(error))
                 return
 
