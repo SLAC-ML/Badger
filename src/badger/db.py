@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 import yaml
 import sqlite3
 from .settings import read_value
+from .utils import ystring
 
 
 # Check badger database root
@@ -269,6 +270,9 @@ def import_routines(filename):
     con_db.close()
 
     con.close()
+
+    if failed_list:
+        raise Exception(ystring(failed_list))
 
 
 def export_routines(filename, routine_name_list):
