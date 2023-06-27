@@ -475,4 +475,4 @@ class BadgerHomePage(QWidget):
             QMessageBox.information(
                 self, 'Success!', f'Import succeeded: imported all routines from {filename}')
         except Exception as e:
-            QMessageBox.warning(self, 'Heads-up!', f'Failed to import the following routines since they already existed: {str(e)}')
+            QMessageBox.warning(self, 'Heads-up!', f'Failed to import the following routines since they already existed: \n{str(e)}')
