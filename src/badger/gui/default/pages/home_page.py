@@ -101,8 +101,8 @@ class BadgerHomePage(QWidget):
         self.btn_import = btn_import = QPushButton('Import')
         btn_export.setFixedHeight(32)
         btn_import.setFixedHeight(32)
-        hbox_action.addWidget(btn_export, 1)
         hbox_action.addWidget(btn_import, 1)
+        hbox_action.addWidget(btn_export, 1)
         vbox_routine.addWidget(action_bar)
 
         # Info panel
