@@ -7,6 +7,7 @@ from PyQt5.QtCore import pyqtSignal, QThreadPool
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 from .routine_runner import BadgerRoutineRunner
+from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
 from ....utils import norm, ParetoFront
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
@@ -121,6 +122,8 @@ class BadgerOptMonitor(QWidget):
         self.pf = None
         # Fix the auto range issue
         self.eval_count = 0
+        # Termination condition for the run
+        self.termination_condition = None
 
         self.init_ui()
         self.config_logic()
@@ -548,6 +551,12 @@ class BadgerOptMonitor(QWidget):
         self.btn_ctrl.setDisabled(False)
         self.sig_lock.emit(True)
 
+    def start_with_terminition_condition(self):
+        pass
+
+    def save_termination_condition(self, tc):
+        self.termination_condition = tc
+
     def is_critical(self, cons):
         if not self.con_names:
             return False, None
@@ -816,7 +825,7 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_solution(self, idx):
         if self.plot_x_axis:  # x-axis is time
-            value = self.ts[idx] -  self.ts[0]
+            value = self.ts[idx] - self.ts[0]
         else:
             value = idx
 
@@ -919,8 +928,14 @@ class BadgerOptMonitor(QWidget):
             self.btn_stop.setDefaultAction(self.run_action)
 
     def set_run_until_action(self):
-        print('Run until!')
-        self.btn_stop.setDefaultAction(self.run_until_action)
+        if self.btn_stop.defaultAction() is not self.run_until_action:
+            self.btn_stop.setDefaultAction(self.run_until_action)
+
+        dlg = BadgerTerminationConditionDialog(
+            self, self.start_with_terminition_condition,
+            self.save_termination_condition, self.termination_condition,
+        )
+        dlg.exec()
 
     # def closeEvent(self, event):
     #     if not self.running:
