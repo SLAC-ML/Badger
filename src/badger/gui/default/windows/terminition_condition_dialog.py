@@ -55,7 +55,7 @@ class BadgerTerminationConditionDialog(QDialog):
         cb.addItems([
             'maximum evaluation reached',
             'maximum running time exceeded',
-            'optimization converged'
+            # 'optimization converged',
         ])
         cb.setCurrentIndex(self.configs['tc_idx'])
 
