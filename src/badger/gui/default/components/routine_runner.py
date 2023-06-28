@@ -113,9 +113,9 @@ class BadgerRoutineRunner(QRunnable):
             dt = time.time() - self.start_time
             if dt >= max_time:
                 raise Exception('Optimization run has been terminated!')
-        elif idx == 2:
-            ftol = tc_config['ftol']
-            print(ftol)
+        # elif idx == 2:
+        #     ftol = tc_config['ftol']
+        #     # Do something
 
     def env_ready(self, env):
         self.env = env
