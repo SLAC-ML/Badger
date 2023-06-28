@@ -2,7 +2,7 @@ import os
 import numpy as np
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
-# from PyQt5.QtWidgets import QMenu, QAction
+from PyQt5.QtWidgets import QToolButton, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, QThreadPool
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
@@ -45,15 +45,15 @@ QPushButton
 '''
 
 stylesheet_run = '''
-QPushButton:hover:pressed
+QToolButton:hover:pressed
 {
     background-color: #92D38C;
 }
-QPushButton:hover
+QToolButton:hover
 {
     background-color: #6EC566;
 }
-QPushButton
+QToolButton
 {
     background-color: #4AB640;
     color: #000000;
@@ -61,15 +61,15 @@ QPushButton
 '''
 
 stylesheet_stop = '''
-QPushButton:hover:pressed
+QToolButton:hover:pressed
 {
     background-color: #ed9c33;
 }
-QPushButton:hover
+QToolButton:hover
 {
     background-color: #eb8f1a;
 }
-QPushButton
+QToolButton
 {
     background-color: #E98300;
     color: #000000;
@@ -221,7 +221,7 @@ class BadgerOptMonitor(QWidget):
 
         cool_font = QFont()
         cool_font.setWeight(QFont.DemiBold)
-        # cool_font.setPixelSize(16)
+        cool_font.setPixelSize(13)
 
         self.btn_del = btn_del = QPushButton('Delete Run')
         btn_del.setFixedSize(128, 32)
@@ -250,22 +250,26 @@ class BadgerOptMonitor(QWidget):
         btn_ctrl.setFixedSize(64, 32)
         btn_ctrl.setFont(cool_font)
 
-        self.btn_stop = btn_stop = QPushButton('Run')
+        # self.btn_stop = btn_stop = QPushButton('Run')
+        self.btn_stop = btn_stop = QToolButton()
         btn_stop.setDisabled(True)
         btn_stop.setFixedSize(128, 32)
         btn_stop.setFont(cool_font)
         btn_stop.setStyleSheet(stylesheet_run)
 
         # Create a menu and add options
-        # menu = QMenu(self)
-        # menu.setFixedWidth(128)
-        # run_action = QAction('Run', self)
-        # run_until_action = QAction('Run until...', self)
-        # menu.addAction(run_action)
-        # menu.addAction(run_until_action)
+        self.run_menu = menu = QMenu(self)
+        menu.setFixedWidth(128)
+        self.run_action = run_action = QAction('Run', self)
+        self.run_until_action = run_until_action = QAction('Run until', self)
+        menu.addAction(run_action)
+        menu.addAction(run_until_action)
 
         # Set the menu as the run button's dropdown menu
-        # btn_stop.setMenu(menu)
+        btn_stop.setMenu(menu)
+        btn_stop.setDefaultAction(run_action)
+        btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
+        btn_stop.setToolTip('')
 
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
@@ -303,7 +307,8 @@ class BadgerOptMonitor(QWidget):
         self.btn_opt.clicked.connect(self.jump_to_optimal)
         self.btn_set.clicked.connect(self.set_vars)
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
-        self.btn_stop.clicked.connect(self.run_stop_routine)
+        self.run_action.triggered.connect(self.set_run_action)
+        self.run_until_action.triggered.connect(self.set_run_until_action)
 
         # Visualization
         self.cb_plot_x.currentIndexChanged.connect(self.select_x_axis)
@@ -535,8 +540,11 @@ class BadgerOptMonitor(QWidget):
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
 
-        self.btn_stop.setText('Stop')
         self.btn_stop.setStyleSheet(stylesheet_stop)
+        self.btn_stop.setPopupMode(QToolButton.DelayedPopup)
+        self.run_action.setText('Stop')
+        self.btn_stop.setToolTip('')
+
         self.btn_ctrl.setDisabled(False)
         self.sig_lock.emit(True)
 
@@ -659,8 +667,13 @@ class BadgerOptMonitor(QWidget):
         self.running = False
         self.btn_ctrl.setText('Pause')
         self.btn_ctrl.setDisabled(True)
-        self.btn_stop.setText('Run')
+
+        # Note the order of the following two lines cannot be changed!
+        self.btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
         self.btn_stop.setStyleSheet(stylesheet_run)
+        self.run_action.setText('Run')
+        self.btn_stop.setToolTip('')
+
         self.btn_reset.setDisabled(False)
         self.btn_set.setDisabled(False)
         self.btn_del.setDisabled(False)
@@ -717,12 +730,6 @@ class BadgerOptMonitor(QWidget):
         else:
             self.sig_pause.emit(False)
             self.btn_ctrl.setText('Pause')
-
-    def run_stop_routine(self):
-        if self.btn_stop.text() == 'Run':
-            self.start()
-        else:
-            self.sig_stop.emit()
 
     def ins_obj_dragged(self, ins_obj):
         self.ins_var.setValue(ins_obj.value())
@@ -901,6 +908,19 @@ class BadgerOptMonitor(QWidget):
 
     def delete_run(self):
         self.sig_del.emit()
+
+    def set_run_action(self):
+        if self.run_action.text() == 'Run':
+            self.start()
+        else:
+            self.sig_stop.emit()
+
+        if self.btn_stop.defaultAction() is not self.run_action:
+            self.btn_stop.setDefaultAction(self.run_action)
+
+    def set_run_until_action(self):
+        print('Run until!')
+        self.btn_stop.setDefaultAction(self.run_until_action)
 
     # def closeEvent(self, event):
     #     if not self.running:
