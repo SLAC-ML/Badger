@@ -536,23 +536,23 @@ class BadgerOptMonitor(QWidget):
             idx = [i,] + v
             pf.is_dominated((idx, o))
 
-    def start(self):
+    def start(self, use_tc=False):
         self.sig_new_run.emit()
         self.init_plots(self.routine)
         self.init_routine_runner()
+        if use_tc:
+            self.routine_runner.set_termination_condition(self.termination_condition)
         self.running = True  # if a routine runner is working
         self.thread_pool.start(self.routine_runner)
 
         self.btn_stop.setStyleSheet(stylesheet_stop)
         self.btn_stop.setPopupMode(QToolButton.DelayedPopup)
         self.run_action.setText('Stop')
+        self.run_until_action.setText('Stop')
         self.btn_stop.setToolTip('')
 
         self.btn_ctrl.setDisabled(False)
         self.sig_lock.emit(True)
-
-    def start_with_terminition_condition(self):
-        pass
 
     def save_termination_condition(self, tc):
         self.termination_condition = tc
@@ -681,6 +681,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
         self.btn_stop.setStyleSheet(stylesheet_run)
         self.run_action.setText('Run')
+        self.run_until_action.setText('Run until')
         self.btn_stop.setToolTip('')
 
         self.btn_reset.setDisabled(False)
@@ -921,23 +922,26 @@ class BadgerOptMonitor(QWidget):
         self.sig_del.emit()
 
     def set_run_action(self):
+        if self.btn_stop.defaultAction() is not self.run_action:
+            self.btn_stop.setDefaultAction(self.run_action)
+
         if self.run_action.text() == 'Run':
             self.start()
         else:
             self.sig_stop.emit()
 
-        if self.btn_stop.defaultAction() is not self.run_action:
-            self.btn_stop.setDefaultAction(self.run_action)
-
     def set_run_until_action(self):
         if self.btn_stop.defaultAction() is not self.run_until_action:
             self.btn_stop.setDefaultAction(self.run_until_action)
 
-        dlg = BadgerTerminationConditionDialog(
-            self, self.start_with_terminition_condition,
-            self.save_termination_condition, self.termination_condition,
-        )
-        dlg.exec()
+        if self.run_until_action.text() == 'Run until':
+            dlg = BadgerTerminationConditionDialog(
+                self, self.start,
+                self.save_termination_condition, self.termination_condition,
+            )
+            dlg.exec()
+        else:
+            self.sig_stop.emit()
 
     # def closeEvent(self, event):
     #     if not self.running:

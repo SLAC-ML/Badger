@@ -150,7 +150,8 @@ class BadgerTerminationConditionDialog(QDialog):
 
     def run(self):
         self.save_config(self.configs)
-        self.run_opt()
+        self.run_opt(True)
+        self.close()
 
     def terminition_condition_changed(self, i):
         self.stacks.setCurrentIndex(i)
