@@ -41,18 +41,25 @@ class BadgerRoutineRunner(QRunnable):
         self.save = save
         self.verbose = verbose
         self.use_full_ts = use_full_ts
+        self.termination_condition = None  # additional option to control the optimization flow
+        self.start_time = None  # track the time cost of the run
 
         self.is_paused = False
         self.is_killed = False
 
+    def set_termination_condition(self, termination_condition):
+        self.termination_condition = termination_condition
+
     def run(self):
+        self.start_time = time.time()
+
         error = None
         try:
             run_routine(self.routine, True, self.save, self.verbose,
                         self.before_evaluate, self.after_evaluate,
                         self.env_ready, self.pf_ready, self.states_ready)
         except Exception as e:
-            if str(e) != 'Optimization run has been terminated!':
+            if 'Optimization run has been terminated!' not in str(e):
                 logger.exception(e)
             error = e
 
@@ -88,8 +95,27 @@ class BadgerRoutineRunner(QRunnable):
         new_row = pd.Series(solution, index=self.data.columns)
         self.data = pd.concat([self.data, new_row.to_frame().T], ignore_index=True)
 
-        # take a break to let the outside signal to change the status
+        # Take a break to let the outside signal to change the status
         time.sleep(0.1)
+
+        # Check if termination condition has been satisfied
+        if self.termination_condition is None:
+            return
+
+        tc_config = self.termination_condition
+        idx = tc_config['tc_idx']
+        if idx == 0:
+            max_eval = tc_config['max_eval']
+            if self.data.shape[0] >= max_eval:
+                raise Exception('Optimization run has been terminated!')
+        elif idx == 1:
+            max_time = tc_config['max_time']
+            dt = time.time() - self.start_time
+            if dt >= max_time:
+                raise Exception('Optimization run has been terminated!')
+        elif idx == 2:
+            ftol = tc_config['ftol']
+            print(ftol)
 
     def env_ready(self, env):
         self.env = env
