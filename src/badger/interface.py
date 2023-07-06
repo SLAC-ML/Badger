@@ -71,3 +71,6 @@ class Interface(BaseModel, ABC):
     @abstractmethod
     def set_values(self, channel_inputs: Dict[str, Any]):
         pass
+
+    def get_value(self, channel_name: str, **kwargs) -> Any:
+        return self.get_values([channel_name], **kwargs)[channel_name]
