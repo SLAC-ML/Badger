@@ -1,4 +1,5 @@
 from .settings import read_value
+from .utils import get_value_or_none
 import sys
 import os
 import importlib
@@ -77,7 +78,8 @@ def load_plugin(root, pname, ptype):
         vars = module.Environment.variables
         obses = module.Environment.observables
         params = module.Environment.schema()['properties']
-        params = {name: info['default'] for name, info in params.items()
+        params = {name: get_value_or_none(info, 'default')
+                  for name, info in params.items()
                   if name != 'interface'}
         # Get vranges by creating an env instance
         try:

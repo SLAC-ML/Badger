@@ -259,3 +259,12 @@ def parse_rule(rule):
         'filter': filter,
         'reducer': reducer,
     }
+
+
+def get_value_or_none(book, key):
+    try:
+        value = book[key]
+    except KeyError:
+        value = None
+
+    return value
