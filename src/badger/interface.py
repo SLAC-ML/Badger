@@ -74,3 +74,6 @@ class Interface(BaseModel, ABC):
 
     def get_value(self, channel_name: str, **kwargs) -> Any:
         return self.get_values([channel_name], **kwargs)[channel_name]
+
+    def set_value(self, channel_name: str, channel_value, **kwargs):
+        return self.set_values({channel_name: channel_value}, **kwargs)
