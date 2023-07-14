@@ -8,6 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+LOAD_LOCAL_ALGO = False
+
+
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = read_value('BADGER_PLUGIN_ROOT')
 if BADGER_PLUGIN_ROOT is None:
@@ -25,7 +28,15 @@ sys.path.append(BADGER_PLUGIN_ROOT)
 
 def scan_plugins(root):
     factory = {}
-    for ptype in ['algorithm', 'interface', 'environment']:
+
+    # Do not scan local algorithms if option disabled
+    if LOAD_LOCAL_ALGO:
+        ptype_list = ['algorithm', 'interface', 'environment']
+    else:
+        ptype_list = ['interface', 'environment']
+        factory['algorithm'] = {}
+
+    for ptype in ptype_list:
         factory[ptype] = {}
 
         proot = os.path.join(root, f'{ptype}s')
