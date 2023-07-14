@@ -63,24 +63,23 @@ class Environment(BaseModel, ABC):
         underscore_attrs_are_private = True
 
     ############################################################
-    # Must-inherit methods
-    ############################################################
-
-    @abstractmethod
-    def get_variables(self, variable_names: List[str]) -> Dict:
-        pass
-
-    @abstractmethod
-    def set_variables(self, variable_inputs: Dict[str, float]):
-        pass
-
-    @abstractmethod
-    def get_observables(self, observable_names: List[str]) -> Dict:
-        pass
-
-    ############################################################
     # Optional methods to inherit
     ############################################################
+
+    def get_variables(self, variable_names: List[str]) -> Dict:
+        assert self.interface, 'Must provide an interface!'
+
+        return self.interface.get_values(variable_names)
+
+    def set_variables(self, variable_inputs: Dict[str, float]):
+        assert self.interface, 'Must provide an interface!'
+
+        return self.interface.set_values(variable_inputs)
+
+    def get_observables(self, observable_names: List[str]) -> Dict:
+        assert self.interface, 'Must provide an interface!'
+
+        return self.interface.get_values(observable_names)
 
     def get_bounds(self, variable_names: List[str]) -> Dict[str, List[float]]:
         return {}
