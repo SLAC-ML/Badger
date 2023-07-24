@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QRegExp
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QComboBox, QGridLayout, QVBoxLayout, QWidget, QLabel, QLineEdit
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication, QStyledItemDelegate
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication, QStyledItemDelegate, QCheckBox
 from qdarkstyle import load_stylesheet, DarkPalette, LightPalette
 from ....settings import list_settings, read_value, write_value
 
@@ -88,6 +88,13 @@ class BadgerSettingsDialog(QDialog):
         grid.addWidget(plugin_url, 7, 0)
         grid.addWidget(plugin_url_name, 7, 1)
 
+        # Advanced settings
+        self.adv_features = adv_features = QLabel('Enable Advanced Features')
+        self.enable_adv_features = enable_adv_features = QCheckBox()
+        enable_adv_features.setChecked(read_value('BADGER_ENABLE_ADVANCED'))
+        grid.addWidget(adv_features, 8, 0)
+        grid.addWidget(enable_adv_features, 8, 1)
+
         grid.setColumnStretch(1, 1)
 
         vbox.addWidget(widget_settings)
@@ -128,6 +135,7 @@ class BadgerSettingsDialog(QDialog):
         write_value('BADGER_CHECK_VAR_INTERVAL', self.var_int_val.text())
         write_value('BADGER_CHECK_VAR_TIMEOUT', self.var_time_val.text())
         write_value('BADGER_PLUGINS_URL', self.plugin_url_name.text())
+        write_value('BADGER_ENABLE_ADVANCED', self.enable_adv_features.isChecked())
 
     def restore_settings(self):
         # Reset theme if needed

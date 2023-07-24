@@ -50,6 +50,11 @@ BADGER_GUI_DICT = {
         'description': 'Theme for the Badger GUI',
         'default value': 'dark',
     },
+    'BADGER_ENABLE_ADVANCED': {
+        'display name': 'enable advanced features',
+        'description': 'Enable advanced features on the GUI',
+        'default value': False,
+    },
 }
 
 
