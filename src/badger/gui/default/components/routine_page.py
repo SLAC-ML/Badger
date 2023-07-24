@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
 from PyQt5.QtCore import Qt
 import sqlite3
 from coolname import generate_slug
@@ -48,6 +48,7 @@ class BadgerRoutinePage(QWidget):
 
         # Meta group
         group_meta = QGroupBox('Metadata')
+        group_meta.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         vbox_meta = QVBoxLayout(group_meta)
 
         # Name
