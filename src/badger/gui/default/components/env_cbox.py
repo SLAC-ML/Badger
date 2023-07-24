@@ -4,6 +4,7 @@ from PyQt5.QtCore import QRegExp
 from .collapsible_box import CollapsibleBox
 from .var_table import VariableTable
 from .obj_table import ObjectiveTable
+from ....settings import read_value
 
 
 class BadgerEnvBox(CollapsibleBox):
@@ -29,6 +30,8 @@ class BadgerEnvBox(CollapsibleBox):
         cb.setCurrentIndex(-1)
         self.btn_env_play = btn_env_play = QPushButton('Open Playground')
         btn_env_play.setFixedSize(128, 24)
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            btn_env_play.hide()
         hbox_name.addWidget(lbl)
         hbox_name.addWidget(cb, 1)
         hbox_name.addWidget(btn_env_play)

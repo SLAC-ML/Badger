@@ -16,6 +16,7 @@ from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
 from ..windows.docs_window import BadgerDocsWindow
+from ....settings import read_value
 
 
 CONS_RELATION_DICT = {
@@ -63,6 +64,8 @@ class BadgerRoutinePage(QWidget):
 
         # Tags
         self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            cbox_tags.hide()
         vbox_meta.addWidget(cbox_tags, alignment=Qt.AlignTop)
         # vbox_meta.addStretch()
 
