@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QH
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
 from PyQt5.QtCore import Qt
 import sqlite3
+import pandas as pd
 from coolname import generate_slug
 from ....factory import list_algo, list_env, get_algo, get_env
 from ....utils import ystring, load_config, config_list_to_dict
@@ -16,6 +17,7 @@ from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
 from ..windows.docs_window import BadgerDocsWindow
+from .data_table import get_table_content_as_dict, set_init_data_table
 from ....settings import read_value
 
 
@@ -155,6 +157,12 @@ class BadgerRoutinePage(QWidget):
         self.env_box.edit_var.clear()
         self.env_box.var_table.set_selected(variables)
         self.env_box.var_table.set_bounds(routine['config']['variables'])
+
+        try:
+            init_points = routine['config']['init_points']
+            set_init_data_table(self.env_box.init_table, init_points)
+        except KeyError:
+            set_init_data_table(self.env_box.init_table, None)
 
         objectives = [next(iter(v)) for v in routine['config']['objectives']]
         self.env_box.check_only_obj.setChecked(True)
@@ -514,6 +522,21 @@ class BadgerRoutinePage(QWidget):
         if tag_gain: tags['gain'] = tag_gain
         if not tags: tags = None
 
+        # Initial points
+        init_points_df = pd.DataFrame.from_dict(
+            get_table_content_as_dict(self.env_box.init_table))
+        init_points_df = init_points_df.replace('', pd.NA)
+        init_points_df = init_points_df.dropna(subset=init_points_df.columns,
+                                               how='all')
+        contains_na = init_points_df.isna().any().any()
+        if contains_na:
+            raise Exception('Initial points are not valid, please fill in the missing values')
+        if init_points_df.empty:
+            init_points = None
+        else:
+            init_points_df = init_points_df.astype(float)
+            init_points = init_points_df.to_dict('list')
+
         configs = {
             'variables': variables,
             'objectives': objectives,
@@ -521,6 +544,7 @@ class BadgerRoutinePage(QWidget):
             'states': states,
             'domain_scaling': domain_scaling,
             'tags': tags,
+            'init_points': init_points,
         }
         if self.algo_box.check_use_script.isChecked():
             configs['script'] = self.script

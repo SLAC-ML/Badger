@@ -123,7 +123,7 @@ def get_table_content_as_dict(table):
             if item is not None:
                 column_values.append(item.text())
             else:
-                column_values.append(None)
+                column_values.append('')
 
         table_content[column_name] = column_values
 
@@ -145,3 +145,18 @@ def update_init_data_table(table, variable_names):
         else:
             for row in range(table.rowCount()):
                 table.setItem(row, col, QTableWidgetItem(''))
+
+
+def set_init_data_table(table, data_dict):
+    variable_names = get_horizontal_header_as_list(table)
+
+    if data_dict is None:  # clear the table
+        for col, name in enumerate(variable_names):
+            for row in range(table.rowCount()):
+                table.setItem(row, col, QTableWidgetItem(''))
+
+        return
+
+    for col, name in enumerate(variable_names):
+        for row in range(len(data_dict[name])):
+            table.setItem(row, col, QTableWidgetItem(f'{data_dict[name][row]:g}'))
