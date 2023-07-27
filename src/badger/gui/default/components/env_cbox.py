@@ -105,12 +105,13 @@ class BadgerEnvBox(CollapsibleBox):
         self.var_table = VariableTable()
         vbox_var_edit.addWidget(self.var_table)
 
-        lbl_init = QLabel('Initial Points')
-        lbl_init.setToolTip('If set, it takes precedence over the start from current setting in algorithm configuration.')
-        vbox_var_edit.addWidget(lbl_init)
-
+        cbox_init = CollapsibleBox(self, ' Initial Points', tooltip='If set, it takes precedence over the start from current setting in algorithm configuration.')
+        vbox_var_edit.addWidget(cbox_init)
+        vbox_init = QVBoxLayout()
         self.init_table = init_data_table()
-        vbox_var_edit.addWidget(self.init_table)
+        vbox_init.addWidget(self.init_table)
+        cbox_init.setContentLayout(vbox_init)
+        cbox_init.expand()
 
         hbox_var.addWidget(edit_var_col)
 
