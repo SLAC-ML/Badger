@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit, QLineEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame
 from PyQt5.QtCore import QRegExp
 from .collapsible_box import CollapsibleBox
 from .var_table import VariableTable
 from .obj_table import ObjectiveTable
+from .data_table import init_data_table, update_init_data_table
 from ....settings import read_value
 
 
@@ -103,6 +104,14 @@ class BadgerEnvBox(CollapsibleBox):
 
         self.var_table = VariableTable()
         vbox_var_edit.addWidget(self.var_table)
+
+        lbl_init = QLabel('Initial Points')
+        lbl_init.setToolTip('If set, it takes precedence over the start from current setting in algorithm configuration.')
+        vbox_var_edit.addWidget(lbl_init)
+
+        self.init_table = init_data_table()
+        vbox_var_edit.addWidget(self.init_table)
+
         hbox_var.addWidget(edit_var_col)
 
         # Objectives config (table style)
@@ -222,6 +231,7 @@ class BadgerEnvBox(CollapsibleBox):
         self.check_only_var.stateChanged.connect(self.toggle_var_show_mode)
         self.edit_obj.textChanged.connect(self.filter_obj)
         self.check_only_obj.stateChanged.connect(self.toggle_obj_show_mode)
+        self.var_table.sig_sel_changed.connect(self.update_init_table)
 
     def toggle_var_show_mode(self, _):
         self.var_table.toggle_show_mode(self.check_only_var.isChecked())
@@ -256,6 +266,11 @@ class BadgerEnvBox(CollapsibleBox):
                 _objectives.append(obj)
 
         self.obj_table.update_objectives(_objectives, 1)
+
+    def update_init_table(self):
+        selected = self.var_table.selected
+        variable_names = [v for v in selected if selected[v]]
+        update_init_data_table(self.init_table, variable_names)
 
     def _fit_content(self, list):
         height = list.sizeHintForRow(0) * list.count() + 2 * list.frameWidth() + 4
