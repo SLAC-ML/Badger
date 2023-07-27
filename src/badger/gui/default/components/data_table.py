@@ -84,3 +84,64 @@ def data_table(data=None):
     table.setStyleSheet('alternate-background-color: #262E38;')
     table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
     return update_table(table, data)
+
+
+def init_data_table(variable_names=None):
+    table = TableWithCopy()
+    table.setAlternatingRowColors(True)
+    table.setStyleSheet('alternate-background-color: #262E38;')
+    table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+    table.setRowCount(10)
+    if variable_names is None:
+        return table
+
+    table.setColumnCount(len(variable_names))
+    table.horizontalHeader().setVisible(False)
+    table.setHorizontalHeaderLabels(variable_names)
+    table.horizontalHeader().setVisible(True)
+
+    return table
+
+
+def get_horizontal_header_as_list(table):
+    header = table.horizontalHeader()
+    header_labels = [header.model().headerData(i, header.orientation()) for i in range(header.count())]
+    return header_labels
+
+
+def get_table_content_as_dict(table):
+    table_content = {}
+    header_labels = get_horizontal_header_as_list(table)
+
+    for col in range(table.columnCount()):
+        column_name = header_labels[col]
+        column_values = []
+
+        for row in range(table.rowCount()):
+            item = table.item(row, col)
+            if item is not None:
+                column_values.append(item.text())
+            else:
+                column_values.append(None)
+
+        table_content[column_name] = column_values
+
+    return table_content
+
+
+def update_init_data_table(table, variable_names):
+    current_init_data = get_table_content_as_dict(table)
+
+    table.setColumnCount(len(variable_names))
+    table.horizontalHeader().setVisible(False)
+    table.setHorizontalHeaderLabels(variable_names)
+    table.horizontalHeader().setVisible(True)
+
+    for col, name in enumerate(variable_names):
+        if name in current_init_data:
+            for row in range(table.rowCount()):
+                table.setItem(row, col, QTableWidgetItem(current_init_data[name][row]))
+        else:
+            for row in range(table.rowCount()):
+                table.setItem(row, col, QTableWidgetItem(''))
