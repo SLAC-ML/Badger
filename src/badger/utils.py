@@ -148,6 +148,11 @@ def str_to_ts(timestr, format='lcls-log'):
         return datetime.fromisoformat(timestr)
 
 
+def ts_float_to_str(ts_float, format='lcls-log'):
+    ts = datetime.fromtimestamp(ts_float)
+    return ts_to_str(ts, format)
+
+
 def curr_ts():
     return datetime.now()
 
