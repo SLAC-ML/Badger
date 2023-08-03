@@ -36,6 +36,11 @@ BADGER_CORE_DICT = {
         'description': 'Maximum waiting time before giving up check var if takes too long time, unit is second',
         'default value': 3,
     },
+    'BADGER_DATA_DUMP_PERIOD': {
+        'display name': 'data dump period',
+        'description': 'Minimum time interval between data dumps, unit is second',
+        'default value': 1,
+    },
     'BADGER_PLUGINS_URL': {
         'display name': 'badger plugins url',
         'description': 'URL for badger plugins server',
