@@ -1,10 +1,13 @@
 import logging
 logger = logging.getLogger(__name__)
+import os
 import time
 import pandas as pd
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
 from ....utils import curr_ts, ts_to_str
 from ....core import run_routine
+from ....settings import read_value
+from ....archive import archive_run
 
 
 class BadgerRoutineSignals(QObject):
@@ -43,6 +46,7 @@ class BadgerRoutineRunner(QRunnable):
         self.use_full_ts = use_full_ts
         self.termination_condition = None  # additional option to control the optimization flow
         self.start_time = None  # track the time cost of the run
+        self.last_dump_time = None  # track the time the run data got dumped
 
         self.is_paused = False
         self.is_killed = False
@@ -52,6 +56,7 @@ class BadgerRoutineRunner(QRunnable):
 
     def run(self):
         self.start_time = time.time()
+        self.last_dump_time = None  # reset the timer
 
         error = None
         try:
@@ -87,13 +92,26 @@ class BadgerRoutineRunner(QRunnable):
         # cons: ndarray
         # stas: list
         ts = curr_ts()
-        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts.timestamp())
+        ts_float = ts.timestamp()
+        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts_float)
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
         solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + list(stas)
         new_row = pd.Series(solution, index=self.data.columns)
         self.data = pd.concat([self.data, new_row.to_frame().T], ignore_index=True)
+
+        # Try dump the run data and interface log to the disk
+        dump_period = read_value('BADGER_DATA_DUMP_PERIOD')
+        if (self.last_dump_time is None) or (ts_float - self.last_dump_time > dump_period):
+            self.last_dump_time = ts_float
+            run = archive_run(self.routine, self.data, self.states)
+            try:
+                path = run['path']
+                filename = run['filename'][:-4] + 'pickle'
+                self.env.interface.stop_recording(os.path.join(path, filename))
+            except:
+                pass
 
         # Take a break to let the outside signal to change the status
         time.sleep(0.1)
