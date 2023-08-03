@@ -62,6 +62,14 @@ class Interface(BaseModel, ABC):
 
         self._logs = []
 
+    def dump_recording(self, filename):
+        # Dump the logs to disk w/o cleaning up the log history
+        if not self._logs:
+            return
+
+        with open(filename, 'wb') as f:
+            pickle.dump(self._logs, f)
+
     # Environment should only call this method to get channels
     @abstractmethod
     def get_values(self, channel_names: List[str]) -> Dict[str, Any]:
