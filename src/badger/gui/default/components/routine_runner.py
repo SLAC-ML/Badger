@@ -3,9 +3,10 @@ logger = logging.getLogger(__name__)
 import os
 import time
 import pandas as pd
+from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
 from ....utils import curr_ts, ts_to_str
-from ....core import run_routine
+from ....core import run_routine, run_routine_xopt
 from ....settings import read_value
 from ....archive import archive_run
 
@@ -60,9 +61,16 @@ class BadgerRoutineRunner(QRunnable):
 
         error = None
         try:
-            run_routine(self.routine, True, self.save, self.verbose,
-                        self.before_evaluate, self.after_evaluate,
-                        self.env_ready, self.pf_ready, self.states_ready)
+            # run_routine(self.routine, True, self.save, self.verbose,
+            #             self.before_evaluate, self.after_evaluate,
+            #             self.env_ready, self.pf_ready, self.states_ready)
+            run_routine_xopt(self.routine,
+                             active_callback=self.run_status,
+                             generate_callback=self.before_evaluate_xopt,
+                             evaluate_callback=self.after_evaluate_xopt,
+                             environment_callback=self.env_ready,
+                             pf_callback=self.pf_ready,
+                             states_callback=self.states_ready)
         except Exception as e:
             if 'Optimization run has been terminated!' not in str(e):
                 logger.exception(e)
@@ -134,6 +142,32 @@ class BadgerRoutineRunner(QRunnable):
         # elif idx == 2:
         #     ftol = tc_config['ftol']
         #     # Do something
+
+    def run_status(self):
+        if self.is_killed:
+            return 2
+        elif self.is_paused:
+            return 1
+        else:
+            return 0  # running
+
+    def before_evaluate_xopt(self, candidates: DataFrame):
+        pass
+
+    def after_evaluate_xopt(self, data: DataFrame):
+        vars = data[self.var_names].to_numpy()[0]
+        obses = data[self.obj_names].to_numpy()[0]
+        cons = data[self.con_names].to_numpy()
+        try:
+            cons = cons[0]
+        except IndexError:
+            pass
+        stas = data[self.sta_names].to_numpy()
+        try:
+            stas = stas[0]
+        except IndexError:
+            pass
+        self.after_evaluate(vars, obses, cons, stas)
 
     def env_ready(self, env):
         self.env = env

@@ -1,7 +1,14 @@
+import time
 import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 from operator import itemgetter
+from typing import Callable
+from pandas import DataFrame, concat
+from pydantic import BaseModel
+from xopt import Generator
+from xopt.generators import get_generator
+from .environment import Environment
 from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm, \
      parse_rule
 
@@ -428,3 +435,192 @@ def get_scaling_func(configs):
         raise Exception(f'scaling function {name} is not supported')
 
     return func
+
+
+class Routine(BaseModel):
+    environment: Environment
+    generator: Generator
+    initial_points: DataFrame
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    # convenience properties
+    @property
+    def vocs(self):
+        """
+        A property that returns the vocs of the generator attribute.
+
+        Returns:
+            self.generator.vocs : VOCS
+        """
+        return self.generator.vocs
+
+
+def evaluate_points(points: DataFrame, routine: Routine, callback: Callable) \
+        -> DataFrame:
+    """
+    Evaluates points using the environment
+
+    Parameters
+    ----------
+    points : DataFrame
+    routine : Routine
+    callback : Callable
+
+    Returns
+    -------
+    evaluated_points : DataFrame
+    """
+
+    env = routine.environment
+    vocs = routine.vocs
+
+    obj_list = []
+    for _, point in points.iterrows():
+        env.set_variables(point.to_dict())
+        obj = env.get_observables(vocs.objective_names)
+        obj_df = DataFrame(obj, index=[0])
+        obj_list.append(obj_df)
+    points_obj = concat(obj_list, axis=0).reset_index(drop=True)
+    points_eval = concat([points, points_obj], axis=1)
+
+    if callback:
+        callback(points_eval)
+
+    return points_eval
+
+
+def run_routine_xopt(
+        # routine: Routine,
+        routine: dict,
+        active_callback: Callable,
+        generate_callback: Callable,
+        evaluate_callback: Callable,
+        environment_callback: Callable,
+        pf_callback: Callable,
+        states_callback: Callable,
+        ) -> None:
+    """
+    Run the provided routine object using Xopt.
+
+    Parameters
+    ----------
+    routine : Routine
+        Routine object created by Badger GUI to run optimization.
+
+    active_callback : Callable
+        Callback function that returns an int denoting if optimization/evaluation
+        should proceed.
+        0: proceed
+        1: paused
+        2: killed
+
+    generate_callback : Callable
+        Callback function called after generating candidate points that takes the form
+        `f(generator: Generator, candidates: DataFrame)`.
+
+    evaluate_callback : Callable
+        Callback function called after evaluating points that takes the form `f(data:
+        DataFrame)`.
+
+    environment_callback : Callable
+        Callback function called after
+
+    states_callback : Callable
+        Callback function called after
+    """
+
+    from .factory import get_env
+
+    # Initialize routine
+    Environment, configs_env = get_env(routine['env'])
+    _configs_env = merge_params(
+        configs_env, {'params': routine['env_params']})
+    environment = instantiate_env(Environment, _configs_env)
+    if environment_callback:
+        environment_callback(environment)
+
+    variables = {key: value for dictionary in routine['config']['variables']
+                 for key, value in dictionary.items()}
+    objectives = {key: value for dictionary in routine['config']['objectives']
+                  for key, value in dictionary.items()}
+    vocs = {
+        'variables': variables,
+        'objectives': objectives,
+    }
+    generator_class = get_generator(routine['algo'])
+    try:
+        del routine['algo_params']['start_from_current']
+    except KeyError:
+        pass
+    generator = generator_class(vocs=vocs, **routine['algo_params'])
+
+    try:
+        initial_points = routine['config']['init_points']
+        initial_points = DataFrame.from_dict(initial_points)
+    except KeyError:
+        # environment.get_variables(generator.var)
+        initial_points = None
+
+    routine_xopt = Routine(environment=environment, generator=generator,
+                           initial_points=initial_points)
+
+    # Setup Pareto front: soon to die
+    rules = [d[next(iter(d))] for d in routine['config']['objectives']]
+    directions = [parse_rule(rule)['direction'] for rule in rules]
+    pf = ParetoFront(directions)
+    if pf_callback:
+        pf_callback(pf)
+
+    # Save system states if applicable
+    states = environment.get_system_states()
+    if states_callback and (states is not None):
+        states_callback(states)
+
+    # evaluate initial points:
+    # Nikita: more care about the setting var logic, wait or consider timeout/retry
+    result = evaluate_points(initial_points, routine_xopt, evaluate_callback)
+
+    # add measurements to generator
+    generator.add_data(result)
+
+    # perform optimization
+    while True:
+        status = active_callback()
+        if status == 2:
+            raise Exception('Optimization run has been terminated!')
+        elif status == 1:
+            time.sleep(0)
+            continue
+
+        # generate points to observe
+        candidates = generator.generate(1)
+        # generate_callback(generator, candidates)
+        generate_callback(candidates)
+
+        # if still active evaluate the points and add to generator
+        # check active_callback evaluate point
+        result = evaluate_points(candidates, routine_xopt, evaluate_callback)
+
+        # Dump results to file
+
+        # Add data to generator
+        generator.add_data(result)
+
+
+def gui_to_routine(routine: dict) -> Routine:
+    pass
+
+
+def initialize_routine(routine: Routine, callback: Callable) -> None:
+    """
+    Initializes the routine, including the environment
+
+    Parameters
+    ----------
+    routine: Routine
+    """
+
+    routine.environment.initialize()  # sudo code
+    callback(routine.environment)  # check this line
