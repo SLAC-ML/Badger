@@ -492,12 +492,10 @@ def evaluate_points(points: DataFrame, routine: Routine, callback: Callable) \
 
 
 def run_routine_xopt(
-        # routine: Routine,
-        routine: dict,
+        routine: Routine,
         active_callback: Callable,
         generate_callback: Callable,
         evaluate_callback: Callable,
-        environment_callback: Callable,
         pf_callback: Callable,
         states_callback: Callable,
         ) -> None:
@@ -524,51 +522,19 @@ def run_routine_xopt(
         Callback function called after evaluating points that takes the form `f(data:
         DataFrame)`.
 
-    environment_callback : Callable
-        Callback function called after
+    pf_callback : Callable
+        Callback function called after Pareto Front object is instantiated
 
     states_callback : Callable
-        Callback function called after
+        Callback function called after system states is fetched
     """
 
-    from .factory import get_env
-
-    # Initialize routine
-    Environment, configs_env = get_env(routine['env'])
-    _configs_env = merge_params(
-        configs_env, {'params': routine['env_params']})
-    environment = instantiate_env(Environment, _configs_env)
-    if environment_callback:
-        environment_callback(environment)
-
-    variables = {key: value for dictionary in routine['config']['variables']
-                 for key, value in dictionary.items()}
-    objectives = {key: value for dictionary in routine['config']['objectives']
-                  for key, value in dictionary.items()}
-    vocs = {
-        'variables': variables,
-        'objectives': objectives,
-    }
-    generator_class = get_generator(routine['algo'])
-    try:
-        del routine['algo_params']['start_from_current']
-    except KeyError:
-        pass
-    generator = generator_class(vocs=vocs, **routine['algo_params'])
-
-    try:
-        initial_points = routine['config']['init_points']
-        initial_points = DataFrame.from_dict(initial_points)
-    except KeyError:
-        # environment.get_variables(generator.var)
-        initial_points = None
-
-    routine_xopt = Routine(environment=environment, generator=generator,
-                           initial_points=initial_points)
+    environment = routine.environment
+    generator = routine.generator
+    initial_points = routine.initial_points
 
     # Setup Pareto front: soon to die
-    rules = [d[next(iter(d))] for d in routine['config']['objectives']]
-    directions = [parse_rule(rule)['direction'] for rule in rules]
+    directions = [parse_rule(rule)['direction'] for rule in routine.vocs.objectives.values()]
     pf = ParetoFront(directions)
     if pf_callback:
         pf_callback(pf)
@@ -580,7 +546,7 @@ def run_routine_xopt(
 
     # evaluate initial points:
     # Nikita: more care about the setting var logic, wait or consider timeout/retry
-    result = evaluate_points(initial_points, routine_xopt, evaluate_callback)
+    result = evaluate_points(initial_points, routine, evaluate_callback)
 
     # add measurements to generator
     generator.add_data(result)
@@ -601,7 +567,7 @@ def run_routine_xopt(
 
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
-        result = evaluate_points(candidates, routine_xopt, evaluate_callback)
+        result = evaluate_points(candidates, routine, evaluate_callback)
 
         # Dump results to file
 
@@ -611,16 +577,3 @@ def run_routine_xopt(
 
 def gui_to_routine(routine: dict) -> Routine:
     pass
-
-
-def initialize_routine(routine: Routine, callback: Callable) -> None:
-    """
-    Initializes the routine, including the environment
-
-    Parameters
-    ----------
-    routine: Routine
-    """
-
-    routine.environment.initialize()  # sudo code
-    callback(routine.environment)  # check this line
