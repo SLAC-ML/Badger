@@ -9,23 +9,9 @@ from pandas import DataFrame, concat
 from pydantic import BaseModel
 from xopt import Generator
 from .environment import Environment
-from .utils import (
-    range_to_str,
-    yprint,
-    merge_params,
-    ParetoFront,
-    norm,
-    denorm,
-    parse_rule,
-    curr_ts_to_str,
-    dump_state,
-)
-from .errors import (
-    VariableRangeError,
-    BadgerNotImplementedError,
-    BadgerRunTerminatedError,
-    BadgerDBError,
-)
+from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm, \
+     parse_rule, curr_ts_to_str, dump_state
+
 
 
 def process_raw(raw, rule):
@@ -538,14 +524,14 @@ def evaluate_points(
 
 
 def run_routine_xopt(
-    routine: Routine,
-    active_callback: Callable,
-    generate_callback: Callable,
-    evaluate_callback: Callable,
-    pf_callback: Callable,
-    states_callback: Callable,
-    dump_file_callback: Callable = None,
-) -> None:
+        routine: Routine,
+        active_callback: Callable,
+        generate_callback: Callable,
+        evaluate_callback: Callable,
+        pf_callback: Callable,
+        states_callback: Callable,
+        dump_file_callback: Callable,
+        ) -> None:
     """
     Run the provided routine object using Xopt.
 
@@ -599,15 +585,8 @@ def run_routine_xopt(
 
     # add measurements to generator
     generator.add_data(result)
-
-    # Prepare for dumping file
-    if dump_file_callback:
-        combined_results = None
-        ts_start = curr_ts_to_str()
-        dump_file = dump_file_callback()
-        if not dump_file:
-            dump_file = f"xopt_states_{ts_start}.yaml"
-
+    
+    combined_results = None 
     # perform optimization
     while True:
         status = active_callback()
@@ -626,14 +605,18 @@ def run_routine_xopt(
         # check active_callback evaluate point
         result = evaluate_points(candidates, routine, evaluate_callback)
 
-        # Dump Xopt state after each step
-        if dump_file_callback:
-            if combined_results:
-                combined_results = combined_results.concat(result)
-            else:
-                combined_results = result
+        if combined_results:
+            combined_results = combined_results.concat(result)
+        else:
+            combined_results = result
 
-            dump_state(dump_file, generator, combined_results)
+        if dump_file_callback:
+            file_name = dump_file_callback()
+        else:
+            file_name = "routine_results" + curr_ts_to_str() + ".yaml"
+        
+        dump_state(file_name, generator, combined_results)
+        
 
         # Add data to generator
         generator.add_data(result)
