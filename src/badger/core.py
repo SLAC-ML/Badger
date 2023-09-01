@@ -524,12 +524,10 @@ def evaluate_points(
 
 
 def run_routine_xopt(
-        # routine: Routine,
-        routine: dict,
+        routine: Routine,
         active_callback: Callable,
         generate_callback: Callable,
         evaluate_callback: Callable,
-        environment_callback: Callable,
         pf_callback: Callable,
         states_callback: Callable,
         dump_file_callback: Callable,
