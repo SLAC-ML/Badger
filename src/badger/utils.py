@@ -2,7 +2,9 @@ import os
 from datetime import datetime
 import numpy as np
 import yaml
-
+import json
+import logging
+logger = logging.getLogger(__name__)
 
 # https://stackoverflow.com/a/39681672/4263605
 # https://github.com/yaml/pyyaml/issues/234#issuecomment-765894586
@@ -273,3 +275,25 @@ def get_value_or_none(book, key):
         value = None
 
     return value
+
+def dump_state(dump_file, generator, data):
+    """dump data to file"""
+    if dump_file is not None:
+        output = state_to_dict(generator, data)
+        with open(dump_file, "w") as f:
+            yaml.dump(output, f)
+        logger.debug(f"Dumped state to YAML file: {dump_file}")
+
+def state_to_dict(generator, data, include_data=True):
+    # dump data to dict with config metadata
+    output = {
+        "generator": {
+            "name": type(generator).name,
+            **json.loads(generator.json(base_key=type(generator).name)),
+        },
+        "vocs": json.loads(generator.vocs.json()),
+    }
+    if include_data:
+        output["data"] = json.loads(data.to_json())
+    
+    return output
