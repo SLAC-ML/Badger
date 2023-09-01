@@ -187,9 +187,11 @@ class BadgerRoutineRunner(QRunnable):
         try:
             initial_points = routine['config']['init_points']
             initial_points = DataFrame.from_dict(initial_points)
-        except KeyError:
-            # environment.get_variables(generator.var)
-            initial_points = None
+            if initial_points.empty:
+                raise KeyError
+        except KeyError:  # start from current
+            initial_points = environment.get_variables(generator.vocs.variable_names)
+            initial_points = DataFrame(initial_points, index=[0])
 
         routine_xopt = Routine(environment=environment, generator=generator,
                                initial_points=initial_points)
