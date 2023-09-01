@@ -2,6 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 import time
+import copy
 import pandas as pd
 from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
@@ -177,7 +178,11 @@ class BadgerRoutineRunner(QRunnable):
             del routine['algo_params']['start_from_current']
         except KeyError:
             pass
-        generator = generator_class(vocs=vocs, **routine['algo_params'])
+        routine_copy = copy.deepcopy(routine['algo_params'])
+        # Note! The following line will remove all the name fields in
+        # generator params. That's why we make a copy here so the modification
+        # will not affect the routine to be saved (in archive)
+        generator = generator_class(vocs=vocs, **routine_copy)
 
         try:
             initial_points = routine['config']['init_points']
