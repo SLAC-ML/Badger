@@ -4,6 +4,7 @@ import numpy as np
 import yaml
 import json
 import logging
+from .errors import BadgerLoadConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -58,17 +59,17 @@ def load_config(fname):
             configs = yaml.safe_load(fname)
             # A string is also a valid yaml
             if type(configs) is str:
-                raise Exception(f"Error loading config {fname}: file not found")
+                raise BadgerLoadConfigError(f"Error loading config {fname}: file not found")
 
             return configs
         except yaml.YAMLError:
-            raise Exception(f"Error parsing config {fname}: invalid yaml")
+            raise BadgerLoadConfigError(f"Error parsing config {fname}: invalid yaml")
 
     with open(fname, "r") as f:
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            raise Exception(f"Error loading config {fname}: invalid yaml")
+            raise BadgerLoadConfigError(f"Error loading config {fname}: invalid yaml")
 
     return configs
 

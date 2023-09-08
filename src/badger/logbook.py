@@ -4,12 +4,13 @@ import logging
 logger = logging.getLogger(__name__)
 from .settings import read_value
 from .archive import BADGER_ARCHIVE_ROOT
+from .errors import BadgerConfigError, BadgerLogbookError
 
 
 # Check badger logbook root
 BADGER_LOGBOOK_ROOT = read_value('BADGER_LOGBOOK_ROOT')
 if BADGER_LOGBOOK_ROOT is None:
-    raise Exception('Please set the BADGER_LOGBOOK_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_LOGBOOK_ROOT env var!')
 elif not os.path.exists(BADGER_LOGBOOK_ROOT):
     os.makedirs(BADGER_LOGBOOK_ROOT)
     logger.info(
@@ -96,7 +97,7 @@ def screenshot(widget, filename):
     Takes a screenshot of the whole gui window, saves png and ps images to file
     """
     if widget is None:
-        raise Exception('No widget to take screenshot on!')
+        raise BadgerLogbookError('No widget to take screenshot on!')
 
     from PIL import Image
 

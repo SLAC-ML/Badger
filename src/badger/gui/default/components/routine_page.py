@@ -19,6 +19,7 @@ from ..windows.edit_script_dialog import BadgerEditScriptDialog
 from ..windows.docs_window import BadgerDocsWindow
 from .data_table import get_table_content_as_dict, set_init_data_table
 from ....settings import read_value
+from ....errors import BadgerRoutineError
 
 
 CONS_RELATION_DICT = {
@@ -530,7 +531,7 @@ class BadgerRoutinePage(QWidget):
                                                how='all')
         contains_na = init_points_df.isna().any().any()
         if contains_na:
-            raise Exception('Initial points are not valid, please fill in the missing values')
+            raise BadgerRoutineError('Initial points are not valid, please fill in the missing values')
         if init_points_df.empty:
             init_points = None
         else:
