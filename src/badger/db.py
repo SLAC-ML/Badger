@@ -6,12 +6,13 @@ import yaml
 import sqlite3
 from .settings import read_value
 from .utils import ystring
+from .errors import BadgerConfigError, BadgerDBError
 
 
 # Check badger database root
 BADGER_DB_ROOT = read_value('BADGER_DB_ROOT')
 if BADGER_DB_ROOT is None:
-    raise Exception('Please set the BADGER_DB_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_DB_ROOT env var!')
 elif not os.path.exists(BADGER_DB_ROOT):
     os.makedirs(BADGER_DB_ROOT)
     logger.info(
@@ -133,7 +134,7 @@ def load_routine(name):
         # logger.warning(f'Routine {name} not found in the database!')
         return None, None
     else:
-        raise Exception(
+        raise BadgerDBError(
             f'Multiple routines with name {name} found in the database!')
 
 
@@ -281,7 +282,7 @@ def import_routines(filename):
     con.close()
 
     if failed_list:
-        raise Exception(ystring(failed_list))
+        raise BadgerDBError(ystring(failed_list))
 
 
 def export_routines(filename, routine_name_list):

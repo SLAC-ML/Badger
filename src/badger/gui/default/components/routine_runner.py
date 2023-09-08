@@ -11,6 +11,7 @@ from ....utils import curr_ts, ts_to_str, merge_params
 from ....core import run_routine_xopt, instantiate_env, Routine
 from ....settings import read_value
 from ....archive import archive_run
+from ....errors import BadgerRunTerminatedError
 
 
 class BadgerRoutineSignals(QObject):
@@ -61,7 +62,6 @@ class BadgerRoutineRunner(QRunnable):
         self.start_time = time.time()
         self.last_dump_time = None  # reset the timer
 
-        error = None
         try:
             # run_routine(self.routine, True, self.save, self.verbose,
             #             self.before_evaluate, self.after_evaluate,
@@ -73,28 +73,23 @@ class BadgerRoutineRunner(QRunnable):
                              evaluate_callback=self.after_evaluate_xopt,
                              pf_callback=self.pf_ready,
                              states_callback=self.states_ready)
+        except BadgerRunTerminatedError as e:
+            self.signals.finished.emit()
+            self.signals.info.emit(str(e))
         except Exception as e:
-            if 'Optimization run has been terminated!' not in str(e):
-                logger.exception(e)
-            error = e
-
-        self.signals.finished.emit()
-        if error:
-            if 'Optimization run has been terminated!' in str(error):
-                self.signals.info.emit(str(error))
-                return
-
-            self.signals.error.emit(error)
+            logger.exception(e)
+            self.signals.finished.emit()
+            self.signals.error.emit(e)
 
     def before_evaluate(self, vars):
         # vars: ndarray
         while self.is_paused:
             time.sleep(0)
             if self.is_killed:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
 
         if self.is_killed:
-            raise Exception('Optimization run has been terminated!')
+            raise BadgerRunTerminatedError
 
     def after_evaluate(self, vars, obses, cons, stas):
         # vars: ndarray
@@ -135,12 +130,12 @@ class BadgerRoutineRunner(QRunnable):
         if idx == 0:
             max_eval = tc_config['max_eval']
             if self.data.shape[0] >= max_eval:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
         elif idx == 1:
             max_time = tc_config['max_time']
             dt = time.time() - self.start_time
             if dt >= max_time:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
         # elif idx == 2:
         #     ftol = tc_config['ftol']
         #     # Do something
@@ -187,9 +182,11 @@ class BadgerRoutineRunner(QRunnable):
         try:
             initial_points = routine['config']['init_points']
             initial_points = DataFrame.from_dict(initial_points)
-        except KeyError:
-            # environment.get_variables(generator.var)
-            initial_points = None
+            if initial_points.empty:
+                raise KeyError
+        except KeyError:  # start from current
+            initial_points = environment.get_variables(generator.vocs.variable_names)
+            initial_points = DataFrame(initial_points, index=[0])
 
         routine_xopt = Routine(environment=environment, generator=generator,
                                initial_points=initial_points)

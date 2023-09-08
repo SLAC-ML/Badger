@@ -4,25 +4,27 @@ import numpy as np
 import yaml
 import json
 import logging
+from .errors import BadgerLoadConfigError
+
 logger = logging.getLogger(__name__)
+
 
 # https://stackoverflow.com/a/39681672/4263605
 # https://github.com/yaml/pyyaml/issues/234#issuecomment-765894586
 class Dumper(yaml.Dumper):
-
     def increase_indent(self, flow=False, indentless=False):
         return super(Dumper, self).increase_indent(flow, False)
 
 
 def ystring(content):
     if content is None:
-        return ''
+        return ""
 
     return yaml.dump(content, Dumper=Dumper, default_flow_style=False, sort_keys=False)
 
 
 def yprint(content):
-    print(ystring(content), end='')
+    print(ystring(content), end="")
 
 
 def norm(x, lb, ub):
@@ -57,18 +59,17 @@ def load_config(fname):
             configs = yaml.safe_load(fname)
             # A string is also a valid yaml
             if type(configs) is str:
-                raise Exception(
-                    f'Error loading config {fname}: file not found')
+                raise BadgerLoadConfigError(f"Error loading config {fname}: file not found")
 
             return configs
         except yaml.YAMLError:
-            raise Exception(f'Error parsing config {fname}: invalid yaml')
+            raise BadgerLoadConfigError(f"Error parsing config {fname}: invalid yaml")
 
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            raise Exception(f'Error loading config {fname}: invalid yaml')
+            raise BadgerLoadConfigError(f"Error loading config {fname}: invalid yaml")
 
     return configs
 
@@ -93,16 +94,15 @@ def range_to_str(vranges):
         var = next(iter(var_dict))
         vrange = var_dict[var]
         vranges_str.append({})
-        vranges_str[-1][var] = f'{vrange[0]} -> {vrange[1]}'
+        vranges_str[-1][var] = f"{vrange[0]} -> {vrange[1]}"
 
     return vranges_str
 
 
 class ParetoFront:
-
     def __init__(self, rules):
         # rules: ['MAXIMIZE', 'MINIMIZE', ...]
-        self.rules = (np.array(rules) == 'MINIMIZE') * 2 - 1
+        self.rules = (np.array(rules) == "MINIMIZE") * 2 - 1
         self.dimension = len(rules)
         self.pareto_set = None
         self.pareto_front = None
@@ -121,36 +121,35 @@ class ParetoFront:
             return True
 
         # Drop points that are dominated by candidate
-        idx_keep = (scores != self.dimension)
-        self.pareto_front = np.vstack(
-            (self.pareto_front[idx_keep], candidate[1]))
+        idx_keep = scores != self.dimension
+        self.pareto_front = np.vstack((self.pareto_front[idx_keep], candidate[1]))
         self.pareto_set = np.vstack((self.pareto_set[idx_keep], candidate[0]))
         return False
 
 
-def ts_to_str(ts, format='lcls-log'):
-    if format == 'lcls-log':
-        return ts.strftime('%d-%b-%Y %H:%M:%S')
-    elif format == 'lcls-log-full':
-        return ts.strftime('%d-%b-%Y %H:%M:%S.%f')
-    elif format == 'lcls-fname':
-        return ts.strftime('%Y-%m-%d-%H%M%S')
+def ts_to_str(ts, format="lcls-log"):
+    if format == "lcls-log":
+        return ts.strftime("%d-%b-%Y %H:%M:%S")
+    elif format == "lcls-log-full":
+        return ts.strftime("%d-%b-%Y %H:%M:%S.%f")
+    elif format == "lcls-fname":
+        return ts.strftime("%Y-%m-%d-%H%M%S")
     else:  # ISO format
         return ts.isoformat()
 
 
-def str_to_ts(timestr, format='lcls-log'):
-    if format == 'lcls-log':
-        return datetime.strptime(timestr, '%d-%b-%Y %H:%M:%S')
-    elif format == 'lcls-log-full':
-        return datetime.strptime(timestr, '%d-%b-%Y %H:%M:%S.%f')
-    elif format == 'lcls-fname':
-        return datetime.strptime(timestr, '%Y-%m-%d-%H%M%S')
+def str_to_ts(timestr, format="lcls-log"):
+    if format == "lcls-log":
+        return datetime.strptime(timestr, "%d-%b-%Y %H:%M:%S")
+    elif format == "lcls-log-full":
+        return datetime.strptime(timestr, "%d-%b-%Y %H:%M:%S.%f")
+    elif format == "lcls-fname":
+        return datetime.strptime(timestr, "%Y-%m-%d-%H%M%S")
     else:  # ISO format
         return datetime.fromisoformat(timestr)
 
 
-def ts_float_to_str(ts_float, format='lcls-log'):
+def ts_float_to_str(ts_float, format="lcls-log"):
     ts = datetime.fromtimestamp(ts_float)
     return ts_to_str(ts, format)
 
@@ -159,31 +158,28 @@ def curr_ts():
     return datetime.now()
 
 
-def curr_ts_to_str(format='lcls-log'):
+def curr_ts_to_str(format="lcls-log"):
     return ts_to_str(datetime.now(), format)
 
 
 def get_header(routine):
     try:
-        obj_names = [next(iter(d))
-                        for d in routine['config']['objectives']]
+        obj_names = [next(iter(d)) for d in routine["config"]["objectives"]]
     except:
         obj_names = []
     try:
-        var_names = [next(iter(d))
-                        for d in routine['config']['variables']]
+        var_names = [next(iter(d)) for d in routine["config"]["variables"]]
     except:
         var_names = []
     try:
-        if routine['config']['constraints']:
-            con_names = [next(iter(d))
-                            for d in routine['config']['constraints']]
+        if routine["config"]["constraints"]:
+            con_names = [next(iter(d)) for d in routine["config"]["constraints"]]
         else:
             con_names = []
     except:
         con_names = []
     try:
-        sta_names = routine['config']['states'] or []
+        sta_names = routine["config"]["states"] or []
     except KeyError:
         sta_names = []
 
@@ -193,7 +189,7 @@ def get_header(routine):
 def run_names_to_dict(run_names):
     runs = {}
     for name in run_names:
-        tokens = name.split('-')
+        tokens = name.split("-")
         year = tokens[1]
         month = tokens[2]
         day = tokens[3]
@@ -203,13 +199,13 @@ def run_names_to_dict(run_names):
         except:
             runs[year] = {}
             year_dict = runs[year]
-        key_month = f'{year}-{month}'
+        key_month = f"{year}-{month}"
         try:
             month_dict = year_dict[key_month]
         except:
             year_dict[key_month] = {}
             month_dict = year_dict[key_month]
-        key_day = f'{year}-{month}-{day}'
+        key_day = f"{year}-{month}-{day}"
         try:
             day_list = month_dict[key_day]
         except:
@@ -242,29 +238,29 @@ def convert_str_to_value(str):
 def parse_rule(rule):
     if type(rule) is str:
         return {
-            'direction': rule,
-            'filter': 'ignore_nan',
-            'reducer': 'percentile_80',
+            "direction": rule,
+            "filter": "ignore_nan",
+            "reducer": "percentile_80",
         }
 
     # rule is a dict
     try:
-        direction = rule['direction']
+        direction = rule["direction"]
     except:
-        direction = 'MINIMIZE'
+        direction = "MINIMIZE"
     try:
-        filter = rule['filter']
+        filter = rule["filter"]
     except:
-        filter = 'ignore_nan'
+        filter = "ignore_nan"
     try:
-        reducer = rule['reducer']
+        reducer = rule["reducer"]
     except:
-        reducer = 'percentile_80'
+        reducer = "percentile_80"
 
     return {
-        'direction': direction,
-        'filter': filter,
-        'reducer': reducer,
+        "direction": direction,
+        "filter": filter,
+        "reducer": reducer,
     }
 
 
@@ -276,6 +272,7 @@ def get_value_or_none(book, key):
 
     return value
 
+
 def dump_state(dump_file, generator, data):
     """dump data to file"""
     if dump_file is not None:
@@ -283,6 +280,7 @@ def dump_state(dump_file, generator, data):
         with open(dump_file, "w") as f:
             yaml.dump(output, f)
         logger.debug(f"Dumped state to YAML file: {dump_file}")
+
 
 def state_to_dict(generator, data, include_data=True):
     # dump data to dict with config metadata
@@ -295,5 +293,5 @@ def state_to_dict(generator, data, include_data=True):
     }
     if include_data:
         output["data"] = json.loads(data.to_json())
-    
+
     return output

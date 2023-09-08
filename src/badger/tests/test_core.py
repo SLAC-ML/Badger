@@ -7,9 +7,12 @@ from ..utils import range_to_str, yprint, merge_params, ParetoFront, norm, denor
      parse_rule
 from xopt.generators import get_generator
 
+<<<<<<< HEAD
 class result:
     pass 
 
+=======
+>>>>>>> a6825c2aa0b0fd8ed20d0f2db2e60355fd8661ea
 @pytest.fixture
 def mock_dependencies():
     with patch('..core.get_env') as get_env,\
@@ -33,6 +36,7 @@ def mock_dependencies():
             'evaluate_points': evaluate_points
         }
 
+<<<<<<< HEAD
 
 
 def test_run_routine_xopt(mock_dependencies):
@@ -43,6 +47,13 @@ def test_run_routine_xopt(mock_dependencies):
 
     mock_active_callback = Mock()
     mock_generate_callback = Mock()
+=======
+def test_run_routine_xopt(mock_dependencies):
+    mock_active_callback = Mock()
+    mock_generate_callback = Mock()
+    mock_evaluate_callback = Mock()
+    mock_environment_callback = Mock()
+>>>>>>> a6825c2aa0b0fd8ed20d0f2db2e60355fd8661ea
     mock_pf_callback = Mock()
     mock_states_callback = Mock()
 
@@ -101,6 +112,10 @@ def test_run_routine_xopt(mock_dependencies):
         mock_active_callback, 
         mock_generate_callback, 
         mock_evaluate_callback, 
+<<<<<<< HEAD
+=======
+        mock_environment_callback, 
+>>>>>>> a6825c2aa0b0fd8ed20d0f2db2e60355fd8661ea
         mock_pf_callback, 
         mock_states_callback
     )
@@ -112,9 +127,13 @@ def test_run_routine_xopt(mock_dependencies):
     mock_dependencies['get_generator'].assert_called_once_with('upper_confidence_bound')
     mock_dependencies['DataFrame'].assert_called_once_with({"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]})
     mock_dependencies['Routine'].assert_called_once()
+<<<<<<< HEAD
     mock_dependencies['ParetoFront'].assert_called_once()
 
     # asserts output is what is expected 
     # just compare objectives 
 
 
+=======
+    mock_dependencies['ParetoFront'].assert_called_once()
+>>>>>>> a6825c2aa0b0fd8ed20d0f2db2e60355fd8661ea
