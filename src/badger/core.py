@@ -20,6 +20,12 @@ from .utils import (
     curr_ts_to_str,
     dump_state,
 )
+from .errors import (
+    VariableRangeError,
+    BadgerNotImplementedError,
+    BadgerRunTerminatedError,
+    BadgerDBError,
+)
 
 
 def process_raw(raw, rule):
@@ -78,7 +84,7 @@ def normalize_routine(routine):
                 ub = vrange_vocs[1]
 
             if lb >= ub:  # TODO: add logic to deal with the == condition
-                raise Exception(
+                raise VariableRangeError(
                     f"variable {var_name}: lower limit {lb} must be lower than the upper limit {ub}!"
                 )
             var[var_name] = [lb, ub]
@@ -163,7 +169,7 @@ def run_routine(
         try:
             save_routine(routine)
         except sqlite3.IntegrityError:
-            raise Exception(
+            raise BadgerDBError(
                 f'Routine {routine["name"]} already existed in the database! Please choose another name.'
             )
 
@@ -435,7 +441,7 @@ def get_scaling_default_params(name):
             "lambda": 8,
         }
     else:
-        raise Exception(f"scaling function {name} is not supported")
+        raise BadgerNotImplementedError(f"scaling function {name} is not supported")
 
     return default_params
 
@@ -471,7 +477,7 @@ def get_scaling_func(configs):
 
     # TODO: consider remove this branch since it's useless
     else:
-        raise Exception(f"scaling function {name} is not supported")
+        raise BadgerNotImplementedError(f"scaling function {name} is not supported")
 
     return func
 
@@ -606,7 +612,7 @@ def run_routine_xopt(
     while True:
         status = active_callback()
         if status == 2:
-            raise Exception("Optimization run has been terminated!")
+            raise BadgerRunTerminatedError
         elif status == 1:
             time.sleep(0)
             continue

@@ -11,6 +11,7 @@ from ..utils import config_list_to_dict, curr_ts, ts_to_str
 from ..core import run_routine as run
 from ..core import normalize_routine
 from ..settings import read_value
+from ..errors import BadgerRunTerminatedError
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,
@@ -46,7 +47,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
             print('')  # start a new line
             if flush_prompt:  # erase the last prompt
                 sys.stdout.write('\033[F')
-            raise Exception('Optimization run has been terminated!')
+            raise BadgerRunTerminatedError
         storage['paused'] = True
 
     signal.signal(signal.SIGINT, handler)

@@ -4,12 +4,13 @@ logger = logging.getLogger(__name__)
 from .db import save_run, remove_run_by_filename
 from .utils import ts_float_to_str, ystring, load_config
 from .settings import read_value
+from .errors import BadgerConfigError
 
 
 # Check badger optimization run archive root
 BADGER_ARCHIVE_ROOT = read_value('BADGER_ARCHIVE_ROOT')
 if BADGER_ARCHIVE_ROOT is None:
-    raise Exception('Please set the BADGER_ARCHIVE_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_ARCHIVE_ROOT env var!')
 elif not os.path.exists(BADGER_ARCHIVE_ROOT):
     os.makedirs(BADGER_ARCHIVE_ROOT)
     logger.info(

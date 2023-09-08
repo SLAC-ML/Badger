@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, final, ClassVar
 from pydantic import BaseModel
 from .interface import Interface
+from .errors import BadgerEnvVarError, BadgerIntfChannelError
 
 
 def validate_variable_names(func):
@@ -121,13 +122,13 @@ class Environment(BaseModel, ABC):
 
         # If no interface
         if self.interface is None:
-            raise Exception(f'Variables {variable_names_tmp} do not exist in the environment!')
+            raise BadgerEnvVarError(f'Variables {variable_names_tmp} do not exist in the environment!')
 
         # Try reading variable values from the interface
         try:
             variable_outputs_tmp = self.interface.get_values(variable_names_tmp)
         except Exception:  # TODO: specify what exceptions could occur
-            raise Exception(f'Error reading variables {variable_names_tmp} from the interface!')
+            raise BadgerIntfChannelError(f'Error reading variables {variable_names_tmp} from the interface!')
 
         return {**variable_outputs_def, **variable_outputs_tmp}
 
@@ -159,11 +160,11 @@ class Environment(BaseModel, ABC):
 
         # If no interface
         if self.interface is None:
-            raise Exception(f'Variables {variable_names_tmp} do not exist in the environment!')
+            raise BadgerEnvVarError(f'Variables {variable_names_tmp} do not exist in the environment!')
 
         # Heads-up to the users that this behavior is not allowed for now
-        raise Exception(f'Variables {variable_names_tmp} not defined in the environment! ' +
-                        'Setting them through interface is not allowed for safety consideration.')
+        raise BadgerIntfChannelError(f'Variables {variable_names_tmp} not defined in the environment! ' +
+                                     'Setting them through interface is not allowed for safety consideration.')
 
     # Optimizer will only call this method to get observable values
     @final
