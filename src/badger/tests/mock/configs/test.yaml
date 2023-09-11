@@ -1,5 +1,5 @@
 variables:
-  - q1
-  - q2
+  - x1
+  - x2
 objectives:
-  - l2
+  - f

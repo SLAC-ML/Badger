@@ -1,8 +1,0 @@
----
-name: silly
-version: "0.1"
-dependencies:
-  - numpy
-  - badger-opt
-interface:
-  - silly
