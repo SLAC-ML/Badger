@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, ClassVar, Any
 from pydantic import Field, BaseModel
 import pickle
 from .utils import curr_ts
@@ -37,9 +37,9 @@ def log(func):
 
 class Interface(BaseModel, ABC):
 
-    # name: str = Field(..., allow_mutation=False)
-    name: str
-    params: Optional[Dict] = Field({}, description='Interface parameters')
+    name: ClassVar[str]
+    # Put interface params here
+    # params: float = Field(..., description='Example intf parameter')
 
     # Private variables
     _logs: List[Dict] = []  # TODO: Add a property for it?
