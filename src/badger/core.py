@@ -1,17 +1,35 @@
-import time
-import numpy as np
 import logging
+import time
 
-logger = logging.getLogger(__name__)
 from operator import itemgetter
 from typing import Callable
-from pandas import DataFrame, concat
+
+import numpy as np
+
+from pandas import concat, DataFrame
 from pydantic import BaseModel
 from xopt import Generator
-from .environment import Environment
-from .utils import range_to_str, yprint, merge_params, ParetoFront, norm, denorm, \
-     parse_rule, curr_ts_to_str, dump_state
 
+from .environment import Environment
+from .errors import (
+    BadgerDBError,
+    BadgerNotImplementedError,
+    BadgerRunTerminatedError,
+    VariableRangeError,
+)
+from .utils import (
+    curr_ts_to_str,
+    denorm,
+    dump_state,
+    merge_params,
+    norm,
+    ParetoFront,
+    parse_rule,
+    range_to_str,
+    yprint,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def process_raw(raw, rule):
@@ -56,14 +74,18 @@ def normalize_routine(routine):
 
             if vrange_vocs[0] < vrange_default[0]:
                 logger.warning(
-                    f"variable {var_name}: lower limit {vrange_vocs[0]} exceeds the bound, set to the lower bound {vrange_default[0]}"
+                    f"variable {var_name}: lower limit {vrange_vocs[0]} "
+                    + "exceeds the bound, "
+                    + f"set to the lower bound {vrange_default[0]}"
                 )
                 lb = vrange_default[0]
             else:
                 lb = vrange_vocs[0]
             if vrange_vocs[1] > vrange_default[1]:
                 logger.warning(
-                    f"variable {var_name}: upper limit {vrange_vocs[1]} exceeds the bound, set to the upper bound {vrange_default[1]}"
+                    f"variable {var_name}: upper limit {vrange_vocs[1]} "
+                    + "exceeds the bound, "
+                    + f"set to the upper bound {vrange_default[1]}"
                 )
                 ub = vrange_default[1]
             else:
@@ -71,7 +93,8 @@ def normalize_routine(routine):
 
             if lb >= ub:  # TODO: add logic to deal with the == condition
                 raise VariableRangeError(
-                    f"variable {var_name}: lower limit {lb} must be lower than the upper limit {ub}!"
+                    f"variable {var_name}: lower limit {lb} must be "
+                    + f"lower than the upper limit {ub}!"
                 )
             var[var_name] = [lb, ub]
 
@@ -150,13 +173,15 @@ def run_routine(
     # Save routine if specified
     if save:
         import sqlite3
+
         from .db import save_routine
 
         try:
             save_routine(routine)
         except sqlite3.IntegrityError:
             raise BadgerDBError(
-                f'Routine {routine["name"]} already existed in the database! Please choose another name.'
+                f'Routine {routine["name"]} already existed in the database! '
+                + "Please choose another name."
             )
 
     # Set up and run the optimization
@@ -183,7 +208,8 @@ def run_routine(
     # log the optimization progress
     opt_logger = _get_default_logger(verbose)
     var_names = [next(iter(d)) for d in routine["config"]["variables"]]
-    vranges = np.array([d[next(iter(d))] for d in routine["config"]["variables"]])
+    vranges = np.array([d[next(iter(d))] for d
+                        in routine["config"]["variables"]])
     obj_names = [next(iter(d)) for d in routine["config"]["objectives"]]
     rules = [d[next(iter(d))] for d in routine["config"]["objectives"]]
     directions = [parse_rule(rule)["direction"] for rule in rules]
@@ -192,7 +218,8 @@ def run_routine(
         pf_ready(pf)
     if routine["config"]["constraints"]:
         con_names = [next(iter(d)) for d in routine["config"]["constraints"]]
-        thresholds = [d[next(iter(d))] for d in routine["config"]["constraints"]]
+        thresholds = [d[next(iter(d))] for d
+                      in routine["config"]["constraints"]]
     else:
         con_names = []
         thresholds = []
@@ -213,7 +240,7 @@ def run_routine(
 
     def evaluate(X):
         Y = []  # objectives
-        I = []  # inequality constraints
+        IE = []  # inequality constraints
         E = []  # equality constraints
         Xo = []  # normalized readback of variables
 
@@ -231,7 +258,8 @@ def run_routine(
         # Double Check if bounds are violated
         if np.max(X) > 1 or np.min(X) < 0:
             logger.warning(
-                "proposed trial solution exceeds the bounds, solution has been clipped at bounds!"
+                "proposed trial solution exceeds the bounds, "
+                + "solution has been clipped at bounds!"
             )
             X = np.clip(X, 0, 1)
 
@@ -262,7 +290,7 @@ def run_routine(
                 obs_raw = env._get_observables([obj_name])[obj_name]
                 try:
                     obs = float(obs_raw)
-                except:  # obs_raw is a list
+                except Exception:  # obs_raw is a list
                     obs = process_raw(obs_raw, rule_dict)
                 if rule_dict["direction"] == "MAXIMIZE":
                     obses.append(-obs)
@@ -288,7 +316,7 @@ def run_routine(
                     cons_e.append(con - thres)
                 cons_raw.append(con)
             if cons_i:
-                I.append(cons_i)
+                IE.append(cons_i)
             if cons_e:
                 E.append(cons_e)
             cons_raw = np.array(cons_raw, dtype=np.float64)
@@ -299,7 +327,7 @@ def run_routine(
                 # A state could be an observation or a variable
                 try:
                     sta = env._get_observables([sta_name])[sta_name]
-                except:
+                except Exception:
                     sta = env._get_variables([sta_name])[sta_name]
                 states.append(sta)
 
@@ -324,17 +352,17 @@ def run_routine(
                 after_evaluate(_xo, obses_raw, cons_raw, states)
 
         Y = np.array(Y)
-        if I:
-            I = np.array(I)
+        if IE:
+            IE = np.array(IE)
         else:
-            I = None
+            IE = None
         if E:
             E = np.array(E)
         else:
             E = None
         Xo = np.array(Xo)
 
-        return Y, I, E, Xo
+        return Y, IE, E, Xo
 
     # Start the optimization
     print("")
@@ -376,7 +404,8 @@ def run_routine(
 
 
 def instantiate_env(env_class, configs, manager=None):
-    from .factory import get_intf  # have to put here to avoid circular dependencies
+    # Have to put here to avoid circular dependencies
+    from .factory import get_intf
 
     # Configure interface
     # TODO: figure out the correct logic
@@ -427,7 +456,8 @@ def get_scaling_default_params(name):
             "lambda": 8,
         }
     else:
-        raise BadgerNotImplementedError(f"scaling function {name} is not supported")
+        raise BadgerNotImplementedError(
+            f"scaling function {name} is not supported")
 
     return default_params
 
@@ -463,7 +493,8 @@ def get_scaling_func(configs):
 
     # TODO: consider remove this branch since it's useless
     else:
-        raise BadgerNotImplementedError(f"scaling function {name} is not supported")
+        raise BadgerNotImplementedError(
+            f"scaling function {name} is not supported")
 
     return func
 
@@ -524,14 +555,14 @@ def evaluate_points(
 
 
 def run_routine_xopt(
-        routine: Routine,
-        active_callback: Callable,
-        generate_callback: Callable,
-        evaluate_callback: Callable,
-        pf_callback: Callable,
-        states_callback: Callable,
-        dump_file_callback: Callable,
-        ) -> None:
+    routine: Routine,
+    active_callback: Callable,
+    generate_callback: Callable,
+    evaluate_callback: Callable,
+    pf_callback: Callable,
+    states_callback: Callable,
+    dump_file_callback: Callable = None,
+) -> None:
     """
     Run the provided routine object using Xopt.
 
@@ -541,19 +572,19 @@ def run_routine_xopt(
         Routine object created by Badger GUI to run optimization.
 
     active_callback : Callable
-        Callback function that returns an int denoting if optimization/evaluation
-        should proceed.
+        Callback function that returns an int denoting if
+        optimization/evaluation should proceed.
         0: proceed
         1: paused
         2: killed
 
     generate_callback : Callable
-        Callback function called after generating candidate points that takes the form
-        `f(generator: Generator, candidates: DataFrame)`.
+        Callback function called after generating candidate points that takes
+        the form `f(generator: Generator, candidates: DataFrame)`.
 
     evaluate_callback : Callable
-        Callback function called after evaluating points that takes the form `f(data:
-        DataFrame)`.
+        Callback function called after evaluating points that takes the form
+        `f(data: DataFrame)`.
 
     pf_callback : Callable
         Callback function called after Pareto Front object is instantiated
@@ -568,7 +599,8 @@ def run_routine_xopt(
 
     # Setup Pareto front: soon to die
     directions = [
-        parse_rule(rule)["direction"] for rule in routine.vocs.objectives.values()
+        parse_rule(rule)["direction"] for rule
+        in routine.vocs.objectives.values()
     ]
     pf = ParetoFront(directions)
     if pf_callback:
@@ -580,13 +612,21 @@ def run_routine_xopt(
         states_callback(states)
 
     # evaluate initial points:
-    # Nikita: more care about the setting var logic, wait or consider timeout/retry
+    # Nikita: more care about the setting var logic,
+    # wait or consider timeout/retry
     result = evaluate_points(initial_points, routine, evaluate_callback)
 
     # add measurements to generator
     generator.add_data(result)
-    
-    combined_results = None 
+
+    # Prepare for dumping file
+    if dump_file_callback:
+        combined_results = None
+        ts_start = curr_ts_to_str()
+        dump_file = dump_file_callback()
+        if not dump_file:
+            dump_file = f"xopt_states_{ts_start}.yaml"
+
     # perform optimization
     while True:
         status = active_callback()
@@ -606,18 +646,14 @@ def run_routine_xopt(
         # check active_callback evaluate point
         result = evaluate_points(candidates, routine, evaluate_callback)
 
-        if combined_results:
-            combined_results = combined_results.concat(result)
-        else:
-            combined_results = result
-
+        # Dump Xopt state after each step
         if dump_file_callback:
-            file_name = dump_file_callback()
-        else:
-            file_name = "routine_results" + curr_ts_to_str() + ".yaml"
-        
-        dump_state(file_name, generator, combined_results)
-        
+            if combined_results:
+                combined_results = combined_results.concat(result)
+            else:
+                combined_results = result
+
+            dump_state(dump_file, generator, combined_results)
 
         # Add data to generator
         generator.add_data(result)
