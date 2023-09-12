@@ -597,7 +597,8 @@ def run_routine_xopt(
             continue
 
         # generate points to observe
-        candidates = generator.generate(1)
+        candidates = generator.generate(1)[0]
+        candidates = DataFrame(candidates, index=[0])
         # generate_callback(generator, candidates)
         generate_callback(candidates)
 
