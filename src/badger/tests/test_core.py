@@ -7,6 +7,7 @@ from pandas import DataFrame
 from badger.utils import merge_params
 from badger.factory import get_env
 from xopt.generators import get_generator
+from badger.tests.mock.plugins.environments.test import Environment
 
 def mock_routine():
     test_routine = {
@@ -109,8 +110,8 @@ def test_preto_setup(routine, pf_callback, expected):
  
 
 test_save_states_cases = [
-    ("", "", True), 
-    ("", "", False)
+    (Environment(), "", True), 
+    (Environment(), "", False)
 ]
 
 @pytest.mark.parametrize("environment, states_callback, expected", test_save_states_cases)
@@ -138,7 +139,6 @@ def test_set_dump_file(dump_file_callback, expected_type):
     assert isinstance(result, expected_type)
 
 test_run_routine_xopt_cases = [
-    (mock_routine(), "", "", "", "", "", "", ""), 
     (mock_routine(), "", "", "", "", "", "", "")
 ]
 
