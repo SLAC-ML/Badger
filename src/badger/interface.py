@@ -1,32 +1,37 @@
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Any
-from pydantic import Field, BaseModel
 import pickle
+from abc import ABC, abstractmethod
+from typing import Any, ClassVar, Dict, List
+
+from pydantic import BaseModel
+
 from .utils import curr_ts
 
 
 def log(func):
-
     def func_log(*args, **kwargs):
-        if func.__name__ == 'set_values':
-            if 'channel_inputs' in kwargs.keys():
-                channel_inputs = kwargs['channel_inputs']
+        if func.__name__ == "set_values":
+            if "channel_inputs" in kwargs.keys():
+                channel_inputs = kwargs["channel_inputs"]
             else:
                 channel_inputs = args[1]
-            args[0]._logs.append({
-                'timestamp': curr_ts().timestamp(),
-                'action': 'set_values',
-                'channel_inputs': channel_inputs,
-            })
+            args[0]._logs.append(
+                {
+                    "timestamp": curr_ts().timestamp(),
+                    "action": "set_values",
+                    "channel_inputs": channel_inputs,
+                }
+            )
 
             return func(*args, **kwargs)
-        elif func.__name__ == 'get_values':
+        elif func.__name__ == "get_values":
             channel_outputs = func(*args, **kwargs)
-            args[0]._logs.append({
-                'timestamp': curr_ts().timestamp(),
-                'action': 'get_values',
-                'channel_outputs': channel_outputs,
-            })
+            args[0]._logs.append(
+                {
+                    "timestamp": curr_ts().timestamp(),
+                    "action": "get_values",
+                    "channel_outputs": channel_outputs,
+                }
+            )
 
             return channel_outputs
         else:
@@ -36,10 +41,9 @@ def log(func):
 
 
 class Interface(BaseModel, ABC):
-
-    # name: str = Field(..., allow_mutation=False)
-    name: str
-    params: Optional[Dict] = Field({}, description='Interface parameters')
+    name: ClassVar[str]
+    # Put interface params here
+    # params: float = Field(..., description='Example intf parameter')
 
     # Private variables
     _logs: List[Dict] = []  # TODO: Add a property for it?
@@ -57,7 +61,7 @@ class Interface(BaseModel, ABC):
         if not self._logs:
             return
 
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             pickle.dump(self._logs, f)
 
         self._logs = []
@@ -67,7 +71,7 @@ class Interface(BaseModel, ABC):
         if not self._logs:
             return
 
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             pickle.dump(self._logs, f)
 
     # Environment should only call this method to get channels

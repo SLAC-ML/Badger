@@ -1,9 +1,11 @@
-import os
-from datetime import datetime
-import numpy as np
-import yaml
 import json
 import logging
+import os
+from datetime import datetime
+
+import numpy as np
+import yaml
+
 from .errors import BadgerLoadConfigError
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,8 @@ def ystring(content):
     if content is None:
         return ""
 
-    return yaml.dump(content, Dumper=Dumper, default_flow_style=False, sort_keys=False)
+    return yaml.dump(content, Dumper=Dumper, default_flow_style=False,
+                     sort_keys=False)
 
 
 def yprint(content):
@@ -59,17 +62,21 @@ def load_config(fname):
             configs = yaml.safe_load(fname)
             # A string is also a valid yaml
             if type(configs) is str:
-                raise BadgerLoadConfigError(f"Error loading config {fname}: file not found")
+                raise BadgerLoadConfigError(
+                    f"Error loading config {fname}: file not found"
+                )
 
             return configs
         except yaml.YAMLError:
-            raise BadgerLoadConfigError(f"Error parsing config {fname}: invalid yaml")
+            err_msg = f"Error parsing config {fname}: invalid yaml"
+            raise BadgerLoadConfigError(err_msg)
 
     with open(fname, "r") as f:
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            raise BadgerLoadConfigError(f"Error loading config {fname}: invalid yaml")
+            err_msg = f"Error loading config {fname}: invalid yaml"
+            raise BadgerLoadConfigError(err_msg)
 
     return configs
 
@@ -122,7 +129,8 @@ class ParetoFront:
 
         # Drop points that are dominated by candidate
         idx_keep = scores != self.dimension
-        self.pareto_front = np.vstack((self.pareto_front[idx_keep], candidate[1]))
+        self.pareto_front = np.vstack((self.pareto_front[idx_keep],
+                                       candidate[1]))
         self.pareto_set = np.vstack((self.pareto_set[idx_keep], candidate[0]))
         return False
 
@@ -165,18 +173,19 @@ def curr_ts_to_str(format="lcls-log"):
 def get_header(routine):
     try:
         obj_names = [next(iter(d)) for d in routine["config"]["objectives"]]
-    except:
+    except Exception:
         obj_names = []
     try:
         var_names = [next(iter(d)) for d in routine["config"]["variables"]]
-    except:
+    except Exception:
         var_names = []
     try:
         if routine["config"]["constraints"]:
-            con_names = [next(iter(d)) for d in routine["config"]["constraints"]]
+            con_names = [next(iter(d)) for d in
+                         routine["config"]["constraints"]]
         else:
             con_names = []
-    except:
+    except Exception:
         con_names = []
     try:
         sta_names = routine["config"]["states"] or []
@@ -196,19 +205,19 @@ def run_names_to_dict(run_names):
 
         try:
             year_dict = runs[year]
-        except:
+        except Exception:
             runs[year] = {}
             year_dict = runs[year]
         key_month = f"{year}-{month}"
         try:
             month_dict = year_dict[key_month]
-        except:
+        except Exception:
             year_dict[key_month] = {}
             month_dict = year_dict[key_month]
         key_day = f"{year}-{month}-{day}"
         try:
             day_list = month_dict[key_day]
-        except:
+        except Exception:
             month_dict[key_day] = []
             day_list = month_dict[key_day]
         day_list.append(name)
@@ -246,15 +255,15 @@ def parse_rule(rule):
     # rule is a dict
     try:
         direction = rule["direction"]
-    except:
+    except Exception:
         direction = "MINIMIZE"
     try:
         filter = rule["filter"]
-    except:
+    except Exception:
         filter = "ignore_nan"
     try:
         reducer = rule["reducer"]
-    except:
+    except Exception:
         reducer = "percentile_80"
 
     return {
