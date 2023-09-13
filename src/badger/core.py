@@ -536,6 +536,48 @@ def evaluate_points(
     return points_eval
 
 
+def preto_setup(routine, pf_callback):
+    # Setup Pareto front: soon to die
+    directions = [
+        parse_rule(rule)["direction"] for rule in routine.vocs.objectives.values()
+    ]
+    pf = ParetoFront(directions)
+    if pf_callback:
+        pf_callback(pf)
+        return True 
+    else: 
+        return False
+
+
+def save_states(environment, states_callback):
+    # Save system states if applicable
+    states = environment.get_system_states()
+    if states_callback and (states is not None):
+        states_callback(states)
+        return True 
+    else: 
+        return False 
+
+
+def evaluate_initial_points(initial_points, routine, evaluate_callback):
+    # evaluate initial points:
+    # Nikita: more care about the setting var logic, wait or consider timeout/retry
+    result = evaluate_points(initial_points, routine, evaluate_callback)
+    return result
+
+
+def set_dump_file(dump_file_callback):
+    # Prepare for dumping file
+    if dump_file_callback:
+        ts_start = curr_ts_to_str()
+        dump_file = dump_file_callback()
+        if not dump_file:
+            dump_file = f"xopt_states_{ts_start}.yaml"
+        return dump_file
+    else:
+        return None  
+    
+
 def run_routine_xopt(
     routine: Routine,
     active_callback: Callable,
@@ -579,33 +621,15 @@ def run_routine_xopt(
     generator = routine.generator
     initial_points = routine.initial_points
 
-    # Setup Pareto front: soon to die
-    directions = [
-        parse_rule(rule)["direction"] for rule in routine.vocs.objectives.values()
-    ]
-    pf = ParetoFront(directions)
-    if pf_callback:
-        pf_callback(pf)
-
-    # Save system states if applicable
-    states = environment.get_system_states()
-    if states_callback and (states is not None):
-        states_callback(states)
-
-    # evaluate initial points:
-    # Nikita: more care about the setting var logic, wait or consider timeout/retry
-    result = evaluate_points(initial_points, routine, evaluate_callback)
-
+    preto_setup(routine, pf_callback)
+    save_states(environment, states_callback)
+    result = evaluate_initial_points(initial_points, routine, evaluate_callback)
+    
     # add measurements to generator
     generator.add_data(result)
 
-    # Prepare for dumping file
-    if dump_file_callback:
-        combined_results = None
-        ts_start = curr_ts_to_str()
-        dump_file = dump_file_callback()
-        if not dump_file:
-            dump_file = f"xopt_states_{ts_start}.yaml"
+    dump_file = set_dump_file(dump_file_callback)
+    combined_results = None 
 
     # perform optimization
     while True:
