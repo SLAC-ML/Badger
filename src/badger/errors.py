@@ -24,6 +24,10 @@ class BadgerEnvVarError(Exception):
     pass
 
 
+class BadgerEnvObsError(Exception):
+    pass
+
+
 class BadgerIntfChannelError(Exception):
     pass
 
