@@ -2,7 +2,11 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, final, ClassVar
 from pydantic import BaseModel
 from .interface import Interface
-from .errors import BadgerEnvVarError, BadgerIntfChannelError
+from .errors import (
+    BadgerEnvVarError,
+    BadgerIntfChannelError,
+    BadgerEnvObsError
+)
 
 
 def validate_variable_names(func):
@@ -10,7 +14,7 @@ def validate_variable_names(func):
         variable_names_invalid = [name for name in variable_names
                                   if name not in cls.variables]
         if len(variable_names_invalid):
-            raise ValueError(f"Variables {variable_names_invalid} not found in environment")
+            raise BadgerEnvVarError(f"Variables {variable_names_invalid} not found in environment")
 
         return func(cls, variable_names)
 
@@ -22,7 +26,7 @@ def validate_observable_names(func):
         observable_names_invalid = [name for name in observable_names
                                     if name not in cls.observables]
         if len(observable_names_invalid):
-            raise ValueError(f"Observables {observable_names_invalid} not found in environment")
+            raise BadgerEnvObsError(f"Observables {observable_names_invalid} not found in environment")
 
         return func(cls, observable_names)
 
@@ -38,7 +42,7 @@ def validate_setpoints(func):
             upper = _bounds[name][1]
 
             if value > upper or value < lower:
-                raise ValueError(f"Input point for {name} is outside its bounds {_bounds[name]}")
+                raise BadgerEnvVarError(f"Input point for {name} is outside its bounds {_bounds[name]}")
 
         return func(cls, variable_inputs)
 
