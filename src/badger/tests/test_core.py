@@ -7,6 +7,7 @@ from badger.factory import get_env
 from xopt.generators import get_generator
 from badger.tests.mock.plugins.environments.test import Environment
 import pandas as pd
+import os
 
 class TestCore(unittest.TestCase):    
     def __init__(self, *args, **kwargs) -> None:
@@ -156,7 +157,8 @@ class TestCore(unittest.TestCase):
         assert self.pf is not None 
         assert self.states is None 
         
-        # check if "test.yaml exists"
+        path = "./test.yaml"
+        assert os.path.exists(path) == True
 
     def evaluate_points_callback(self, points_eval):
          self.points_eval = points_eval 
