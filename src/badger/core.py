@@ -648,8 +648,9 @@ def run_routine_xopt(
 
         # Dump Xopt state after each step
         if dump_file_callback:
-            if combined_results:
-                combined_results = combined_results.concat(result)
+            if combined_results is not None:
+                combined_results = concat(
+                    [combined_results, result], axis=0).reset_index(drop=True)
             else:
                 combined_results = result
 
