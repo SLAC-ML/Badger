@@ -31,7 +31,7 @@ setup(
             'pytest-qt'
         ]
     },
-    python_requires='>=3.6',
+    python_requires='>=3.9',
     entry_points={
         'console_scripts': [
             'badger = badger.__main__:main'
