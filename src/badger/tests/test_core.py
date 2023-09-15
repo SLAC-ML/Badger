@@ -5,38 +5,53 @@ import pandas as pd
 from typing import Type
 from xopt.generators import get_generator
 from badger.utils import merge_params
-from badger.core import (run_routine_xopt, evaluate_points, Routine, instantiate_env)
+from badger.core import (
+    run_routine_xopt,
+    evaluate_points,
+    Routine,
+    instantiate_env,
+)
 from badger.errors import BadgerRunTerminatedError
-class TestCore:  
+
+
+class TestCore:
     """
-    This class is to provide unit test coverage for the core.py file. 
-    """  
+    This class is to provide unit test coverage for the core.py file.
+    """
+
     def prepare(self, *args, **kwargs) -> None:
         super(TestCore, self).__init__(*args, **kwargs)
         self.count = 0
         self.points_eval = None
-        self.candidates = None 
+        self.candidates = None
         self.points_eval_list = []
         self.candidates_list = []
         self.states = None
-        
+
         data = {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]}
-        data_eval_target = {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5], "f": [1.0]}
+        data_eval_target = {
+            "x0": [0.5],
+            "x1": [0.5],
+            "x2": [0.5],
+            "x3": [0.5],
+            "f": [1.0],
+        }
 
         self.points = pd.DataFrame(data)
-        
+
         self.points_eval_target = pd.DataFrame(data_eval_target)
 
         self.test_evaluate_points_cases = [
-            (self.points, 
-             self.mock_routine, 
-             self.evaluate_points_callback, 
-             self.points_eval_target)]
+            (
+                self.points,
+                self.mock_routine,
+                self.evaluate_points_callback,
+                self.points_eval_target,
+            )
+        ]
 
-        
     def mock_routine(self) -> Type[Routine]:
-        """
-        """
+        """ """
         from badger.factory import get_env
 
         test_routine = {
@@ -80,125 +95,147 @@ class TestCore:
                 "states": None,
                 "domain_scaling": None,
                 "tags": None,
-                "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
+                "init_points": {
+                    "x0": [0.5],
+                    "x1": [0.5],
+                    "x2": [0.5],
+                    "x3": [0.5],
+                },
             },
         }
-        
+
         # Initialize routine
-        Environment, configs_env = get_env(test_routine['env'])
-        _configs_env = merge_params(configs_env, {'params': test_routine['env_params']})
+        Environment, configs_env = get_env(test_routine["env"])
+        _configs_env = merge_params(
+            configs_env, {"params": test_routine["env_params"]}
+        )
         environment = instantiate_env(Environment, _configs_env)
 
         # self.env_ready(environment)
-        
-        variables = {key: value for dictionary in test_routine['config']['variables']
-                        for key, value in dictionary.items()}
-        objectives = {key: value for dictionary in test_routine['config']['objectives']
-                        for key, value in dictionary.items()}
+
+        variables = {
+            key: value
+            for dictionary in test_routine["config"]["variables"]
+            for key, value in dictionary.items()
+        }
+        objectives = {
+            key: value
+            for dictionary in test_routine["config"]["objectives"]
+            for key, value in dictionary.items()
+        }
         vocs = {
-                'variables': variables,
-                'objectives': objectives,
-            }
-        
-        generator_class = get_generator(test_routine['algo'])
-        
+            "variables": variables,
+            "objectives": objectives,
+        }
+
+        generator_class = get_generator(test_routine["algo"])
+
         try:
-            del test_routine['algo_params']['start_from_current']
+            del test_routine["algo_params"]["start_from_current"]
         except KeyError:
             pass
-        
-        del test_routine['algo_params']['n_candidates']
-        del test_routine['algo_params']['fixed_features']
 
-        test_routine_copy = copy.deepcopy(test_routine['algo_params'])
+        del test_routine["algo_params"]["n_candidates"]
+        del test_routine["algo_params"]["fixed_features"]
+
+        test_routine_copy = copy.deepcopy(test_routine["algo_params"])
 
         generator = generator_class(vocs=vocs, **test_routine_copy)
 
         # TODO -- this need changing to remove try except
         try:
-            initial_points = test_routine['config']['init_points']
+            initial_points = test_routine["config"]["init_points"]
             initial_points = pd.DataFrame.from_dict(initial_points)
             if initial_points.empty:
-                    raise KeyError
+                raise KeyError
         except KeyError:  # start from current
-            initial_points = environment.get_variables(generator.vocs.variable_names)
+            initial_points = environment.get_variables(
+                generator.vocs.variable_names
+            )
             initial_points = pd.DataFrame(initial_points, index=[0])
 
-        test_routine_xopt = Routine(environment=environment, generator=generator,
-                                initial_points=initial_points)
-        
+        test_routine_xopt = Routine(
+            environment=environment,
+            generator=generator,
+            initial_points=initial_points,
+        )
+
         return test_routine_xopt
 
-
     def mock_active_callback(self) -> int:
-        """
-        """
+        """ """
         if self.count >= 5:
             return 2
         else:
             return 0
 
     def mock_generate_callback(self, candidates) -> None:
-        """
-        """
+        """ """
         self.candidates_list.append(candidates)
 
     def mock_evaluate_callback(self, points_eval: pd.DataFrame) -> None:
-        """
-        """
-        self.points_eval_list.append(points_eval) 
+        """ """
+        self.points_eval_list.append(points_eval)
         self.count += 1
 
     def mock_pf_callback(self, pf) -> None:
-        """
-        """
-        self.pf = pf 
+        """ """
+        self.pf = pf
 
     def mock_states_callback(self, states) -> None:
-        """
-        """
-        self.states = states 
- 
+        """ """
+        self.states = states
+
     def mock_dump_file_callback(self) -> str:
-        """
-        """
-        return "test.yaml"   
+        """ """
+        return "test.yaml"
 
     def test_run_routine_xopt(self) -> None:
-        """
-        """
+        """ """
         self.prepare()
         routine = self.mock_routine()
-        
-        with pytest.raises(BadgerRunTerminatedError):
-            run_routine_xopt(routine, self.mock_active_callback, self.mock_generate_callback,
-                            self.mock_evaluate_callback, self.mock_pf_callback, self.mock_states_callback, 
-                            self.mock_dump_file_callback)
-        
-        assert len(self.candidates_list) == self.count - 1
-        assert len(self.points_eval_list) == self.count 
 
-        assert self.pf is not None 
+        with pytest.raises(BadgerRunTerminatedError):
+            run_routine_xopt(
+                routine,
+                self.mock_active_callback,
+                self.mock_generate_callback,
+                self.mock_evaluate_callback,
+                self.mock_pf_callback,
+                self.mock_states_callback,
+                self.mock_dump_file_callback,
+            )
+
+        assert len(self.candidates_list) == self.count - 1
+        assert len(self.points_eval_list) == self.count
+
+        assert self.pf is not None
         assert self.states is None
-        
+
         path = "./test.yaml"
-        assert os.path.exists(path) == True
+        assert os.path.exists(path) is True
         os.remove("./test.yaml")
 
     def evaluate_points_callback(self, points_eval: pd.DataFrame) -> None:
-        """
-        """
-        self.points_eval = points_eval 
+        """ """
+        self.points_eval = points_eval
 
     def test_evaluate_points(self) -> None:
-        """
-        """
+        """ """
         self.prepare()
         routine = self.mock_routine()
-        
-        assert routine.environment.get_variables(['x1', 'x2']) == {'x1': 0, 'x2': 0}
-        evaluate_points_result = evaluate_points(self.points, routine, self.evaluate_points_callback)
 
-        assert evaluate_points_result.astype(float).equals(self.points_eval_target.astype(float))
-        assert self.points_eval.astype(float).equals(self.points_eval_target.astype(float))
+        assert routine.environment.get_variables(["x1", "x2"]) == {
+            "x1": 0,
+            "x2": 0,
+        }
+        evaluate_points_result = evaluate_points(
+            self.points, routine, self.evaluate_points_callback
+        )
 
+        assert evaluate_points_result.astype(float).equals(
+            self.points_eval_target.astype(float)
+        )
+        assert self.points_eval.astype(float).equals(
+            self.points_eval_target.astype(float)
+        )
