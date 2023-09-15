@@ -131,6 +131,7 @@ class BadgerRoutineRunner(QRunnable):
             max_eval = tc_config['max_eval']
             if self.data.shape[0] >= max_eval:
                 raise BadgerRunTerminatedError
+
         elif idx == 1:
             max_time = tc_config['max_time']
             dt = time.time() - self.start_time
