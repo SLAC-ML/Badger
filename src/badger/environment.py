@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from .errors import (
     BadgerEnvObsError,
     BadgerEnvVarError,
-    BadgerIntfChannelError
+    BadgerInterfaceChannelError,
+    BadgerNoInterfaceError,
 )
 from .interface import Interface
 
@@ -82,17 +83,20 @@ class Environment(BaseModel, ABC):
     ############################################################
 
     def get_variables(self, variable_names: List[str]) -> Dict:
-        assert self.interface, "Must provide an interface!"
+        if not self.interface:
+            raise BadgerNoInterfaceError
 
         return self.interface.get_values(variable_names)
 
     def set_variables(self, variable_inputs: Dict[str, float]):
-        assert self.interface, "Must provide an interface!"
+        if not self.interface:
+            raise BadgerNoInterfaceError
 
         return self.interface.set_values(variable_inputs)
 
     def get_observables(self, observable_names: List[str]) -> Dict:
-        assert self.interface, "Must provide an interface!"
+        if not self.interface:
+            raise BadgerNoInterfaceError
 
         return self.interface.get_values(observable_names)
 
@@ -146,7 +150,7 @@ class Environment(BaseModel, ABC):
             variable_outputs_tmp = self.interface.get_values(
                 variable_names_tmp)
         except Exception:  # TODO: specify what exceptions could occur
-            raise BadgerIntfChannelError(
+            raise BadgerInterfaceChannelError(
                 f"Error reading variables {variable_names_tmp} "
                 + "from the interface!"
             )
@@ -195,7 +199,7 @@ class Environment(BaseModel, ABC):
             + "not defined in the environment! "
             + "Setting them through interface is not allowed."
         )
-        raise BadgerIntfChannelError(err_msg)
+        raise BadgerInterfaceChannelError(err_msg)
 
     # Optimizer will only call this method to get observable values
     @final
