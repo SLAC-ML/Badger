@@ -1,6 +1,7 @@
 import torch
 from typing import Dict
 from badger import environment
+from badger.errors import BadgerNoInterfaceError
 
 
 class Environment(environment.Environment):
@@ -12,7 +13,8 @@ class Environment(environment.Environment):
     flag = 0
 
     def set_variables(self, variable_inputs: Dict[str, float]):
-        assert self.interface, 'Must provide an interface!'
+        if not self.interface:
+            raise BadgerNoInterfaceError
 
         self.interface.set_values(variable_inputs)
         full_outputs = self.interface.get_values(self.variable_names)
