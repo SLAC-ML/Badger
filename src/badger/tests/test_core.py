@@ -4,7 +4,7 @@ import pytest
 import pandas as pd
 from typing import Type
 from xopt.generators import get_generator
-from badger.utils import merge_params
+from badger.utils import merge_params, ParetoFront
 from badger.core import (
     run_routine_xopt,
     evaluate_points,
@@ -19,7 +19,8 @@ class TestCore:
     This class is to provide unit test coverage for the core.py file.
     """
 
-    def prepare(self, *args, **kwargs) -> None:
+    @pytest.fixture(autouse=True, scope="function")
+    def test_core_setup(self, *args, **kwargs) -> None:
         super(TestCore, self).__init__(*args, **kwargs)
         self.count = 0
         self.points_eval = None
@@ -45,13 +46,16 @@ class TestCore:
             (
                 self.points,
                 self.mock_routine,
-                self.evaluate_points_callback,
+                self.mock_evaluate_points_callback,
                 self.points_eval_target,
             )
         ]
 
     def mock_routine(self) -> Type[Routine]:
-        """ """
+        """
+        A method that creates a Routine class object
+        filled with sample data for testing purposes.
+        """
         from badger.factory import get_env
 
         test_routine = {
@@ -111,8 +115,6 @@ class TestCore:
         )
         environment = instantiate_env(Environment, _configs_env)
 
-        # self.env_ready(environment)
-
         variables = {
             key: value
             for dictionary in test_routine["config"]["variables"]
@@ -130,11 +132,7 @@ class TestCore:
 
         generator_class = get_generator(test_routine["algo"])
 
-        try:
-            del test_routine["algo_params"]["start_from_current"]
-        except KeyError:
-            pass
-
+        del test_routine["algo_params"]["start_from_current"]
         del test_routine["algo_params"]["n_candidates"]
         del test_routine["algo_params"]["fixed_features"]
 
@@ -142,17 +140,8 @@ class TestCore:
 
         generator = generator_class(vocs=vocs, **test_routine_copy)
 
-        # TODO -- this need changing to remove try except
-        try:
-            initial_points = test_routine["config"]["init_points"]
-            initial_points = pd.DataFrame.from_dict(initial_points)
-            if initial_points.empty:
-                raise KeyError
-        except KeyError:  # start from current
-            initial_points = environment.get_variables(
-                generator.vocs.variable_names
-            )
-            initial_points = pd.DataFrame(initial_points, index=[0])
+        initial_points = test_routine["config"]["init_points"]
+        initial_points = pd.DataFrame.from_dict(initial_points)
 
         test_routine_xopt = Routine(
             environment=environment,
@@ -163,36 +152,56 @@ class TestCore:
         return test_routine_xopt
 
     def mock_active_callback(self) -> int:
-        """ """
+        """
+        A mock active callback method to test
+        if active callback is functioning properly.
+        """
         if self.count >= 5:
             return 2
         else:
             return 0
 
-    def mock_generate_callback(self, candidates) -> None:
-        """ """
+    def mock_generate_callback(self, candidates: pd.DataFrame) -> None:
+        """
+        A mock generate callback method to test
+        if generate callback is functioning properly.
+        """
         self.candidates_list.append(candidates)
 
     def mock_evaluate_callback(self, points_eval: pd.DataFrame) -> None:
-        """ """
+        """
+        A mock evaluate callback method to test
+        if evaluate callback is functioning properly.
+        """
         self.points_eval_list.append(points_eval)
         self.count += 1
 
-    def mock_pf_callback(self, pf) -> None:
-        """ """
+    def mock_pf_callback(self, pf: Type[ParetoFront]) -> None:
+        """
+        A mock pareto callback method to test
+        if pareto callback is functioning properly.
+        """
         self.pf = pf
 
-    def mock_states_callback(self, states) -> None:
-        """ """
+    def mock_states_callback(self, states: dict) -> None:
+        """
+        A mock states callback method to test
+        if states callback is functioning properly.
+        """
         self.states = states
 
     def mock_dump_file_callback(self) -> str:
-        """ """
+        """
+        A mock dump file callback method to test
+        if dump file callback is functioning properly.
+        """
         return "test.yaml"
 
     def test_run_routine_xopt(self) -> None:
-        """ """
-        self.prepare()
+        """
+        A unit test to ensure the core functionality
+        of run_routine_xopt is functioning as intended.
+        """
         routine = self.mock_routine()
 
         with pytest.raises(BadgerRunTerminatedError):
@@ -216,13 +225,18 @@ class TestCore:
         assert os.path.exists(path) is True
         os.remove("./test.yaml")
 
-    def evaluate_points_callback(self, points_eval: pd.DataFrame) -> None:
-        """ """
+    def mock_evaluate_points_callback(self, points_eval: pd.DataFrame) -> None:
+        """
+        A mock callback method to test if callback method passed
+        to the evaluate_points method is functioning properly.
+        """
         self.points_eval = points_eval
 
     def test_evaluate_points(self) -> None:
-        """ """
-        self.prepare()
+        """
+        A unit test to ensure the core functionality of evaluate_points
+        is functioning as intended.
+        """
         routine = self.mock_routine()
 
         assert routine.environment.get_variables(["x1", "x2"]) == {
@@ -230,7 +244,7 @@ class TestCore:
             "x2": 0,
         }
         evaluate_points_result = evaluate_points(
-            self.points, routine, self.evaluate_points_callback
+            self.points, routine, self.mock_evaluate_points_callback
         )
 
         assert evaluate_points_result.astype(float).equals(
