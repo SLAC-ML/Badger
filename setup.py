@@ -22,7 +22,8 @@ setup(
         'qdarkstyle',
         'pillow',
         'requests',
-        'tqdm'
+        'tqdm',
+        'xopt'
     ],
     extras_require={
         'dev': [
@@ -30,7 +31,7 @@ setup(
             'pytest-qt'
         ]
     },
-    python_requires='>=3.6',
+    python_requires='>=3.9',
     entry_points={
         'console_scripts': [
             'badger = badger.__main__:main'

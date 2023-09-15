@@ -10,6 +10,8 @@ from ..utils import load_config, merge_params
 from ..utils import config_list_to_dict, curr_ts, ts_to_str
 from ..core import run_routine as run
 from ..core import normalize_routine
+from ..settings import read_value
+from ..errors import BadgerRunTerminatedError
 
 
 def run_n_archive(routine, yes=False, save=False, verbose=2,
@@ -32,22 +34,26 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         sta_names = []
     # Store solutions in a list to avoid global var def
     solutions = []
-
-    status = {}
-    status['paused'] = False
+    # Store system states and other stuff
+    storage = {
+        'states': None,
+        'env': None,
+        'ts_last_dump': None,
+        'paused': False,
+    }
 
     def handler(*args):
-        if status['paused'] == True:
+        if storage['paused']:
             print('')  # start a new line
             if flush_prompt:  # erase the last prompt
                 sys.stdout.write('\033[F')
-            raise Exception('Optimization run has been terminated!')
-        status['paused'] = True
+            raise BadgerRunTerminatedError
+        storage['paused'] = True
 
     signal.signal(signal.SIGINT, handler)
 
     def before_evaluate(vars):
-        if status['paused'] == True:
+        if storage['paused']:
             res = input('Optimization paused. Press Enter to resume or Ctrl/Cmd + C to terminate: ')
             while res != '':
                 if flush_prompt:
@@ -55,7 +61,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
                 res = input(f'Invalid choice: {res}. Please press Enter to resume or Ctrl/Cmd + C to terminate: ')
             if flush_prompt:
                 sys.stdout.write('\033[F')
-        status['paused'] =  False
+        storage['paused'] = False
 
     def after_evaluate(vars, obses, cons, stas):
         # vars: ndarray
@@ -63,13 +69,27 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         # cons: ndarray
         # stas: list
         ts = curr_ts()
-        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
+        ts_float = ts.timestamp()
+        solution = [ts_float, ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + stas
         solutions.append(solution)
+
+        # Try dump the run data and interface log to the disk
+        dump_period = read_value('BADGER_DATA_DUMP_PERIOD')
+        ts_last_dump = storage['ts_last_dump']
+        if (ts_last_dump is None) or (ts_float - ts_last_dump > dump_period):
+            storage['ts_last_dump'] = ts_float
+            df = pd.DataFrame(solutions, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
+            _run = archive_run(routine, df, storage['states'])
+            # Try dump the interface logs
+            try:
+                path = _run['path']
+                filename = _run['filename'][:-4] + 'pickle'
+                storage['env'].interface.dump_recording(os.path.join(path, filename))
+            except:
+                pass
+
         # take a break to let the outside signal to change the status
         time.sleep(sleep)
-
-    # Store system states and other stuff
-    storage = {'states': None, 'env': None}
 
     def states_ready(states):
         storage['states'] = states

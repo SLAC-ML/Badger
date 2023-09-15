@@ -5,10 +5,13 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
 )
+from PyQt5.QtCore import pyqtSignal
 from .robust_spinbox import RobustSpinBox
 
 
 class VariableTable(QTableWidget):
+    sig_sel_changed = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -88,6 +91,8 @@ class VariableTable(QTableWidget):
             _cb = self.cellWidget(i, 0)
             name = self.item(i, 1).text()
             self.selected[name] = _cb.isChecked()
+
+        self.sig_sel_changed.emit()
 
         if self.checked_only:
             self.show_checked_only()
@@ -187,6 +192,8 @@ class VariableTable(QTableWidget):
         header = self.horizontalHeader()
         # header.setSectionResizeMode(0, QHeaderView.Interactive)
         header.setVisible(True)
+
+        self.sig_sel_changed.emit()
 
     def add_variable(self, name, lb, ub):
         var = {}

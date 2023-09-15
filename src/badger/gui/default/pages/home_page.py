@@ -16,6 +16,7 @@ from ....db import list_routine, load_routine, remove_routine, get_runs_by_routi
 from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
 from ....utils import get_header
+from ....settings import read_value
 
 
 stylesheet = '''
@@ -82,6 +83,8 @@ class BadgerHomePage(QWidget):
 
         # Filters
         self.filter_box = filter_box = BadgerFilterBox(self, title=' Filters')
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            filter_box.hide()
         vbox_routine.addWidget(filter_box)
 
         # Routine list

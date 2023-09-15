@@ -1,252 +1,223 @@
-import numpy as np
-import time
-from abc import ABC, abstractmethod
-from typing import List
+from abc import ABC
+from typing import ClassVar, Dict, final, List, Optional
+
+from pydantic import BaseModel
+
+from .errors import (
+    BadgerEnvObsError,
+    BadgerEnvVarError,
+    BadgerInterfaceChannelError,
+    BadgerNoInterfaceError,
+)
 from .interface import Interface
-from .utils import merge_params
-from .settings import read_value
 
 
-BADGER_CHECK_VAR_INTERVAL = float(read_value('BADGER_CHECK_VAR_INTERVAL'))
-BADGER_CHECK_VAR_TIMEOUT = float(read_value('BADGER_CHECK_VAR_TIMEOUT'))
+def validate_variable_names(func):
+    def validate(cls, variable_names: List[str]):
+        variable_names_invalid = [
+            name for name in variable_names if name not in cls.variables
+        ]
+        if len(variable_names_invalid):
+            raise BadgerEnvVarError(
+                f"Variables {variable_names_invalid} not found in environment"
+            )
+
+        return func(cls, variable_names)
+
+    return validate
 
 
-class Environment(ABC):
+def validate_observable_names(func):
+    def validate(cls, observable_names: List[str]):
+        observable_names_invalid = [
+            name for name in observable_names if name not in cls.observables
+        ]
+        if len(observable_names_invalid):
+            raise BadgerEnvObsError(
+                f"Observables {observable_names_invalid} "
+                + "not found in environment"
+            )
 
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
+        return func(cls, observable_names)
 
-    @abstractmethod
-    def __init__(self, interface: Interface, params=None):
-        self.interface = interface
-        self.params = merge_params(self.get_default_params(), params)
+    return validate
 
-    # List all available variables
-    @staticmethod
-    @abstractmethod
-    def list_vars() -> List[str]:
-        pass
 
-    # List all available observations
-    @staticmethod
-    @abstractmethod
-    def list_obses() -> List[str]:
-        pass
+def validate_setpoints(func):
+    def validate(cls, variable_inputs: Dict[str, float]):
+        _bounds = cls._get_bounds(list(variable_inputs.keys()))
+        for name, value in variable_inputs.items():
+            lower = _bounds[name][0]
+            upper = _bounds[name][1]
 
-    # Get the default params of the environment
-    @staticmethod
-    def get_default_params() -> dict:
-        return None
+            if value > upper or value < lower:
+                raise BadgerEnvVarError(
+                    f"Input point for {name} is outside "
+                    + f"its bounds {_bounds[name]}"
+                )
 
-    # Get current variable
-    # Unsafe version (var won't be checked beforehand)
-    @abstractmethod
-    def _get_var(self, var: str):
-        pass
+        return func(cls, variable_inputs)
 
-    # Set variable
-    # Unsafe version
-    @abstractmethod
-    def _set_var(self, var: str, x):
-        pass
+    return validate
 
-    # Check variable
-    # Unsafe version
-    def _check_var(self, var: str):
-        # 0: success
-        # other: error code
-        return 0
 
-    # Actions to preform after change vars and before read vars/obj
-    def vars_changed(self, vars: List[str], values: list):
+class Environment(BaseModel, ABC):
+    # Class variables
+    name: ClassVar[str]
+    variables: ClassVar[Dict[str, List]]  # bounds list could be empty for var
+    observables: ClassVar[List[str]]
+
+    # Interface
+    interface: Optional[Interface] = None
+    # Put all other env params here
+    # params: float = Field(..., description='Example env parameter')
+
+    class Config:
+        validate_assignment = True
+        use_enum_values = True
+        arbitrary_types_allowed = True
+        underscore_attrs_are_private = True
+
+    ############################################################
+    # Optional methods to inherit
+    ############################################################
+
+    def get_variables(self, variable_names: List[str]) -> Dict:
+        if not self.interface:
+            raise BadgerNoInterfaceError
+
+        return self.interface.get_values(variable_names)
+
+    def set_variables(self, variable_inputs: Dict[str, float]):
+        if not self.interface:
+            raise BadgerNoInterfaceError
+
+        return self.interface.set_values(variable_inputs)
+
+    def get_observables(self, observable_names: List[str]) -> Dict:
+        if not self.interface:
+            raise BadgerNoInterfaceError
+
+        return self.interface.get_values(observable_names)
+
+    def get_bounds(self, variable_names: List[str]) -> Dict[str, List[float]]:
+        return {}
+
+    # Actions to preform after changing vars and before reading vars/obj
+    def variables_changed(self, variables_input: Dict[str, float]):
         pass
 
     # Get current system states
     # If return is not None, the states would be saved at the start of each run
     # Should return a dict if not None
-    def get_system_states(self):
+    def get_system_states(self) -> Optional[Dict]:
         return None
 
-    # Get observation
-    # Unsafe version
-    @abstractmethod
-    def _get_obs(self, obs: str):
-        pass
+    ############################################################
+    # Should never be overridden
+    ############################################################
 
-    # Get variable range
-    # Unsafe version
-    def _get_vrange(self, var: str):
-        return [0, 1]
+    @final
+    @property
+    def variable_names(self):
+        return [k for k in self.variables]
 
-    # Safe version of _get_vrange
-    def get_vrange(self, var: str):
-        if var not in self.list_vars():
-            raise Exception(f'Variable {var} doesn\'t exist!')
+    # Optimizer will only call this method to get variable values
+    @final
+    def _get_variables(self, variable_names: List[str]) -> Dict:
+        # Deal with variables defined in env
+        variable_names_def = [v for v in variable_names if v in self.variables]
+        variable_outputs_def = self.get_variables(variable_names_def)
 
-        return self._get_vrange(var)
+        # Deal with tmp variables
+        # Usually should be able to read from the interface
+        variable_names_tmp = [v for v in variable_names if
+                              v not in self.variables]
 
-    # Get all the variable ranges
-    def get_vranges(self, vars=None):
-        if vars is None:
-            return [self._get_vrange(var) for var in self.list_vars()]
-        else:
-            return [self.get_vrange(var) for var in vars]
+        # If no undefined variables
+        if not len(variable_names_tmp):
+            return variable_outputs_def
 
-    # Get all the variable ranges
-    def get_vranges_dict(self, vars=None):
-        book = {}
-        if vars is None:
-            vars = self.list_vars()
-            for var in vars:
-                book[var] = self._get_vrange(var)
-        else:
-            for var in vars:
-                book[var] = self.get_vrange(var)
-        return book
+        # If no interface
+        if self.interface is None:
+            raise BadgerEnvVarError(
+                f"Variables {variable_names_tmp} " +
+                "do not exist in the environment!"
+            )
 
-    # Safe version of _get_var
-    def get_var(self, var: str):
-        if var not in self.list_vars():
-            raise Exception(f'Variable {var} doesn\'t exist!')
+        # Heads-up to the users that this behavior is not allowed for now
+        err_msg = (
+            f"Variables [{variable_names_tmp}] "
+            + "not defined in the environment! "
+            + "Getting them through interface is not allowed."
+        )
+        raise BadgerInterfaceChannelError(err_msg)
 
-        return self._get_var(var)
+    # The reason for this method is we cannot know the bounds of a variable
+    # that exists in interface but not defined in environment.
+    # So we can only validate the setpoints for the defined variables
+    @final
+    @validate_setpoints
+    def _set_variables_def(self, variable_inputs: Dict[str, float]):
+        self.set_variables(variable_inputs)
 
-    # Safe version of _set_var with check
-    def set_var(self, var: str, x):
-        if var not in self.list_vars():
-            raise Exception(f'Variable {var} doesn\'t exist!')
+    # Optimizer will only call this method to set variable values
+    @final
+    def _set_variables(self, variable_inputs: Dict[str, float]):
+        # Deal with variables defined in env
+        variable_inputs_def = dict(
+            [v for v in variable_inputs.items() if v[0] in self.variables]
+        )
+        self._set_variables_def(variable_inputs_def)
 
-        self._set_var(var, x)
+        # Deal with tmp variables
+        # Usually should be able to directly set to the interface
+        variable_inputs_tmp = dict(
+            [v for v in variable_inputs.items() if v[0] not in self.variables]
+        )
+        variable_names_tmp = list(variable_inputs_tmp.keys())
 
-        # Wait until check_var returns 0
-        status = 1
-        time_start = time.time()
-        while status:
-            time_elapsed = time.time() - time_start
-            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
-                raise Exception(f'Set variable {var} timeout!')
-            status = self._check_var(var)
-            time.sleep(BADGER_CHECK_VAR_INTERVAL)
+        # If no undefined variables
+        if not len(variable_inputs_tmp):
+            return
 
-    # Safe version of _get_obs
-    def get_obs(self, obs: str):
-        if obs not in self.list_obses():
-            raise Exception(f'Observation {obs} doesn\'t exist!')
+        # If no interface
+        if self.interface is None:
+            err_msg = (
+                f"Variables [{variable_names_tmp}] "
+                + "do not exist in the environment!"
+            )
+            raise BadgerEnvVarError(err_msg)
 
-        return self._get_obs(obs)
+        # Heads-up to the users that this behavior is not allowed for now
+        err_msg = (
+            f"Variables [{variable_names_tmp}] "
+            + "not defined in the environment! "
+            + "Setting them through interface is not allowed."
+        )
+        raise BadgerInterfaceChannelError(err_msg)
 
-    def get_vars(self, vars: List[str]) -> list:
-        values = []
-        for var in vars:
-            values.append(self.get_var(var))
+    # Optimizer will only call this method to get observable values
+    @final
+    @validate_observable_names
+    def _get_observables(self, observable_names: List[str]) -> Dict:
+        return self.get_observables(observable_names)
 
-        return values
+    # Optimizer will only call this method to get variable bounds
+    # Lazy loading -- read the bounds only when they are needed
+    # TODO: considering cache validation (is it needed?)
+    @final
+    @validate_variable_names
+    def _get_bounds(
+        self, variable_names: Optional[List[str]] = None
+    ) -> Dict[str, List[float]]:
+        if variable_names is None:
+            variable_names = self.variable_names
 
-    # Unsafe version of get_vars
-    def _get_vars(self, vars: List[str]) -> list:
-        values = []
-        for var in vars:
-            values.append(self._get_var(var))
+        variable_names_new = [
+            name for name in variable_names if not len(self.variables[name])
+        ]
+        if len(variable_names_new):
+            self.variables.update(self.get_bounds(variable_names_new))
 
-        return values
-
-    def get_vars_dict(self) -> dict:
-        vars = self.list_vars()
-        book = {}
-        for var in vars:
-            book[var] = self._get_var(var)
-
-        return book
-
-    def set_vars(self, vars: List[str], values: list):
-        assert len(vars) == len(
-            values), 'Variables and values number mismatch!'
-
-        for idx, var in enumerate(vars):
-            self.set_var(var, values[idx])
-
-        # Wait until all check_var calls return 0
-        status = np.ones(len(vars))
-        time_start = time.time()
-        while np.any(status):
-            time_elapsed = time.time() - time_start
-            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
-                raise Exception(f'Set variable {vars[np.argmax(status)]} timeout!')
-            for idx, var in enumerate(vars):
-                status[idx] = self._check_var(var)
-            time.sleep(BADGER_CHECK_VAR_INTERVAL)
-
-    # Unsafe version of set_vars
-    def _set_vars(self, vars: List[str], values: list):
-        assert len(vars) == len(
-            values), 'Variables and values number mismatch!'
-
-        for idx, var in enumerate(vars):
-            self._set_var(var, values[idx])
-
-        # Wait until all check_var calls return 0
-        status = np.ones(len(vars))
-        time_start = time.time()
-        while np.any(status):
-            time_elapsed = time.time() - time_start
-            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
-                raise Exception(f'Set variable {vars[np.argmax(status)]} timeout!')
-            for idx, var in enumerate(vars):
-                status[idx] = self._check_var(var)
-            time.sleep(BADGER_CHECK_VAR_INTERVAL)
-
-    def set_vars_dict(self, book: dict):
-        for var, val in book.items():
-            self.set_var(var, val)
-
-        # Wait until all check_var calls return 0
-        status = np.ones(len(book))
-        time_start = time.time()
-        while np.any(status):
-            time_elapsed = time.time() - time_start
-            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
-                raise Exception(f'Set variable {list(book.keys())[np.argmax(status)]} timeout!')
-            for idx, var in enumerate(book.keys()):
-                status[idx] = self._check_var(var)
-            time.sleep(BADGER_CHECK_VAR_INTERVAL)
-
-    # Unsafe version of set_vars_dict
-    def _set_vars_dict(self, book: dict):
-        for var, val in book.items():
-            self._set_var(var, val)
-
-        # Wait until all check_var calls return 0
-        status = np.ones(len(book))
-        time_start = time.time()
-        while np.any(status):
-            time_elapsed = time.time() - time_start
-            if time_elapsed > BADGER_CHECK_VAR_TIMEOUT:
-                raise Exception(f'Set variable {list(book.keys())[np.argmax(status)]} timeout!')
-            for idx, var in enumerate(book.keys()):
-                status[idx] = self._check_var(var)
-            time.sleep(BADGER_CHECK_VAR_INTERVAL)
-
-    def get_obses(self, obses: List[str]) -> list:
-        values = []
-        for obs in obses:
-            values.append(self.get_obs(obs))
-
-        return values
-
-    # Unsafe version of get_obses
-    def _get_obses(self, obses: List[str]) -> list:
-        values = []
-        for obs in obses:
-            values.append(self._get_obs(obs))
-
-        return values
-
-    def get_obses_dict(self) -> dict:
-        obses = self.list_obses()
-        book = {}
-        for obs in obses:
-            book[obs] = self._get_obs(obs)
-
-        return book
+        return {k: self.variables[k] for k in variable_names}

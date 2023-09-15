@@ -78,15 +78,15 @@ class BadgerVariableDialog(QDialog):
     def check_var(self):
         name = self.edit_name.text()
         try:
-            value = self.env._get_var(name)
-            min, max = self.env._get_vrange(name)
+            value = self.env._get_variables([name])[name]
+            min, max = self.env._get_bounds([name])[name]
 
             self.edit_value.edit.setText(str(value))
             self.edit_min.edit.setText(str(min))
             self.edit_max.edit.setText(str(max))
 
             self.btn_add.setDisabled(False)
-        except Exception as e:
+        except Exception:
             self.edit_value.edit.setText('')
             self.edit_min.edit.setText('')
             self.edit_max.edit.setText('')

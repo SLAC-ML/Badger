@@ -1,9 +1,11 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit, QLineEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QListWidget, QFrame
 from PyQt5.QtCore import QRegExp
 from .collapsible_box import CollapsibleBox
 from .var_table import VariableTable
 from .obj_table import ObjectiveTable
+from .data_table import init_data_table, update_init_data_table
+from ....settings import read_value
 
 
 class BadgerEnvBox(CollapsibleBox):
@@ -29,6 +31,8 @@ class BadgerEnvBox(CollapsibleBox):
         cb.setCurrentIndex(-1)
         self.btn_env_play = btn_env_play = QPushButton('Open Playground')
         btn_env_play.setFixedSize(128, 24)
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            btn_env_play.hide()
         hbox_name.addWidget(lbl)
         hbox_name.addWidget(cb, 1)
         hbox_name.addWidget(btn_env_play)
@@ -100,6 +104,15 @@ class BadgerEnvBox(CollapsibleBox):
 
         self.var_table = VariableTable()
         vbox_var_edit.addWidget(self.var_table)
+
+        cbox_init = CollapsibleBox(self, ' Initial Points', tooltip='If set, it takes precedence over the start from current setting in algorithm configuration.')
+        vbox_var_edit.addWidget(cbox_init)
+        vbox_init = QVBoxLayout()
+        self.init_table = init_data_table()
+        vbox_init.addWidget(self.init_table)
+        cbox_init.setContentLayout(vbox_init)
+        cbox_init.expand()
+
         hbox_var.addWidget(edit_var_col)
 
         # Objectives config (table style)
@@ -219,6 +232,7 @@ class BadgerEnvBox(CollapsibleBox):
         self.check_only_var.stateChanged.connect(self.toggle_var_show_mode)
         self.edit_obj.textChanged.connect(self.filter_obj)
         self.check_only_obj.stateChanged.connect(self.toggle_obj_show_mode)
+        self.var_table.sig_sel_changed.connect(self.update_init_table)
 
     def toggle_var_show_mode(self, _):
         self.var_table.toggle_show_mode(self.check_only_var.isChecked())
@@ -253,6 +267,11 @@ class BadgerEnvBox(CollapsibleBox):
                 _objectives.append(obj)
 
         self.obj_table.update_objectives(_objectives, 1)
+
+    def update_init_table(self):
+        selected = self.var_table.selected
+        variable_names = [v for v in selected if selected[v]]
+        update_init_data_table(self.init_table, variable_names)
 
     def _fit_content(self, list):
         height = list.sizeHintForRow(0) * list.count() + 2 * list.frameWidth() + 4

@@ -800,9 +800,11 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
-        current_vars = self.env._get_vars(self.var_names)
-        self.env._set_vars(self.var_names, self.init_vars)
-        after_vars = self.env._get_vars(self.var_names)
+        _var_dict = self.env._get_variables(self.var_names)
+        current_vars = [_var_dict[v] for v in self.var_names]
+        self.env._set_variables(dict(zip(self.var_names, self.init_vars)))
+        _var_dict = self.env._get_variables(self.var_names)
+        after_vars = [_var_dict[v] for v in self.var_names]
         QMessageBox.information(
             self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
 
@@ -849,7 +851,7 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
-        self.env._set_vars(self.var_names, solution)
+        self.env._set_variables(dict(zip(self.var_names, solution)))
         # center around the inspector
         self.plot_var.setXRange(idx - 3, idx + 3)
         # QMessageBox.information(

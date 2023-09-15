@@ -20,7 +20,7 @@ class ScrollArea(QtWidgets.QScrollArea):
 
 # https://stackoverflow.com/a/52617714/4263605
 class CollapsibleBox(QtWidgets.QWidget):
-    def __init__(self, parent=None, title="", duration=100):
+    def __init__(self, parent=None, title="", duration=100, tooltip=None):
         super(CollapsibleBox, self).__init__(parent)
 
         self.title = title
@@ -42,6 +42,7 @@ class CollapsibleBox(QtWidgets.QWidget):
         self.toggle_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.toggle_button.setIconSize(QtCore.QSize(11, 11))
         self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
+        self.toggle_button.setToolTip(tooltip)
         self.toggle_button.clicked.connect(self.start_animation)
         # self.toggle_button.setText(f'+ {title}')
 

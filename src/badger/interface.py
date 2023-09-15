@@ -1,74 +1,55 @@
-from abc import ABC, abstractmethod
-from typing import List
 import pickle
-from .utils import merge_params, curr_ts
+from abc import ABC, abstractmethod
+from typing import Any, ClassVar, Dict, List
+
+from pydantic import BaseModel
+
+from .utils import curr_ts
 
 
 def log(func):
-
     def func_log(*args, **kwargs):
-        if func.__name__ == 'set_value':
-            if 'channel' in kwargs.keys():
-                channel = kwargs['channel']
+        if func.__name__ == "set_values":
+            if "channel_inputs" in kwargs.keys():
+                channel_inputs = kwargs["channel_inputs"]
             else:
-                channel = args[1]
-            if 'value' in kwargs.keys():
-                value = kwargs['value']
-            else:
-                value = args[2]
-            args[0]._logs.append({
-                'timestamp': curr_ts().timestamp(),
-                'action': 'set_value',
-                'channel': channel,
-                'value': value,
-            })
+                channel_inputs = args[1]
+            args[0]._logs.append(
+                {
+                    "timestamp": curr_ts().timestamp(),
+                    "action": "set_values",
+                    "channel_inputs": channel_inputs,
+                }
+            )
 
             return func(*args, **kwargs)
-        elif func.__name__ == 'get_value':
-            if 'channel' in kwargs.keys():
-                channel = kwargs['channel']
-            else:
-                channel = args[1]
-            value = func(*args, **kwargs)
-            args[0]._logs.append({
-                'timestamp': curr_ts().timestamp(),
-                'action': 'get_value',
-                'channel': channel,
-                'value': value,
-            })
+        elif func.__name__ == "get_values":
+            channel_outputs = func(*args, **kwargs)
+            args[0]._logs.append(
+                {
+                    "timestamp": curr_ts().timestamp(),
+                    "action": "get_values",
+                    "channel_outputs": channel_outputs,
+                }
+            )
 
-            return value
+            return channel_outputs
         else:
             return func(*args, **kwargs)
 
     return func_log
 
 
-class Interface(ABC):
+class Interface(BaseModel, ABC):
+    name: ClassVar[str]
+    # Put interface params here
+    # params: float = Field(..., description='Example intf parameter')
 
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
+    # Private variables
+    _logs: List[Dict] = []  # TODO: Add a property for it?
 
-    @abstractmethod
-    def __init__(self, params=None):
-        self.params = merge_params(self.get_default_params(), params)
-        self._logs = []
-
-    # Get the default params of the interface
-    @staticmethod
-    @abstractmethod
-    def get_default_params() -> dict:
-        pass
-
-    @abstractmethod
-    def get_value(self, channel: str):
-        pass
-
-    @abstractmethod
-    def set_value(self, channel: str, value):
-        pass
+    class Config:
+        underscore_attrs_are_private = True
 
     def start_recording(self):
         self._logs = []
@@ -80,21 +61,31 @@ class Interface(ABC):
         if not self._logs:
             return
 
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             pickle.dump(self._logs, f)
 
         self._logs = []
 
-    def get_values(self, channels: List[str]) -> list:
-        values = []
-        for c in channels:
-            values.append(self.get_value(c))
+    def dump_recording(self, filename):
+        # Dump the logs to disk w/o cleaning up the log history
+        if not self._logs:
+            return
 
-        return values
+        with open(filename, "wb") as f:
+            pickle.dump(self._logs, f)
 
-    def set_values(self, channels: List[str], values: list):
-        assert len(channels) == len(
-            values), 'Channels and values number mismatch!'
+    # Environment should only call this method to get channels
+    @abstractmethod
+    def get_values(self, channel_names: List[str]) -> Dict[str, Any]:
+        pass
 
-        for idx, c in enumerate(channels):
-            self.set_value(c, values[idx])
+    # Environment should only call this method to set channels
+    @abstractmethod
+    def set_values(self, channel_inputs: Dict[str, Any]):
+        pass
+
+    def get_value(self, channel_name: str, **kwargs) -> Any:
+        return self.get_values([channel_name], **kwargs)[channel_name]
+
+    def set_value(self, channel_name: str, channel_value, **kwargs):
+        return self.set_values({channel_name: channel_value}, **kwargs)

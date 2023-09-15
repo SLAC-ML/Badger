@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QPlainTextEdit
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel, QFrame
-# from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QStyledItemDelegate, QLabel
 from .collapsible_box import CollapsibleBox
+from ....settings import read_value
 
 
 class BadgerAlgoBox(CollapsibleBox):
@@ -49,7 +49,7 @@ class BadgerAlgoBox(CollapsibleBox):
 
         edit_params_col = QWidget()
         vbox_params_edit = QVBoxLayout(edit_params_col)
-        vbox_params_edit.setContentsMargins(0, 0, 0, 0)
+        vbox_params_edit.setContentsMargins(0, 0, 0, 8)
         script_bar = QWidget()
         hbox_script = QHBoxLayout(script_bar)
         hbox_script.setContentsMargins(0, 0, 0, 0)
@@ -61,8 +61,11 @@ class BadgerAlgoBox(CollapsibleBox):
         btn_edit_script.hide()
         hbox_script.addWidget(check_use_script)
         hbox_script.addWidget(btn_edit_script)
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            script_bar.hide()
         self.edit = edit = QPlainTextEdit()
-        edit.setMaximumHeight(80)
+        # edit.setMaximumHeight(80)
+        edit.setMinimumHeight(480)
         vbox_params_edit.addWidget(edit)
         hbox_params.addWidget(edit_params_col)
         vbox.addWidget(params)
@@ -107,6 +110,8 @@ class BadgerAlgoBox(CollapsibleBox):
         vbox_misc.addWidget(params_s)
 
         cbox_misc.setContentLayout(vbox_misc)
+        if not read_value('BADGER_ENABLE_ADVANCED'):
+            cbox_misc.hide()
 
         self.setContentLayout(vbox)
         # vbox.addStretch()

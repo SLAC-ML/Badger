@@ -1,4 +1,11 @@
 from .settings import read_value
+from .utils import get_value_or_none
+from .errors import (
+    BadgerConfigError,
+    BadgerInvalidPluginError,
+    BadgerInvalidDocsError,
+    BadgerPluginNotFoundError,
+)
 import sys
 import os
 import importlib
@@ -7,12 +14,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+LOAD_LOCAL_ALGO = False
+
+
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = read_value('BADGER_PLUGIN_ROOT')
 if BADGER_PLUGIN_ROOT is None:
-    raise Exception('Please set the BADGER_PLUGIN_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_PLUGIN_ROOT env var!')
 elif not os.path.exists(BADGER_PLUGIN_ROOT):
-    raise Exception(
+    raise BadgerConfigError(
         f'The badger plugin root {BADGER_PLUGIN_ROOT} does not exist!')
 else:
     module_file = os.path.join(BADGER_PLUGIN_ROOT, '__init__.py')
@@ -24,7 +34,15 @@ sys.path.append(BADGER_PLUGIN_ROOT)
 
 def scan_plugins(root):
     factory = {}
-    for ptype in ['algorithm', 'interface', 'environment']:
+
+    # Do not scan local algorithms if option disabled
+    if LOAD_LOCAL_ALGO:
+        ptype_list = ['algorithm', 'interface', 'environment']
+    else:
+        ptype_list = ['interface', 'environment']
+        factory['algorithm'] = {}
+
+    for ptype in ptype_list:
         factory[ptype] = {}
 
         proot = os.path.join(root, f'{ptype}s')
@@ -55,14 +73,14 @@ def load_plugin(root, pname, ptype):
         try:
             configs = yaml.safe_load(f)
         except yaml.YAMLError:
-            raise Exception(
+            raise BadgerInvalidPluginError(
                 f'Error loading plugin {ptype} {pname}: invalid config')
 
     # Load module
     try:
         module = importlib.import_module(f'{ptype}s.{pname}')
     except ImportError as e:
-        _e = Exception(
+        _e = BadgerInvalidPluginError(
             f'{ptype} {pname} is not available due to missing dependencies: {e}')
         _e.configs = configs  # attach information to the exception
         raise _e
@@ -70,13 +88,18 @@ def load_plugin(root, pname, ptype):
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
-        params = module.Interface.get_default_params()
+        params = module.Interface.schema()['properties']
+        params = {name: get_value_or_none(info, 'default')
+                  for name, info in params.items()}
         configs['params'] = params
         plugin = [module.Interface, configs]
     elif ptype == 'environment':
-        vars = module.Environment.list_vars()
-        obses = module.Environment.list_obses()
-        params = module.Environment.get_default_params()
+        vars = module.Environment.variables
+        obses = module.Environment.observables
+        params = module.Environment.schema()['properties']
+        params = {name: get_value_or_none(info, 'default')
+                  for name, info in params.items()
+                  if name != 'interface'}
         # Get vranges by creating an env instance
         try:
             intf_name = configs['interface'][0]
@@ -87,19 +110,21 @@ def load_plugin(root, pname, ptype):
         except Exception as e:
             logger.warning(e)
             intf = None
-        env = module.Environment(intf, configs)
-        vranges = env.get_vranges()
+        env = module.Environment(interface=intf, params=configs)
+        var_bounds = env._get_bounds(vars)
 
         vars_info = []
-        for i, var in enumerate(vars):
+        for var in vars:
             var_info = {}
-            var_info[var] = vranges[i]
+            var_info[var] = var_bounds[var]
             vars_info.append(var_info)
 
         configs['params'] = params
         configs['variables'] = vars_info
         configs['observations'] = obses
         plugin = [module.Environment, configs]
+    else:  # TODO: raise an exception here instead?
+        return [None, None]
 
     BADGER_FACTORY[ptype][pname] = plugin
 
@@ -119,7 +144,7 @@ def load_docs(root, pname, ptype):
             readme = f.read()
         return readme
     except:
-        raise Exception(f'Error loading docs for {ptype} {pname}: docs not found')
+        raise BadgerInvalidDocsError(f'Error loading docs for {ptype} {pname}: docs not found')
 
 
 def get_plug(root, name, ptype):
@@ -131,7 +156,7 @@ def get_plug(root, name, ptype):
         # Prevent accidentially modifying default configs
         plug = [plug[0], plug[1].copy()]
     except KeyError:
-        raise Exception(
+        raise BadgerPluginNotFoundError(
             f'Error loading plugin {ptype} {name}: plugin not found')
 
     return plug
@@ -176,7 +201,7 @@ def get_algo(name):
                 logger.warning(
                     f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
-        raise Exception(
+        raise BadgerPluginNotFoundError(
             f'Error loading plugin algorithm {name}: plugin not found')
 
 
@@ -193,7 +218,7 @@ def get_algo_docs(name):
                 logger.warning(
                     f'Failed to read algorithms from ext {ext_name}: {str(e)}')
 
-        raise Exception(f'Error loading docs for algorithm {name}: plugin not found')
+        raise BadgerPluginNotFoundError(f'Error loading docs for algorithm {name}: plugin not found')
 
 
 def get_intf(name):

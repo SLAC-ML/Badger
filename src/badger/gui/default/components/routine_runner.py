@@ -1,10 +1,17 @@
 import logging
 logger = logging.getLogger(__name__)
+import os
 import time
+import copy
 import pandas as pd
+from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from ....utils import curr_ts, ts_to_str
-from ....core import run_routine
+from xopt.generators import get_generator
+from ....utils import curr_ts, ts_to_str, merge_params
+from ....core import run_routine_xopt, instantiate_env, Routine
+from ....settings import read_value
+from ....archive import archive_run
+from ....errors import BadgerRunTerminatedError
 
 
 class BadgerRoutineSignals(QObject):
@@ -43,6 +50,7 @@ class BadgerRoutineRunner(QRunnable):
         self.use_full_ts = use_full_ts
         self.termination_condition = None  # additional option to control the optimization flow
         self.start_time = None  # track the time cost of the run
+        self.last_dump_time = None  # track the time the run data got dumped
 
         self.is_paused = False
         self.is_killed = False
@@ -52,34 +60,36 @@ class BadgerRoutineRunner(QRunnable):
 
     def run(self):
         self.start_time = time.time()
+        self.last_dump_time = None  # reset the timer
 
-        error = None
         try:
-            run_routine(self.routine, True, self.save, self.verbose,
-                        self.before_evaluate, self.after_evaluate,
-                        self.env_ready, self.pf_ready, self.states_ready)
+            # run_routine(self.routine, True, self.save, self.verbose,
+            #             self.before_evaluate, self.after_evaluate,
+            #             self.env_ready, self.pf_ready, self.states_ready)
+            routine_xopt = self.get_routine_xopt()
+            run_routine_xopt(routine_xopt,
+                             active_callback=self.run_status,
+                             generate_callback=self.before_evaluate_xopt,
+                             evaluate_callback=self.after_evaluate_xopt,
+                             pf_callback=self.pf_ready,
+                             states_callback=self.states_ready)
+        except BadgerRunTerminatedError as e:
+            self.signals.finished.emit()
+            self.signals.info.emit(str(e))
         except Exception as e:
-            if 'Optimization run has been terminated!' not in str(e):
-                logger.exception(e)
-            error = e
-
-        self.signals.finished.emit()
-        if error:
-            if 'Optimization run has been terminated!' in str(error):
-                self.signals.info.emit(str(error))
-                return
-
-            self.signals.error.emit(error)
+            logger.exception(e)
+            self.signals.finished.emit()
+            self.signals.error.emit(e)
 
     def before_evaluate(self, vars):
         # vars: ndarray
         while self.is_paused:
             time.sleep(0)
             if self.is_killed:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
 
         if self.is_killed:
-            raise Exception('Optimization run has been terminated!')
+            raise BadgerRunTerminatedError
 
     def after_evaluate(self, vars, obses, cons, stas):
         # vars: ndarray
@@ -87,13 +97,26 @@ class BadgerRoutineRunner(QRunnable):
         # cons: ndarray
         # stas: list
         ts = curr_ts()
-        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts.timestamp())
+        ts_float = ts.timestamp()
+        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts_float)
 
         # Append solution to data
         fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
         solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + list(stas)
         new_row = pd.Series(solution, index=self.data.columns)
         self.data = pd.concat([self.data, new_row.to_frame().T], ignore_index=True)
+
+        # Try dump the run data and interface log to the disk
+        dump_period = read_value('BADGER_DATA_DUMP_PERIOD')
+        if (self.last_dump_time is None) or (ts_float - self.last_dump_time > dump_period):
+            self.last_dump_time = ts_float
+            run = archive_run(self.routine, self.data, self.states)
+            try:
+                path = run['path']
+                filename = run['filename'][:-4] + 'pickle'
+                self.env.interface.stop_recording(os.path.join(path, filename))
+            except:
+                pass
 
         # Take a break to let the outside signal to change the status
         time.sleep(0.1)
@@ -107,19 +130,92 @@ class BadgerRoutineRunner(QRunnable):
         if idx == 0:
             max_eval = tc_config['max_eval']
             if self.data.shape[0] >= max_eval:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
+
         elif idx == 1:
             max_time = tc_config['max_time']
             dt = time.time() - self.start_time
             if dt >= max_time:
-                raise Exception('Optimization run has been terminated!')
+                raise BadgerRunTerminatedError
         # elif idx == 2:
         #     ftol = tc_config['ftol']
         #     # Do something
 
+    def run_status(self):
+        if self.is_killed:
+            return 2
+        elif self.is_paused:
+            return 1
+        else:
+            return 0  # running
+
+    def get_routine_xopt(self):
+        routine = self.routine
+
+        from ....factory import get_env
+
+        # Initialize routine
+        Environment, configs_env = get_env(routine['env'])
+        _configs_env = merge_params(
+            configs_env, {'params': routine['env_params']})
+        environment = instantiate_env(Environment, _configs_env)
+        self.env_ready(environment)
+
+        variables = {key: value for dictionary in routine['config']['variables']
+                     for key, value in dictionary.items()}
+        objectives = {key: value for dictionary in routine['config']['objectives']
+                      for key, value in dictionary.items()}
+        vocs = {
+            'variables': variables,
+            'objectives': objectives,
+        }
+        generator_class = get_generator(routine['algo'])
+        try:
+            del routine['algo_params']['start_from_current']
+        except KeyError:
+            pass
+        routine_copy = copy.deepcopy(routine['algo_params'])
+        # Note! The following line will remove all the name fields in
+        # generator params. That's why we make a copy here so the modification
+        # will not affect the routine to be saved (in archive)
+        generator = generator_class(vocs=vocs, **routine_copy)
+
+        try:
+            initial_points = routine['config']['init_points']
+            initial_points = DataFrame.from_dict(initial_points)
+            if initial_points.empty:
+                raise KeyError
+        except KeyError:  # start from current
+            initial_points = environment.get_variables(generator.vocs.variable_names)
+            initial_points = DataFrame(initial_points, index=[0])
+
+        routine_xopt = Routine(environment=environment, generator=generator,
+                               initial_points=initial_points)
+
+        return routine_xopt
+
+    def before_evaluate_xopt(self, candidates: DataFrame):
+        pass
+
+    def after_evaluate_xopt(self, data: DataFrame):
+        vars = data[self.var_names].to_numpy()[0]
+        obses = data[self.obj_names].to_numpy()[0]
+        cons = data[self.con_names].to_numpy()
+        try:
+            cons = cons[0]
+        except IndexError:
+            pass
+        stas = data[self.sta_names].to_numpy()
+        try:
+            stas = stas[0]
+        except IndexError:
+            pass
+        self.after_evaluate(vars, obses, cons, stas)
+
     def env_ready(self, env):
         self.env = env
-        init_vars = env._get_vars(self.var_names)
+        var_dict = env._get_variables(self.var_names)
+        init_vars = [var_dict[v] for v in self.var_names]
         self.signals.env_ready.emit(init_vars)
 
     def pf_ready(self, pf):

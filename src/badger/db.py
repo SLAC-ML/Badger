@@ -6,12 +6,13 @@ import yaml
 import sqlite3
 from .settings import read_value
 from .utils import ystring
+from .errors import BadgerConfigError, BadgerDBError
 
 
 # Check badger database root
 BADGER_DB_ROOT = read_value('BADGER_DB_ROOT')
 if BADGER_DB_ROOT is None:
-    raise Exception('Please set the BADGER_DB_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_DB_ROOT env var!')
 elif not os.path.exists(BADGER_DB_ROOT):
     os.makedirs(BADGER_DB_ROOT)
     logger.info(
@@ -133,7 +134,7 @@ def load_routine(name):
         # logger.warning(f'Routine {name} not found in the database!')
         return None, None
     else:
-        raise Exception(
+        raise BadgerDBError(
             f'Multiple routines with name {name} found in the database!')
 
 
@@ -169,16 +170,25 @@ def save_run(run):
     con = sqlite3.connect(db_run)
     cur = con.cursor()
 
-    # Insert a record
+    # Insert or update a record
     routine_name = run['routine']['name']
     run_filename = run['filename']
     timestamps = run['data']['timestamp_raw']
     time_start = datetime.fromtimestamp(timestamps[0])
     time_finish = datetime.fromtimestamp(timestamps[-1])
-    cur.execute('insert into run values (?, ?, ?, ?, ?)',
-                (None, time_start, time_finish, routine_name, run_filename))
 
-    rid = cur.lastrowid
+    # Check if the record exist (same filename)
+    cur.execute('select id from run where filename = ?', (run_filename,))
+    existing_row = cur.fetchone()
+
+    if existing_row:
+        cur.execute('update run set finishedAt = ? where filename = ?',
+                    (time_finish, run_filename))
+        rid = existing_row[0]
+    else:
+        cur.execute('insert into run values (?, ?, ?, ?, ?)',
+                    (None, time_start, time_finish, routine_name, run_filename))
+        rid = cur.lastrowid
 
     con.commit()
     con.close()
@@ -272,7 +282,7 @@ def import_routines(filename):
     con.close()
 
     if failed_list:
-        raise Exception(ystring(failed_list))
+        raise BadgerDBError(ystring(failed_list))
 
 
 def export_routines(filename, routine_name_list):

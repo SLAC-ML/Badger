@@ -2,14 +2,15 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 from .db import save_run, remove_run_by_filename
-from .utils import curr_ts_to_str, ystring, load_config
+from .utils import ts_float_to_str, ystring, load_config
 from .settings import read_value
+from .errors import BadgerConfigError
 
 
 # Check badger optimization run archive root
 BADGER_ARCHIVE_ROOT = read_value('BADGER_ARCHIVE_ROOT')
 if BADGER_ARCHIVE_ROOT is None:
-    raise Exception('Please set the BADGER_ARCHIVE_ROOT env var!')
+    raise BadgerConfigError('Please set the BADGER_ARCHIVE_ROOT env var!')
 elif not os.path.exists(BADGER_ARCHIVE_ROOT):
     os.makedirs(BADGER_ARCHIVE_ROOT)
     logger.info(
@@ -19,7 +20,10 @@ elif not os.path.exists(BADGER_ARCHIVE_ROOT):
 def archive_run(routine, data, states=None):
     # routine: dict
     # data: pandas dataframe
-    suffix = curr_ts_to_str("lcls-fname")
+
+    data_dict = data.to_dict('list')
+    ts_float = data_dict['timestamp_raw'][0]  # time of the first evaluated point
+    suffix = ts_float_to_str(ts_float, "lcls-fname")
     tokens = suffix.split('-')
     first_level = tokens[0]
     second_level = f'{tokens[0]}-{tokens[1]}'
@@ -30,7 +34,7 @@ def archive_run(routine, data, states=None):
     run = {
         'filename': fname,
         'routine': routine,
-        'data': data.to_dict('list'),
+        'data': data_dict,
     }
     rid = save_run(run)
     run = {'id': rid, **run}  # Put id in front
