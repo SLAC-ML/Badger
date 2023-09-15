@@ -145,17 +145,13 @@ class Environment(BaseModel, ABC):
                 "do not exist in the environment!"
             )
 
-        # Try reading variable values from the interface
-        try:
-            variable_outputs_tmp = self.interface.get_values(
-                variable_names_tmp)
-        except Exception:  # TODO: specify what exceptions could occur
-            raise BadgerInterfaceChannelError(
-                f"Error reading variables {variable_names_tmp} "
-                + "from the interface!"
-            )
-
-        return {**variable_outputs_def, **variable_outputs_tmp}
+        # Heads-up to the users that this behavior is not allowed for now
+        err_msg = (
+            f"Variables [{variable_names_tmp}] "
+            + "not defined in the environment! "
+            + "Getting them through interface is not allowed."
+        )
+        raise BadgerInterfaceChannelError(err_msg)
 
     # The reason for this method is we cannot know the bounds of a variable
     # that exists in interface but not defined in environment.
