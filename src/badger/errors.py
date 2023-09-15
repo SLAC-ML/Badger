@@ -28,7 +28,13 @@ class BadgerEnvObsError(Exception):
     pass
 
 
-class BadgerIntfChannelError(Exception):
+class BadgerNoInterfaceError(Exception):
+
+    def __init__(self, message="Must provide an interface!"):
+        super().__init__(message)
+
+
+class BadgerInterfaceChannelError(Exception):
     pass
 
 
