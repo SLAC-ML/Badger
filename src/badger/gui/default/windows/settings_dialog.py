@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QComboBox, QGridLayout, QVBoxLayout, QWidget, QLabel
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QApplication, QStyledItemDelegate, QCheckBox
 from qdarkstyle import load_stylesheet, DarkPalette, LightPalette
 from ....settings import list_settings, read_value, write_value
+from ....utils import strtobool
 
 
 class BadgerSettingsDialog(QDialog):
@@ -91,7 +92,7 @@ class BadgerSettingsDialog(QDialog):
         # Advanced settings
         self.adv_features = adv_features = QLabel('Enable Advanced Features')
         self.enable_adv_features = enable_adv_features = QCheckBox()
-        enable_adv_features.setChecked(read_value('BADGER_ENABLE_ADVANCED'))
+        enable_adv_features.setChecked(strtobool(read_value('BADGER_ENABLE_ADVANCED')))
         grid.addWidget(adv_features, 8, 0)
         grid.addWidget(enable_adv_features, 8, 1)
 
@@ -104,7 +105,6 @@ class BadgerSettingsDialog(QDialog):
 
         vbox.addStretch(1)
         vbox.addWidget(self.btns)
-
 
     def config_logic(self):
         self.cb_theme.currentIndexChanged.connect(self.select_theme)

@@ -5,7 +5,7 @@ import sqlite3
 import pandas as pd
 from coolname import generate_slug
 from ....factory import list_algo, list_env, get_algo, get_env
-from ....utils import ystring, load_config, config_list_to_dict
+from ....utils import ystring, load_config, config_list_to_dict, strtobool
 from ....core import normalize_routine, instantiate_env, list_scaling_func, get_scaling_default_params
 from ....db import save_routine, remove_routine
 from .constraint_item import constraint_item
@@ -68,7 +68,7 @@ class BadgerRoutinePage(QWidget):
 
         # Tags
         self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
-        if not read_value('BADGER_ENABLE_ADVANCED'):
+        if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             cbox_tags.hide()
         vbox_meta.addWidget(cbox_tags, alignment=Qt.AlignTop)
         # vbox_meta.addStretch()

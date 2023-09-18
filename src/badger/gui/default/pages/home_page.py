@@ -15,7 +15,7 @@ from ..components.filter_cbox import BadgerFilterBox
 from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
-from ....utils import get_header
+from ....utils import get_header, strtobool
 from ....settings import read_value
 
 
@@ -83,7 +83,7 @@ class BadgerHomePage(QWidget):
 
         # Filters
         self.filter_box = filter_box = BadgerFilterBox(self, title=' Filters')
-        if not read_value('BADGER_ENABLE_ADVANCED'):
+        if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             filter_box.hide()
         vbox_routine.addWidget(filter_box)
 

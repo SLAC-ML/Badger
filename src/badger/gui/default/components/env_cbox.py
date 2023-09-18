@@ -6,6 +6,7 @@ from .var_table import VariableTable
 from .obj_table import ObjectiveTable
 from .data_table import init_data_table, update_init_data_table
 from ....settings import read_value
+from ....utils import strtobool
 
 
 class BadgerEnvBox(CollapsibleBox):
@@ -31,7 +32,7 @@ class BadgerEnvBox(CollapsibleBox):
         cb.setCurrentIndex(-1)
         self.btn_env_play = btn_env_play = QPushButton('Open Playground')
         btn_env_play.setFixedSize(128, 24)
-        if not read_value('BADGER_ENABLE_ADVANCED'):
+        if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             btn_env_play.hide()
         hbox_name.addWidget(lbl)
         hbox_name.addWidget(cb, 1)
