@@ -74,7 +74,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
         solutions.append(solution)
 
         # Try dump the run data and interface log to the disk
-        dump_period = read_value('BADGER_DATA_DUMP_PERIOD')
+        dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
         ts_last_dump = storage['ts_last_dump']
         if (ts_last_dump is None) or (ts_float - ts_last_dump > dump_period):
             storage['ts_last_dump'] = ts_float

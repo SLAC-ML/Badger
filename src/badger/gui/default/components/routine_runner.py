@@ -107,7 +107,7 @@ class BadgerRoutineRunner(QRunnable):
         self.data = pd.concat([self.data, new_row.to_frame().T], ignore_index=True)
 
         # Try dump the run data and interface log to the disk
-        dump_period = read_value('BADGER_DATA_DUMP_PERIOD')
+        dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
         if (self.last_dump_time is None) or (ts_float - self.last_dump_time > dump_period):
             self.last_dump_time = ts_float
             run = archive_run(self.routine, self.data, self.states)
