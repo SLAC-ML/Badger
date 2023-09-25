@@ -1,0 +1,12 @@
+pandas
+pyyaml
+coolname
+pyqt5
+pyqtgraph
+qdarkstyle
+pillow
+requests
+tqdm
+xopt
+pytest
+pytest-qt
