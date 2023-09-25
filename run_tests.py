@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # Show coverage
     if "--show-cov" in args:
-        args.extend(["--cov=archive_viewer", "--cov-report", "term-missing"])
+        args.extend(["--cov=badger", "--cov-report", "term-missing"])
         args.remove("--show-cov")
 
     print("pytest arguments: {}".format(args))
