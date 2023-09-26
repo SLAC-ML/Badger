@@ -1,0 +1,35 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    if: ${{ github.repository == 'slaclab/Badger' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.9]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          channels: conda-forge
+          activate-environment: badger-doc
+          environment-file: doc-environment.yml
+
+      - name: Build Docs
+        shell: bash -l {0}
+        run: |
+          mkdocs build
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site/
