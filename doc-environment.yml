@@ -1,7 +1,0 @@
-name: badger-dev
-  - mkdocs
-  - mkdocs-material
-  - mkdocstrings
-  - mkdocstrings-python
-
-    

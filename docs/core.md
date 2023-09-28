@@ -1,3 +1,0 @@
-# Core
-
-::: src.badgre.core
