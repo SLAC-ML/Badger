@@ -541,8 +541,8 @@ def evaluate_points(
 
     obj_list = []
     for _, point in points.iterrows():
-        env.set_variables(point.to_dict())
-        obj = env.get_observables(vocs.objective_names)
+        env._set_variables(point.to_dict())
+        obj = env._get_observables(vocs.objective_names)
         obj_df = DataFrame(obj, index=[0])
         obj_list.append(obj_df)
     points_obj = concat(obj_list, axis=0).reset_index(drop=True)
