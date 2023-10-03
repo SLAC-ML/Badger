@@ -554,6 +554,15 @@ def evaluate_points(
     return points_eval
 
 
+def add_to_pf(idx: int, candidate: DataFrame, result: DataFrame,
+              pf: ParetoFront) -> None:
+    n_var = candidate.shape[1]
+    inputs = candidate.iloc[0].values
+    inputs = np.insert(inputs, 0, idx)
+    outputs = result.iloc[0][n_var:].values[:]  # copy to avoid troubles
+    pf.is_dominated((inputs, outputs))
+
+
 def run_routine_xopt(
     routine: Routine,
     active_callback: Callable,
@@ -619,6 +628,9 @@ def run_routine_xopt(
     # add measurements to generator
     generator.add_data(result)
 
+    eval_index = 0  # record current evaluation index
+    add_to_pf(eval_index, initial_points, result, pf)
+
     # Prepare for dumping file
     if dump_file_callback:
         combined_results = None
@@ -645,6 +657,9 @@ def run_routine_xopt(
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
         result = evaluate_points(candidates, routine, evaluate_callback)
+
+        eval_index += 1
+        add_to_pf(eval_index, candidates, result, pf)
 
         # Dump Xopt state after each step
         if dump_file_callback:
