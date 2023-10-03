@@ -841,7 +841,10 @@ class BadgerOptMonitor(QWidget):
 
     def set_vars(self):
         df = self.routine_runner.data
-        idx = int(self.ins_obj.value())
+        if self.plot_x_axis:  # x-axis is time
+            pos, idx = self.closest_ts(self.ins_obj.value())
+        else:
+            pos = idx = int(self.ins_obj.value())
         solution = df.loc[idx, self.var_names].to_numpy()
 
         reply = QMessageBox.question(self,
@@ -853,7 +856,9 @@ class BadgerOptMonitor(QWidget):
 
         self.env._set_variables(dict(zip(self.var_names, solution)))
         # center around the inspector
-        self.plot_var.setXRange(idx - 3, idx + 3)
+        x_range = self.plot_var.getViewBox().viewRange()[0]
+        delta = (x_range[1] - x_range[0]) / 2
+        self.plot_var.setXRange(pos - delta, pos + delta)
         # QMessageBox.information(
         #     self, 'Set Environment', f'Env vars have been set to {solution}')
 
