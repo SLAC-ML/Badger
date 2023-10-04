@@ -481,7 +481,7 @@ class BadgerRoutinePage(QWidget):
                 hard_bounds = vrange[i][name]
                 delta = 0.5 * ratio * (hard_bounds[1] - hard_bounds[0])
                 bounds = [var_curr[name] - delta, var_curr[name] + delta]
-                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1])
+                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1]).tolist()
                 vrange[i][name] = bounds
         else:
             ratio = self.limit_option['ratio_curr']
@@ -490,7 +490,7 @@ class BadgerRoutinePage(QWidget):
                 sign = np.sign(var_curr[name])
                 bounds = [var_curr[name] * (1 - 0.5 * sign * ratio),
                           var_curr[name] * (1 + 0.5 * sign * ratio)]
-                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1])
+                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1]).tolist()
                 vrange[i][name] = bounds
 
         self.env_box.var_table.set_bounds(vrange)
