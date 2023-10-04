@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
+from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.QtCore import Qt
 import sqlite3
 import numpy as np
@@ -104,6 +105,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_lim_vrange.clicked.connect(self.limit_variable_ranges)
         self.env_box.btn_add_con.clicked.connect(self.add_constraint)
         self.env_box.btn_add_sta.clicked.connect(self.add_state)
+        self.env_box.btn_add_curr.clicked.connect(self.fill_curr_in_init_table)
 
     def refresh_ui(self, routine):
         self.routine = routine  # save routine for future reference
@@ -383,6 +385,33 @@ class BadgerRoutinePage(QWidget):
         self.env_box.list_sta.clear()
         self.env_box.fit_content()
         self.routine = None
+
+    def get_init_table_header(self):
+        table = self.env_box.init_table
+        header_list = []
+        for col in range(table.columnCount()):
+            item = table.horizontalHeaderItem(col)
+            if item:
+                header_list.append(item.text())
+            else:
+                header_list.append('')  # Handle the case where the header item is None
+        return header_list
+
+    def fill_curr_in_init_table(self):
+        env = self.create_env()
+        table = self.env_box.init_table
+        vname_selected = self.get_init_table_header()
+        var_curr = env._get_variables(vname_selected)
+
+        # Iterate through the rows
+        for row in range(table.rowCount()):
+            # Check if the row is empty
+            if np.all([not table.item(row, col).text() for col in range(table.columnCount())]):
+                # Fill the row with content_list
+                for col, name in enumerate(vname_selected):
+                    item = QTableWidgetItem(str(var_curr[name]))
+                    table.setItem(row, col, item)
+                break  # Stop after filling the first non-empty row
 
     def open_playground(self):
         pass
