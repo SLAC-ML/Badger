@@ -96,10 +96,16 @@ class BadgerEnvBox(CollapsibleBox):
         self.btn_add_var = btn_add_var = QPushButton('Add')
         btn_add_var.setFixedSize(96, 24)
         btn_add_var.setDisabled(True)
+        if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
+            btn_add_var.hide()
+        self.btn_lim_vrange = btn_lim_vrange = QPushButton('Limit Variable Range')
+        btn_lim_vrange.setFixedSize(144, 24)
+        btn_lim_vrange.setDisabled(True)
         self.check_only_var = check_only_var = QCheckBox('Show Checked Only')
         check_only_var.setChecked(False)
         hbox_action_var.addWidget(edit_var)
         hbox_action_var.addWidget(btn_add_var)
+        hbox_action_var.addWidget(btn_lim_vrange)
         hbox_action_var.addStretch()
         hbox_action_var.addWidget(check_only_var)
 

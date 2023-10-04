@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QH
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
 from PyQt5.QtCore import Qt
 import sqlite3
+import numpy as np
 import pandas as pd
 from coolname import generate_slug
 from ....factory import list_algo, list_env, get_algo, get_env
@@ -17,6 +18,7 @@ from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
 from ..windows.edit_script_dialog import BadgerEditScriptDialog
 from ..windows.docs_window import BadgerDocsWindow
+from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
 from .data_table import get_table_content_as_dict, set_init_data_table
 from ....settings import read_value
 from ....errors import BadgerRoutineError
@@ -40,6 +42,9 @@ class BadgerRoutinePage(QWidget):
         self.script = ''
         self.scaling_functions = list_scaling_func()
         self.window_docs = BadgerDocsWindow(self, '')
+
+        # Limit variable ranges
+        self.limit_option = None
 
         self.init_ui()
         self.config_logic()
@@ -96,6 +101,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.cb.currentIndexChanged.connect(self.select_env)
         self.env_box.btn_env_play.clicked.connect(self.open_playground)
         self.env_box.btn_add_var.clicked.connect(self.add_var)
+        self.env_box.btn_lim_vrange.clicked.connect(self.limit_variable_ranges)
         self.env_box.btn_add_con.clicked.connect(self.add_constraint)
         self.env_box.btn_add_sta.clicked.connect(self.add_state)
 
@@ -254,6 +260,20 @@ class BadgerRoutinePage(QWidget):
         self.script = text
         self.refresh_params_algo()
 
+    def create_env(self):
+        env_params = load_config(self.env_box.edit.toPlainText())
+        try:
+            intf_name = self.configs['interface'][0]
+        except KeyError:
+            intf_name = None
+        configs = {
+            'params': env_params,
+            'interface': [intf_name]
+        }
+        env = instantiate_env(self.env, configs)
+
+        return env
+
     def refresh_params_algo(self):
         if not self.script:
             return
@@ -267,16 +287,7 @@ class BadgerRoutinePage(QWidget):
                 QMessageBox.warning(self, 'Please define a valid generate function!', str(e))
                 return
 
-            env_params = load_config(self.env_box.edit.toPlainText())
-            try:
-                intf_name = self.configs['interface'][0]
-            except KeyError:
-                intf_name = None
-            configs = {
-                'params': env_params,
-                'interface': [intf_name]
-            }
-            env = instantiate_env(self.env, configs)
+            env = self.create_env()
             # Get vocs
             try:
                 vocs = self._compose_vocs()
@@ -313,6 +324,7 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_add_con.setDisabled(True)
             self.env_box.btn_add_sta.setDisabled(True)
             self.env_box.btn_add_var.setDisabled(True)
+            self.env_box.btn_lim_vrange.setDisabled(True)
             self.routine = None
             return
 
@@ -326,6 +338,7 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_add_con.setDisabled(False)
             self.env_box.btn_add_sta.setDisabled(False)
             self.env_box.btn_add_var.setDisabled(False)
+            self.env_box.btn_lim_vrange.setDisabled(False)
             if self.algo_box.check_use_script.isChecked():
                 self.refresh_params_algo()
         except Exception as e:
@@ -335,6 +348,7 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_add_con.setDisabled(True)
             self.env_box.btn_add_sta.setDisabled(True)
             self.env_box.btn_add_var.setDisabled(True)
+            self.env_box.btn_lim_vrange.setDisabled(True)
             self.routine = None
             return QMessageBox.critical(self, 'Error!', str(e))
 
@@ -390,6 +404,51 @@ class BadgerRoutinePage(QWidget):
 
         dlg = BadgerVariableDialog(self, self.env, configs, self.add_var_to_list)
         dlg.exec()
+
+    def limit_variable_ranges(self):
+        dlg = BadgerLimitVariableRangeDialog(
+            self, self.set_vrange,
+            self.save_limit_option,
+            self.limit_option,
+        )
+        dlg.exec()
+
+    def set_vrange(self):
+        vname_selected = []
+        vrange = []
+
+        for var in self.env_box.var_table.all_variables:
+            name = next(iter(var))
+            if self.env_box.var_table.is_checked(name):
+                vname_selected.append(name)
+                vrange.append({name: var[name]})
+
+        env = self.create_env()
+        var_curr = env._get_variables(vname_selected)
+
+        option_idx = self.limit_option['limit_option_idx']
+        if option_idx:
+            ratio = self.limit_option['ratio_full']
+            for i, name in enumerate(vname_selected):
+                hard_bounds = vrange[i][name]
+                delta = 0.5 * ratio * (hard_bounds[1] - hard_bounds[0])
+                bounds = [var_curr[name] - delta, var_curr[name] + delta]
+                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1])
+                vrange[i][name] = bounds
+        else:
+            ratio = self.limit_option['ratio_curr']
+            for i, name in enumerate(vname_selected):
+                hard_bounds = vrange[i][name]
+                sign = np.sign(var_curr[name])
+                bounds = [var_curr[name] * (1 - 0.5 * sign * ratio),
+                          var_curr[name] * (1 + 0.5 * sign * ratio)]
+                bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1])
+                vrange[i][name] = bounds
+
+        self.env_box.var_table.set_bounds(vrange)
+
+    def save_limit_option(self, limit_option):
+        self.limit_option = limit_option
 
     def add_var_to_list(self, name, lb, ub):
         # Check if already in the list
