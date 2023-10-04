@@ -106,6 +106,8 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_add_con.clicked.connect(self.add_constraint)
         self.env_box.btn_add_sta.clicked.connect(self.add_state)
         self.env_box.btn_add_curr.clicked.connect(self.fill_curr_in_init_table)
+        self.env_box.btn_clear.clicked.connect(self.clear_init_table)
+        self.env_box.btn_add_row.clicked.connect(self.add_row_to_init_table)
 
     def refresh_ui(self, routine):
         self.routine = routine  # save routine for future reference
@@ -412,6 +414,23 @@ class BadgerRoutinePage(QWidget):
                     item = QTableWidgetItem(str(var_curr[name]))
                     table.setItem(row, col, item)
                 break  # Stop after filling the first non-empty row
+
+    def clear_init_table(self):
+        table = self.env_box.init_table
+        for row in range(table.rowCount()):
+            for col in range(table.columnCount()):
+                item = table.item(row, col)
+                if item:
+                    item.setText('')  # Set the cell content to an empty string
+
+    def add_row_to_init_table(self):
+        table = self.env_box.init_table
+        row_position = table.rowCount()
+        table.insertRow(row_position)
+
+        for col in range(table.columnCount()):
+            item = QTableWidgetItem('')
+            table.setItem(row_position, col, item)
 
     def open_playground(self):
         pass
