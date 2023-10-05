@@ -1,4 +1,4 @@
-from pkg_resources import get_distribution
+from importlib import metadata
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
 # from PyQt5.QtWidgets import QMenuBar, QMenu
 from ..pages.home_page import BadgerHomePage
@@ -12,8 +12,9 @@ class BadgerMainWindow(QMainWindow):
         self.config_logic()
 
     def init_ui(self):
-        version = get_distribution('badger-opt').version
-        self.setWindowTitle(f'Badger v{version}')
+        version = metadata.version('badger-opt')
+        version_xopt = metadata.version('xopt')
+        self.setWindowTitle(f'Badger v{version} (Xopt v{version_xopt})')
         self.resize(960, 720)
         self.center()
 

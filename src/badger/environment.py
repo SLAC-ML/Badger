@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import ClassVar, Dict, final, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .errors import (
     BadgerEnvObsError,
@@ -62,6 +62,12 @@ def validate_setpoints(func):
 
 
 class Environment(BaseModel, ABC):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        use_enum_values=True,
+        arbitrary_types_allowed=True
+    )
+
     # Class variables
     name: ClassVar[str]
     variables: ClassVar[Dict[str, List]]  # bounds list could be empty for var
@@ -71,12 +77,6 @@ class Environment(BaseModel, ABC):
     interface: Optional[Interface] = None
     # Put all other env params here
     # params: float = Field(..., description='Example env parameter')
-
-    class Config:
-        validate_assignment = True
-        use_enum_values = True
-        arbitrary_types_allowed = True
-        underscore_attrs_are_private = True
 
     ############################################################
     # Optional methods to inherit

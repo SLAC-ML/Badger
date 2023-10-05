@@ -1,6 +1,5 @@
-import os
 import subprocess
-from pkg_resources import get_distribution
+from importlib import metadata
 
 
 def capture(command):
@@ -26,7 +25,7 @@ def test_cli_main():
     assert outlines[0] == 'name: Badger the optimizer'
 
     # Check version
-    version = get_distribution('badger-opt').version
+    version = metadata.version('badger-opt')
     assert outlines[1] == f'version: {version}'
 
 

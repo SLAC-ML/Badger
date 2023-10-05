@@ -1,4 +1,4 @@
-from pkg_resources import resource_filename
+from importlib import resources
 import signal
 import time
 from PyQt5.QtWidgets import QApplication, QMessageBox
@@ -53,8 +53,9 @@ def launch_gui():
 
     # Set app metainfo
     app.setApplicationName('Badger')
-    icon_path = resource_filename(__name__, 'images/icon.png')
-    app.setWindowIcon(QIcon(icon_path))
+    icon_ref = resources.files(__name__) / 'images/icon.png'
+    with resources.as_file(icon_ref) as icon_path:
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     font = QFont()
     font.setPixelSize(13)

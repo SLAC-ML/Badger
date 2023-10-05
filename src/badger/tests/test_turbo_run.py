@@ -54,7 +54,7 @@ class TestTuRBORun:
                 "model": None,
                 "turbo_controller": "optimize",
                 "use_cuda": False,
-                "model_constructor": {
+                "gp_constructor": {
                     "name": "standard",
                     "use_low_noise_prior": True,
                     "covar_modules": {},
@@ -63,7 +63,6 @@ class TestTuRBORun:
                 },
                 "numerical_optimizer": {
                     "name": "LBFGS",
-                    "n_raw_samples": 20,
                     "n_restarts": 20,
                     "max_iter": 2000,
                 },

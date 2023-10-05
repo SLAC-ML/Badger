@@ -10,7 +10,7 @@ class Environment(environment.Environment):
     variables = {f'x{i}': [-1, 1] for i in range(20)}
     observables = ['f']
 
-    flag = 0
+    flag: int = 0
 
     def set_variables(self, variable_inputs: Dict[str, float]):
         if not self.interface:

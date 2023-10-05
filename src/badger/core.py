@@ -7,7 +7,7 @@ from typing import Callable
 import numpy as np
 
 from pandas import concat, DataFrame
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from xopt import Generator
 
 from .environment import Environment
@@ -500,12 +500,11 @@ def get_scaling_func(configs):
 
 
 class Routine(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     environment: Environment
     generator: Generator
     initial_points: DataFrame
-
-    class Config:
-        arbitrary_types_allowed = True
 
     # convenience properties
     @property

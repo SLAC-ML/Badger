@@ -48,9 +48,6 @@ class Interface(BaseModel, ABC):
     # Private variables
     _logs: List[Dict] = []  # TODO: Add a property for it?
 
-    class Config:
-        underscore_attrs_are_private = True
-
     def start_recording(self):
         self._logs = []
 

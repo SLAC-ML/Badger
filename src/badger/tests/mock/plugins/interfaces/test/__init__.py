@@ -5,7 +5,7 @@ from typing import Dict
 class Interface(interface.Interface):
 
     name = 'test'
-    flag = 0
+    flag: int = 0
 
     # Private variables
     _states: Dict

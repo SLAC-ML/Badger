@@ -1,9 +1,9 @@
-from pkg_resources import resource_filename
+from importlib import resources
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QPushButton
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt  # , QSize
 from ..windows.settings_dialog import BadgerSettingsDialog
 
 
@@ -20,9 +20,10 @@ class BadgerStatusBar(QWidget):
 
         self.summary = summary = QLabel()
         self.btn_settings = btn_settings = QPushButton()
-        icon_path = resource_filename(__name__, '../images/gear.png')
         btn_settings.setFixedSize(24, 24)
-        btn_settings.setIcon(QIcon(icon_path))
+        icon_ref = resources.files(__package__) / '../images/gear.png'
+        with resources.as_file(icon_ref) as icon_path:
+            btn_settings.setIcon(QIcon(str(icon_path)))
         # btn_settings.setIconSize(QSize(18, 18))
         summary.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         summary.setAlignment(Qt.AlignCenter)

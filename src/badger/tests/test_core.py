@@ -66,7 +66,7 @@ class TestCore:
                 "model": None,
                 "turbo_controller": None,
                 "use_cuda": False,
-                "model_constructor": {
+                "gp_constructor": {
                     "name": "standard",
                     "use_low_noise_prior": True,
                     "covar_modules": {},
@@ -75,7 +75,6 @@ class TestCore:
                 },
                 "numerical_optimizer": {
                     "name": "LBFGS",
-                    "n_raw_samples": 20,
                     "n_restarts": 20,
                     "max_iter": 2000,
                 },

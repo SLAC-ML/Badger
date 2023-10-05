@@ -296,9 +296,9 @@ def state_to_dict(generator, data, include_data=True):
     output = {
         "generator": {
             "name": type(generator).name,
-            **json.loads(generator.json(base_key=type(generator).name)),
+            type(generator).name: json.loads(generator.model_dump_json()),
         },
-        "vocs": json.loads(generator.vocs.json()),
+        "vocs": json.loads(generator.vocs.model_dump_json()),
     }
     if include_data:
         output["data"] = json.loads(data.to_json())

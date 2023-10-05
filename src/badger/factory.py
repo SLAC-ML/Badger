@@ -88,7 +88,7 @@ def load_plugin(root, pname, ptype):
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
-        params = module.Interface.schema()['properties']
+        params = module.Interface.model_json_schema()['properties']
         params = {name: get_value_or_none(info, 'default')
                   for name, info in params.items()}
         configs['params'] = params
@@ -96,7 +96,7 @@ def load_plugin(root, pname, ptype):
     elif ptype == 'environment':
         vars = module.Environment.variables
         obses = module.Environment.observables
-        params = module.Environment.schema()['properties']
+        params = module.Environment.model_json_schema()['properties']
         params = {name: get_value_or_none(info, 'default')
                   for name, info in params.items()
                   if name != 'interface'}
