@@ -539,27 +539,48 @@ def evaluate_points(
     vocs = routine.vocs
 
     obj_list = []
-    for _, point in points.iterrows():
-        env._set_variables(point.to_dict())
+    for i in range(points.shape[0]):
+        env._set_variables(points.iloc[i].to_dict())  # point is a series!
         obj = env._get_observables(vocs.objective_names)
         obj_df = DataFrame(obj, index=[0])
         obj_list.append(obj_df)
+
+        # Have to call the callback after each evaluation
+        # since we need the time information
+        # Note: point here is a dataframe!
+        point_eval = concat([points.iloc[i:i + 1].reset_index(drop=True),
+                             obj_df], axis=1)
+        if callback:
+            callback(point_eval)
+
     points_obj = concat(obj_list, axis=0).reset_index(drop=True)
     points_eval = concat([points, points_obj], axis=1)
-
-    if callback:
-        callback(points_eval)
 
     return points_eval
 
 
 def add_to_pf(idx: int, candidate: DataFrame, result: DataFrame,
               pf: ParetoFront) -> None:
-    n_var = candidate.shape[1]
-    inputs = candidate.iloc[0].values
-    inputs = np.insert(inputs, 0, idx)
-    outputs = result.iloc[0][n_var:].values[:]  # copy to avoid troubles
-    pf.is_dominated((inputs, outputs))
+    n_sol, n_var = candidate.shape
+    for i in range(n_sol):  # loop through each solution
+        inputs = candidate.iloc[i].values
+        inputs = np.insert(inputs, 0, idx + i)
+        outputs = result.iloc[i][n_var:].values[:]  # copy to avoid troubles
+        pf.is_dominated((inputs, outputs))
+
+    return n_sol  # number of points inserted
+
+
+def check_run_status(active_callback):
+    while True:
+        status = active_callback()
+        if status == 2:
+            raise BadgerRunTerminatedError
+        elif status == 1:
+            time.sleep(0)
+            continue
+        else:
+            break
 
 
 def run_routine_xopt(
@@ -628,7 +649,7 @@ def run_routine_xopt(
     generator.add_data(result)
 
     eval_index = 0  # record current evaluation index
-    add_to_pf(eval_index, initial_points, result, pf)
+    eval_index += add_to_pf(eval_index, initial_points, result, pf)
 
     # Prepare for dumping file
     if dump_file_callback:
@@ -653,12 +674,12 @@ def run_routine_xopt(
         # generate_callback(generator, candidates)
         generate_callback(candidates)
 
+        check_run_status(active_callback)
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
         result = evaluate_points(candidates, routine, evaluate_callback)
 
-        eval_index += 1
-        add_to_pf(eval_index, candidates, result, pf)
+        eval_index += add_to_pf(eval_index, candidates, result, pf)
 
         # Dump Xopt state after each step
         if dump_file_callback:
