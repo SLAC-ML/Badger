@@ -150,13 +150,15 @@ def update_init_data_table(table, variable_names):
 def set_init_data_table(table, data_dict):
     variable_names = get_horizontal_header_as_list(table)
 
-    if data_dict is None:  # clear the table
-        for col, name in enumerate(variable_names):
-            for row in range(table.rowCount()):
-                table.setItem(row, col, QTableWidgetItem(''))
+    # Clear the table
+    for col, name in enumerate(variable_names):
+        for row in range(table.rowCount()):
+            table.setItem(row, col, QTableWidgetItem(''))
 
+    if data_dict is None:
         return
 
+    # Fill the table
     for col, name in enumerate(variable_names):
         for row in range(len(data_dict[name])):
             table.setItem(row, col, QTableWidgetItem(f'{data_dict[name][row]:g}'))
