@@ -10,6 +10,8 @@ import sys
 import os
 import importlib
 import yaml
+import json
+from xopt.generators import generators
 import logging
 logger = logging.getLogger(__name__)
 
@@ -165,60 +167,67 @@ def get_plug(root, name, ptype):
 def scan_extensions(root):
     extensions = {}
 
-    eroot = os.path.join(root, 'extensions')
-
-    try:
-        enames = [fname for fname in os.listdir(eroot)
-                  if os.path.exists(os.path.join(eroot, fname, '__init__.py'))]
-    except:
-        enames = []
-
-    for ename in enames:
-        try:
-            module = importlib.import_module(f'extensions.{ename}')
-            ext = module.Extension()
-            extensions[ename] = ext
-        except ImportError:  # usually caused by missing dependencies
-            logger.debug(
-                f'Extension {ename} is not available due to missing dependencies')
-        except Exception as e:
-            logger.debug(
-                f'Failed to load extension {ename}: {str(e)}')
-
     return extensions
 
 
-def get_algo(name):
-    if name in BADGER_FACTORY['algorithm'].keys():
-        return get_plug(BADGER_PLUGIN_ROOT, name, 'algorithm')
-    else:
-        for ext_name in BADGER_EXTENSIONS.keys():
-            ext = BADGER_EXTENSIONS[ext_name]
-            try:
-                if name in ext.list_algo():
-                    return [ext, ext.get_algo_config(name)]
-            except ImportError as e:
-                logger.warning(
-                    f'Failed to read algorithms from ext {ext_name}: {str(e)}')
+def get_algo_params(cls):
+    params = {}
+    for k in cls.__fields__:
+        if k in ['vocs', 'data']:
+            continue
 
-        raise BadgerPluginNotFoundError(
-            f'Error loading plugin algorithm {name}: plugin not found')
+        v = cls.__fields__[k]
+        try:
+            _ = v.default
+        except AttributeError:
+            params[k] = get_algo_params(v)
+            continue
+
+        try:
+            params[k] = json.loads(v.default.json())
+        except AttributeError:
+            params[k] = v.default
+
+    return params
+
+
+def get_algo(name):
+    from xopt import __version__
+
+    try:
+        from xopt.generators import generator_default_options
+
+        params = generator_default_options[name].dict()
+    except ImportError:  # Xopt v2.0+
+        from xopt.generators import get_generator
+
+        params = get_algo_params(get_generator(name))
+
+    try:
+        _ = params["start_from_current"]
+    except KeyError:
+        params["start_from_current"] = True
+    try:  # remove custom GP kernel to avoid yaml parsing error for now
+        del params["model"]["function"]
+    except KeyError:
+        pass
+    except TypeError:
+        pass
+
+    try:
+        return [None, {
+            "name": name,
+            "version": __version__,
+            "dependencies": ["xopt"],
+            "params": params,
+        }]
+    except Exception as e:
+        raise e
+        # raise Exception(f'Algorithm {name} is not supported')
 
 
 def get_algo_docs(name):
-    if name in BADGER_FACTORY['algorithm'].keys():
-        return load_docs(BADGER_PLUGIN_ROOT, name, 'algorithm')
-    else:
-        for ext_name in BADGER_EXTENSIONS.keys():
-            ext = BADGER_EXTENSIONS[ext_name]
-            try:
-                if name in ext.list_algo():
-                    return ext.get_algo_docs(name)
-            except ImportError as e:
-                logger.warning(
-                    f'Failed to read algorithms from ext {ext_name}: {str(e)}')
-
-        raise BadgerPluginNotFoundError(f'Error loading docs for algorithm {name}: plugin not found')
+    return generators[name].__doc__
 
 
 def get_intf(name):
@@ -230,15 +239,8 @@ def get_env(name):
 
 
 def list_algo():
-    algos = []
-    algos += BADGER_FACTORY['algorithm']
-    for ext_name in BADGER_EXTENSIONS.keys():
-        ext = BADGER_EXTENSIONS[ext_name]
-        try:
-            algos += ext.list_algo()
-        except ImportError as e:
-            logger.warning(
-                f'Failed to list algorithms from ext {ext_name}: {str(e)}')
+    algos = list(generators.keys())
+
     return sorted(algos)
 
 
