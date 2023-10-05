@@ -683,6 +683,7 @@ class BadgerOptMonitor(QWidget):
         self.run_action.setText('Run')
         self.run_until_action.setText('Run until')
         self.btn_stop.setToolTip('')
+        self.btn_stop.setDisabled(False)
 
         self.btn_reset.setDisabled(False)
         self.btn_set.setDisabled(False)
@@ -933,6 +934,7 @@ class BadgerOptMonitor(QWidget):
         if self.run_action.text() == 'Run':
             self.start()
         else:
+            self.btn_stop.setDisabled(True)
             self.sig_stop.emit()
 
     def set_run_until_action(self):
@@ -946,6 +948,7 @@ class BadgerOptMonitor(QWidget):
             )
             dlg.exec()
         else:
+            self.btn_stop.setDisabled(True)
             self.sig_stop.emit()
 
     # def closeEvent(self, event):
