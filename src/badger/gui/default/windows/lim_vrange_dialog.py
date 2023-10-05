@@ -2,23 +2,6 @@ from PyQt5.QtWidgets import QDialog, QWidget, QHBoxLayout, QPushButton, QVBoxLay
 from PyQt5.QtWidgets import QGroupBox, QLabel, QComboBox, QStyledItemDelegate, QStackedWidget
 
 
-stylesheet_set = '''
-QPushButton:hover:pressed
-{
-    background-color: #92D38C;
-}
-QPushButton:hover
-{
-    background-color: #6EC566;
-}
-QPushButton
-{
-    background-color: #4AB640;
-    color: #000000;
-}
-'''
-
-
 class BadgerLimitVariableRangeDialog(QDialog):
     def __init__(self, parent, set_vrange, save_config, configs=None):
         super().__init__(parent)
@@ -104,13 +87,12 @@ class BadgerLimitVariableRangeDialog(QDialog):
         hbox_set = QHBoxLayout(button_set)
         hbox_set.setContentsMargins(0, 0, 0, 0)
         self.btn_cancel = btn_cancel = QPushButton('Cancel')
-        self.btn_run = btn_run = QPushButton('Set')
-        btn_run.setStyleSheet(stylesheet_set)
+        self.btn_set = btn_set = QPushButton('Set')
         btn_cancel.setFixedSize(96, 24)
-        btn_run.setFixedSize(96, 24)
+        btn_set.setFixedSize(96, 24)
         hbox_set.addStretch()
         hbox_set.addWidget(btn_cancel)
-        hbox_set.addWidget(btn_run)
+        hbox_set.addWidget(btn_set)
 
         vbox.addWidget(action_bar)
         vbox.addWidget(group_config, 1)
@@ -119,7 +101,7 @@ class BadgerLimitVariableRangeDialog(QDialog):
     def config_logic(self):
         self.cb.currentIndexChanged.connect(self.limit_option_changed)
         self.btn_cancel.clicked.connect(self.close)
-        self.btn_run.clicked.connect(self.set)
+        self.btn_set.clicked.connect(self.set)
         self.sb_ratio_curr.valueChanged.connect(self.ratio_curr_changed)
         self.sb_ratio_full.valueChanged.connect(self.ratio_full_changed)
 
