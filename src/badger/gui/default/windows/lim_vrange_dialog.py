@@ -33,6 +33,17 @@ class BadgerLimitVariableRangeDialog(QDialog):
         lbl = QLabel('Limit variable range by')
         lbl.setFixedWidth(128)
         self.cb = cb = QComboBox()
+        tooltip = '''Ratio wrt current value will set the limit
+with [ratio * current value] span,
+while centering around the current value;
+
+Ratio wrt full range will set the limit
+with [ratio * variable range] span,
+while centering around the current value;
+
+No matter which option you choose, the limit
+will be clipped by the variable range.'''
+        cb.setToolTip(tooltip)
         cb.setItemDelegate(QStyledItemDelegate())
         cb.addItems([
             'ratio wrt current value',
