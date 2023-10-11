@@ -1,10 +1,11 @@
 import os
+from importlib import resources
 import numpy as np
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QStyledItemDelegate
 from PyQt5.QtWidgets import QToolButton, QMenu, QAction
-from PyQt5.QtCore import pyqtSignal, QThreadPool
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal, QThreadPool, QSize
+from PyQt5.QtGui import QFont, QIcon
 import pyqtgraph as pg
 from .routine_runner import BadgerRoutineRunner
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
@@ -129,6 +130,17 @@ class BadgerOptMonitor(QWidget):
         self.config_logic()
 
     def init_ui(self):
+        # Load all icons
+        icon_ref = resources.files(__package__) / '../images/play.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_play = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/pause.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_pause = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/info.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_info = QIcon(str(icon_path))
+
         # self.main_panel = main_panel = QWidget(self)
         # main_panel.setStyleSheet('background-color: #19232D;')
         vbox = QVBoxLayout(self)
@@ -248,10 +260,12 @@ class BadgerOptMonitor(QWidget):
         btn_set.setDisabled(True)
         btn_set.setFixedSize(64, 32)
         btn_set.setFont(cool_font)
-        self.btn_ctrl = btn_ctrl = QPushButton('Pause')
+        self.btn_ctrl = btn_ctrl = QPushButton()
         btn_ctrl.setDisabled(True)
-        btn_ctrl.setFixedSize(64, 32)
-        btn_ctrl.setFont(cool_font)
+        btn_ctrl.setFixedSize(32, 32)
+        btn_ctrl.setIcon(self.icon_pause)
+        btn_ctrl.setToolTip('Pause')
+        btn_ctrl._status = 'pause'
 
         # self.btn_stop = btn_stop = QPushButton('Run')
         self.btn_stop = btn_stop = QToolButton()
@@ -274,6 +288,12 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
         btn_stop.setToolTip('')
 
+        # Details button
+        self.btn_details = btn_details = QPushButton()
+        btn_details.setFixedSize(32, 32)
+        btn_details.setIcon(self.icon_info)
+        # btn_details.setIconSize(QSize(24, 24))
+
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
@@ -283,6 +303,7 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(btn_set)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
+        hbox_action.addWidget(btn_details)
 
         vbox.addWidget(config_bar)
         vbox.addWidget(monitor)
@@ -656,7 +677,9 @@ class BadgerOptMonitor(QWidget):
             return
 
         self.sig_pause.emit(True)
-        self.btn_ctrl.setText('Resume')
+        self.btn_ctrl.setIcon(self.icon_play)
+        self.btn_ctrl.setToolTip('Resume')
+        self.btn_ctrl._status = 'play'
 
         reply = QMessageBox.warning(self,
                                     'Run Paused',
@@ -674,7 +697,9 @@ class BadgerOptMonitor(QWidget):
 
     def routine_finished(self):
         self.running = False
-        self.btn_ctrl.setText('Pause')
+        self.btn_ctrl.setIcon(self.icon_pause)
+        self.btn_ctrl.setToolTip('Pause')
+        self.btn_ctrl._status = 'pause'
         self.btn_ctrl.setDisabled(True)
 
         # Note the order of the following two lines cannot be changed!
@@ -735,12 +760,16 @@ class BadgerOptMonitor(QWidget):
             self, 'Success!', f'Log saved to {BADGER_LOGBOOK_ROOT}')
 
     def ctrl_routine(self):
-        if self.btn_ctrl.text() == 'Pause':
+        if self.btn_ctrl._status == 'pause':
             self.sig_pause.emit(True)
-            self.btn_ctrl.setText('Resume')
+            self.btn_ctrl.setIcon(self.icon_play)
+            self.btn_ctrl.setToolTip('Resume')
+            self.btn_ctrl._status = 'play'
         else:
             self.sig_pause.emit(False)
-            self.btn_ctrl.setText('Pause')
+            self.btn_ctrl.setIcon(self.icon_pause)
+            self.btn_ctrl.setToolTip('Pause')
+            self.btn_ctrl._status = 'pause'
 
     def ins_obj_dragged(self, ins_obj):
         self.ins_var.setValue(ins_obj.value())
