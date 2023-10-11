@@ -65,16 +65,15 @@ QToolButton
 stylesheet_stop = '''
 QToolButton:hover:pressed
 {
-    background-color: #ed9c33;
+    background-color: #C7737B;
 }
 QToolButton:hover
 {
-    background-color: #eb8f1a;
+    background-color: #BF616A;
 }
 QToolButton
 {
-    background-color: #E98300;
-    color: #000000;
+    background-color: #A9444E;
 }
 '''
 
@@ -137,7 +136,25 @@ class BadgerOptMonitor(QWidget):
         icon_ref = resources.files(__package__) / '../images/pause.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_pause = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/info.png'
+        icon_ref = resources.files(__package__) / '../images/stop.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_stop = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/undo.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_reset = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/set.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_set = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/book.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_log = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/trash.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_del = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/star.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_opt = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/tools.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_info = QIcon(str(icon_path))
 
@@ -238,28 +255,33 @@ class BadgerOptMonitor(QWidget):
         cool_font.setWeight(QFont.DemiBold)
         cool_font.setPixelSize(13)
 
-        self.btn_del = btn_del = QPushButton('Delete Run')
-        btn_del.setFixedSize(128, 32)
-        btn_del.setFont(cool_font)
+        self.btn_del = btn_del = QPushButton()
+        btn_del.setFixedSize(32, 32)
+        btn_del.setIcon(self.icon_del)
+        btn_del.setToolTip('Delete run')
         btn_del.setStyleSheet(stylesheet_del)
         # self.btn_edit = btn_edit = QPushButton('Edit')
         # btn_edit.setFixedSize(64, 32)
         # btn_edit.setFont(cool_font)
-        self.btn_log = btn_log = QPushButton('Logbook')
-        btn_log.setFixedSize(128, 32)
-        btn_log.setFont(cool_font)
+        self.btn_log = btn_log = QPushButton()
+        btn_log.setFixedSize(32, 32)
+        btn_log.setIcon(self.icon_log)
+        btn_log.setToolTip('Logbook')
         btn_log.setStyleSheet(stylesheet_log)
-        self.btn_reset = btn_reset = QPushButton('Reset')
+        self.btn_reset = btn_reset = QPushButton()
         btn_reset.setDisabled(True)
-        btn_reset.setFixedSize(64, 32)
-        btn_reset.setFont(cool_font)
-        self.btn_opt = btn_opt = QPushButton('Optimal')
-        btn_opt.setFixedSize(64, 32)
-        btn_opt.setFont(cool_font)
-        self.btn_set = btn_set = QPushButton('Set')
+        btn_reset.setFixedSize(32, 32)
+        btn_reset.setIcon(self.icon_reset)
+        btn_reset.setToolTip('Reset environment')
+        self.btn_opt = btn_opt = QPushButton()
+        btn_opt.setFixedSize(32, 32)
+        btn_opt.setIcon(self.icon_opt)
+        btn_opt.setToolTip('Jump to optimum')
+        self.btn_set = btn_set = QPushButton()
         btn_set.setDisabled(True)
-        btn_set.setFixedSize(64, 32)
-        btn_set.setFont(cool_font)
+        btn_set.setFixedSize(32, 32)
+        btn_set.setIcon(self.icon_set)
+        btn_set.setToolTip('Dial in solution')
         self.btn_ctrl = btn_ctrl = QPushButton()
         btn_ctrl.setDisabled(True)
         btn_ctrl.setFixedSize(32, 32)
@@ -270,7 +292,7 @@ class BadgerOptMonitor(QWidget):
         # self.btn_stop = btn_stop = QPushButton('Run')
         self.btn_stop = btn_stop = QToolButton()
         btn_stop.setDisabled(True)
-        btn_stop.setFixedSize(128, 32)
+        btn_stop.setFixedSize(96, 32)
         btn_stop.setFont(cool_font)
         btn_stop.setStyleSheet(stylesheet_run)
 
@@ -278,7 +300,9 @@ class BadgerOptMonitor(QWidget):
         self.run_menu = menu = QMenu(self)
         menu.setFixedWidth(128)
         self.run_action = run_action = QAction('Run', self)
+        run_action.setIcon(self.icon_play)
         self.run_until_action = run_until_action = QAction('Run until', self)
+        run_until_action.setIcon(self.icon_play)
         menu.addAction(run_action)
         menu.addAction(run_until_action)
 
@@ -286,24 +310,25 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setMenu(menu)
         btn_stop.setDefaultAction(run_action)
         btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
-        btn_stop.setToolTip('')
+        # btn_stop.setToolTip('')
 
         # Details button
         self.btn_details = btn_details = QPushButton()
         btn_details.setFixedSize(32, 32)
         btn_details.setIcon(self.icon_info)
+        btn_details.setToolTip('Configure run')
         # btn_details.setIconSize(QSize(24, 24))
 
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
-        hbox_action.addWidget(btn_opt)
+        hbox_action.addWidget(btn_details)
         hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_opt)
         hbox_action.addWidget(btn_reset)
         hbox_action.addWidget(btn_set)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
-        hbox_action.addWidget(btn_details)
 
         vbox.addWidget(config_bar)
         vbox.addWidget(monitor)
@@ -569,8 +594,10 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setStyleSheet(stylesheet_stop)
         self.btn_stop.setPopupMode(QToolButton.DelayedPopup)
         self.run_action.setText('Stop')
+        self.run_action.setIcon(self.icon_stop)
         self.run_until_action.setText('Stop')
-        self.btn_stop.setToolTip('')
+        self.run_until_action.setIcon(self.icon_stop)
+        # self.btn_stop.setToolTip('')
 
         self.btn_ctrl.setDisabled(False)
         self.sig_lock.emit(True)
@@ -706,8 +733,10 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
         self.btn_stop.setStyleSheet(stylesheet_run)
         self.run_action.setText('Run')
+        self.run_action.setIcon(self.icon_play)
         self.run_until_action.setText('Run until')
-        self.btn_stop.setToolTip('')
+        self.run_until_action.setIcon(self.icon_play)
+        # self.btn_stop.setToolTip('')
         self.btn_stop.setDisabled(False)
 
         self.btn_reset.setDisabled(False)

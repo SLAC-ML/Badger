@@ -1,9 +1,10 @@
 import os
+from importlib import resources
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QFileDialog
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QIcon, QFont
 from ..components.search_bar import search_bar
 from ..components.data_table import data_table, update_table, reset_table, add_row
 from ..components.routine_item import BadgerRoutineItem
@@ -50,6 +51,20 @@ class BadgerHomePage(QWidget):
         self.load_all_runs()
 
     def init_ui(self):
+        icon_ref = resources.files(__package__) / '../images/add.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_add = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/import.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_import = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/export.png'
+        with resources.as_file(icon_ref) as icon_path:
+            self.icon_export = QIcon(str(icon_path))
+
+        # cool_font = QFont()
+        # cool_font.setWeight(QFont.DemiBold)
+        # cool_font.setPixelSize(13)
+
         # Set up the layout
         vbox = QVBoxLayout(self)
         vbox.setContentsMargins(0, 0, 0, 0)
@@ -68,16 +83,19 @@ class BadgerHomePage(QWidget):
         panel_search = QWidget()
         hbox_search = QHBoxLayout(panel_search)
         hbox_search.setContentsMargins(0, 0, 0, 0)
+        # hbox_search.setSpacing(8)
 
         self.sbar = sbar = search_bar()
         sbar.setFixedHeight(36)
         f = sbar.font()
         f.setPixelSize(16)
         sbar.setFont(f)
-        self.btn_new = btn_new = QPushButton('+')
+        self.btn_new = btn_new = QPushButton()
         btn_new.setFixedSize(36, 36)
-        btn_new.setFont(f)
+        btn_new.setIcon(self.icon_add)
+        btn_new.setToolTip('Create new routine')
         hbox_search.addWidget(sbar)
+        # hbox_search.addSpacing(4)
         hbox_search.addWidget(btn_new)
         vbox_routine.addWidget(panel_search)
 
@@ -100,12 +118,17 @@ class BadgerHomePage(QWidget):
         action_bar = QWidget()
         hbox_action = QHBoxLayout(action_bar)
         hbox_action.setContentsMargins(0, 0, 0, 0)
-        self.btn_export = btn_export = QPushButton('Export')
-        self.btn_import = btn_import = QPushButton('Import')
-        btn_export.setFixedHeight(32)
-        btn_import.setFixedHeight(32)
-        hbox_action.addWidget(btn_import, 1)
-        hbox_action.addWidget(btn_export, 1)
+        self.btn_export = btn_export = QPushButton()
+        btn_export.setFixedSize(28, 28)
+        btn_export.setIcon(self.icon_export)
+        btn_export.setToolTip('Export filtered routines')
+        self.btn_import = btn_import = QPushButton()
+        btn_import.setFixedSize(28, 28)
+        btn_import.setIcon(self.icon_import)
+        btn_import.setToolTip('Import routines')
+        hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_import)
+        hbox_action.addWidget(btn_export)
         vbox_routine.addWidget(action_bar)
 
         # Info panel
