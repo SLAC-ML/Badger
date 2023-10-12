@@ -2,13 +2,11 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 import time
-import copy
 import pandas as pd
 from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from xopt.generators import get_generator
-from ....utils import curr_ts, ts_to_str, merge_params
-from ....core import run_routine_xopt, instantiate_env, Routine
+from ....utils import curr_ts, ts_to_str
+from ....core import run_routine, Routine
 from ....settings import read_value
 from ....archive import archive_run
 from ....errors import BadgerRunTerminatedError
@@ -24,7 +22,7 @@ class BadgerRoutineSignals(QObject):
 
 class BadgerRoutineRunner(QRunnable):
 
-    def __init__(self, routine, save, verbose=2, use_full_ts=False):
+    def __init__(self, routine: Routine, save, verbose=2, use_full_ts=False):
         super().__init__()
 
         # Signals should belong to instance rather than class
@@ -33,17 +31,6 @@ class BadgerRoutineRunner(QRunnable):
 
         self.routine = routine
         self.run_filename = None
-        self.var_names = var_names = [next(iter(d)) for d in routine['config']['variables']]
-        self.obj_names = obj_names = [next(iter(d)) for d in routine['config']['objectives']]
-        if routine['config']['constraints']:
-            self.con_names = con_names = [next(iter(d)) for d in routine['config']['constraints']]
-        else:
-            self.con_names = con_names = []
-        try:
-            self.sta_names = sta_names = routine['config']['states'] or []
-        except KeyError:  # this would happen when rerun an old version routine
-            self.sta_names = sta_names = []
-        self.data = pd.DataFrame(None, columns=['timestamp_raw', 'timestamp'] + obj_names + con_names + var_names + sta_names)
         self.states = None  # system states to be saved at start of a run
         self.save = save
         self.verbose = verbose
@@ -63,16 +50,13 @@ class BadgerRoutineRunner(QRunnable):
         self.last_dump_time = None  # reset the timer
 
         try:
-            # run_routine(self.routine, True, self.save, self.verbose,
-            #             self.before_evaluate, self.after_evaluate,
-            #             self.env_ready, self.pf_ready, self.states_ready)
-            routine_xopt = self.get_routine_xopt()
-            run_routine_xopt(routine_xopt,
-                             active_callback=self.run_status,
-                             generate_callback=self.before_evaluate_xopt,
-                             evaluate_callback=self.after_evaluate_xopt,
-                             pf_callback=self.pf_ready,
-                             states_callback=self.states_ready)
+            run_routine(
+                self.routine,
+                active_callback=self.run_status,
+                generate_callback=self.before_evaluate_xopt,
+                evaluate_callback=self.after_evaluate_xopt,
+                states_callback=self.states_ready
+            )
         except BadgerRunTerminatedError as e:
             self.signals.finished.emit()
             self.signals.info.emit(str(e))
@@ -148,51 +132,6 @@ class BadgerRoutineRunner(QRunnable):
             return 1
         else:
             return 0  # running
-
-    def get_routine_xopt(self):
-        routine = self.routine
-
-        from ....factory import get_env
-
-        # Initialize routine
-        Environment, configs_env = get_env(routine['env'])
-        _configs_env = merge_params(
-            configs_env, {'params': routine['env_params']})
-        environment = instantiate_env(Environment, _configs_env)
-        self.env_ready(environment)
-
-        variables = {key: value for dictionary in routine['config']['variables']
-                     for key, value in dictionary.items()}
-        objectives = {key: value for dictionary in routine['config']['objectives']
-                      for key, value in dictionary.items()}
-        vocs = {
-            'variables': variables,
-            'objectives': objectives,
-        }
-        generator_class = get_generator(routine['algo'])
-        try:
-            del routine['algo_params']['start_from_current']
-        except KeyError:
-            pass
-        routine_copy = copy.deepcopy(routine['algo_params'])
-        # Note! The following line will remove all the name fields in
-        # generator params. That's why we make a copy here so the modification
-        # will not affect the routine to be saved (in archive)
-        generator = generator_class(vocs=vocs, **routine_copy)
-
-        try:
-            initial_points = routine['config']['init_points']
-            initial_points = DataFrame.from_dict(initial_points)
-            if initial_points.empty:
-                raise KeyError
-        except KeyError:  # start from current
-            initial_points = environment.get_variables(generator.vocs.variable_names)
-            initial_points = DataFrame(initial_points, index=[0])
-
-        routine_xopt = Routine(environment=environment, generator=generator,
-                               initial_points=initial_points)
-
-        return routine_xopt
 
     def before_evaluate_xopt(self, candidates: DataFrame):
         pass
