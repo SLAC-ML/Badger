@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QToolButton, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, QThreadPool, QSize
 from PyQt5.QtGui import QFont, QIcon
 import pyqtgraph as pg
+
+from .analysis_extensions import DataViewer
 from .routine_runner import BadgerRoutineRunner
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
@@ -100,7 +102,7 @@ class BadgerOptMonitor(QWidget):
         self.routine = None
         self.var_names = []
         self.obj_names = []
-        self.con_names = []
+        self.constraint_names = []
         self.sta_names = []
         self.vranges = []
         # Curves in the monitor
@@ -124,6 +126,8 @@ class BadgerOptMonitor(QWidget):
         self.eval_count = 0
         # Termination condition for the run
         self.termination_condition = None
+
+        self.active_analysis_extensions = []
 
         self.init_ui()
         self.config_logic()
@@ -296,6 +300,10 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setFont(cool_font)
         btn_stop.setStyleSheet(stylesheet_run)
 
+        # add button for extensions
+        self.btn_activate_extensions = btn_extensions = QPushButton("Extensions")
+
+
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
         menu.setFixedWidth(128)
@@ -325,6 +333,7 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(btn_details)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_opt)
+        hbox_action.addWidget(btn_extensions)
         hbox_action.addWidget(btn_reset)
         hbox_action.addWidget(btn_set)
         hbox_action.addWidget(btn_ctrl)
@@ -358,6 +367,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.run_action.triggered.connect(self.set_run_action)
         self.run_until_action.triggered.connect(self.set_run_until_action)
+        self.btn_activate_extensions.clicked.connect(self.activate_extensions)
 
         # Visualization
         self.cb_plot_x.currentIndexChanged.connect(self.select_x_axis)
@@ -371,36 +381,11 @@ class BadgerOptMonitor(QWidget):
     #         print('Yo')
     #         self.sender().showMenu()
 
-    def init_plots(self, routine, data=None, run_filename=None):
-        # Parse routine
-        self.routine = routine
-        try:
-            self.obj_names = [next(iter(d))
-                              for d in self.routine['config']['objectives']]
-        except:
-            self.obj_names = []
-        try:
-            self.var_names = [next(iter(d))
-                              for d in self.routine['config']['variables']]
-        except:
-            self.var_names = []
-        try:
-            self.vranges = np.array([d[next(iter(d))]
-                                    for d in routine['config']['variables']])
-        except:
-            self.vranges = []
-        try:
-            if self.routine['config']['constraints']:
-                self.con_names = [next(iter(d))
-                                  for d in self.routine['config']['constraints']]
-            else:
-                self.con_names = []
-        except:
-            self.con_names = []
-        try:
-            self.sta_names = self.routine['config']['states'] or []
-        except KeyError:  # this would happen when rerun an old version routine
-            self.sta_names = []
+    def init_plots(self, data=None, run_filename=None):
+        self.obj_names = self.routine.vocs.objective_names
+        self.var_names = self.routine.vocs.variable_names
+        self.constraint_names = self.routine.vocs.constraint_names
+        self.sta_names = self.routine.vocs.constant_names
 
         # Configure plots
         # Clear current plots
@@ -440,7 +425,7 @@ class BadgerOptMonitor(QWidget):
                                         name=var_name)
             self.curves_var.append(_curve)
 
-        if self.con_names:
+        if self.constraint_names:
             try:
                 self.plot_con
             except:
@@ -454,7 +439,7 @@ class BadgerOptMonitor(QWidget):
                 plot_con.addItem(self.ins_con)
                 plot_con.setXLink(self.plot_obj)
 
-            for i, con_name in enumerate(self.con_names):
+            for i, con_name in enumerate(self.constraint_names):
                 color = self.colors[i % len(self.colors)]
                 symbol = self.symbols[i % len(self.colors)]
                 _curve = self.plot_con.plot(pen=pg.mkPen(color, width=3),
@@ -538,7 +523,7 @@ class BadgerOptMonitor(QWidget):
         for obj in self.obj_names:
             self.objs.append(data[obj])
         self.objs = np.array(self.objs).T.tolist()
-        for con in self.con_names:
+        for con in self.constraint_names:
             self.cons.append(data[con])
         self.cons = np.array(self.cons).T.tolist()
         for sta in self.sta_names:
@@ -606,12 +591,12 @@ class BadgerOptMonitor(QWidget):
         self.termination_condition = tc
 
     def is_critical(self, cons):
-        if not self.con_names:
+        if not self.constraint_names:
             return False, None
 
         constraints = self.routine['config']['constraints']
         for i, con_dict in enumerate(constraints):
-            name = self.con_names[i]
+            name = self.constraint_names[i]
             if len(con_dict[name]) != 3:
                 continue
 
@@ -633,7 +618,7 @@ class BadgerOptMonitor(QWidget):
         # Enable autorange
         self.plot_obj.enableAutoRange()
         self.plot_var.enableAutoRange()
-        if self.con_names:
+        if self.constraint_names:
             self.plot_con.enableAutoRange()
         if self.sta_names:
             self.plot_sta.enableAutoRange()
@@ -668,8 +653,8 @@ class BadgerOptMonitor(QWidget):
             else:
                 self.curves_obj[i].setData(np.array(self.objs)[:, i])
 
-        if self.con_names:
-            for i in range(len(self.con_names)):
+        if self.constraint_names:
+            for i in range(len(self.constraint_names)):
                 if type_x:
                     self.curves_con[i].setData(ts, np.array(self.cons)[:, i])
                 else:
@@ -682,6 +667,16 @@ class BadgerOptMonitor(QWidget):
                 else:
                     self.curves_sta[i].setData(np.array(self.stas)[:, i])
 
+    def activate_extensions(self):
+        self.active_analysis_extensions += [DataViewer()]
+
+        for ele in self.active_analysis_extensions:
+            ele.show()
+
+    def update_analysis_extensions(self):
+        for ele in self.active_analysis_extensions:
+            ele.update_window(self.routine)
+
     def update(self, vars, objs, cons, stas, ts):
         self.vars.append(vars)
         self.objs.append(objs)
@@ -690,6 +685,8 @@ class BadgerOptMonitor(QWidget):
         self.ts.append(ts)
 
         self.update_curves()
+
+        self.update_analysis_extensions()
 
         # Quick-n-dirty fix to the auto range issue
         self.eval_count += 1
@@ -746,8 +743,8 @@ class BadgerOptMonitor(QWidget):
         self.sig_lock.emit(False)
 
         try:
-            run = archive_run(self.routine_runner.routine, self.routine_runner.data,
-                self.routine_runner.states)
+            run = archive_run(self.routine_runner.routine_name, self.routine_runner.data,
+                              self.routine_runner.states)
             self.routine_runner.run_filename = run['filename']
             try:
                 path = run['path']
@@ -776,7 +773,7 @@ class BadgerOptMonitor(QWidget):
     def logbook(self):
         try:
             if self.routine_runner:
-                routine = self.routine_runner.routine
+                routine = self.routine_runner.routine_name
                 data = self.routine_runner.data.to_dict('list')
             else:
                 routine = self.routine
@@ -802,7 +799,7 @@ class BadgerOptMonitor(QWidget):
 
     def ins_obj_dragged(self, ins_obj):
         self.ins_var.setValue(ins_obj.value())
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(ins_obj.value())
         if self.sta_names:
             self.ins_sta.setValue(ins_obj.value())
@@ -816,12 +813,12 @@ class BadgerOptMonitor(QWidget):
     def ins_sta_dragged(self, ins_sta):
         self.ins_var.setValue(ins_sta.value())
         self.ins_obj.setValue(ins_sta.value())
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(ins_sta.value())
 
     def ins_var_dragged(self, ins_var):
         self.ins_obj.setValue(ins_var.value())
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(ins_var.value())
         if self.sta_names:
             self.ins_sta.setValue(ins_var.value())
@@ -835,7 +832,7 @@ class BadgerOptMonitor(QWidget):
         else:
             value = idx = np.clip(np.round(pos), 0, len(self.ts) - 1)
         self.ins_obj.setValue(value)
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(value)
         if self.sta_names:
             self.ins_sta.setValue(value)
@@ -892,7 +889,7 @@ class BadgerOptMonitor(QWidget):
             value = idx
 
         self.ins_obj.setValue(value)
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(value)
         if self.sta_names:
             self.ins_sta.setValue(value)
@@ -928,14 +925,14 @@ class BadgerOptMonitor(QWidget):
         if i:
             self.plot_var.setLabel('bottom', 'time (s)')
             self.plot_obj.setLabel('bottom', 'time (s)')
-            if self.con_names:
+            if self.constraint_names:
                 self.plot_con.setLabel('bottom', 'time (s)')
             if self.sta_names:
                 self.plot_sta.setLabel('bottom', 'time (s)')
         else:
             self.plot_var.setLabel('bottom', 'iterations')
             self.plot_obj.setLabel('bottom', 'iterations')
-            if self.con_names:
+            if self.constraint_names:
                 self.plot_con.setLabel('bottom', 'iterations')
             if self.sta_names:
                 self.plot_sta.setLabel('bottom', 'iterations')
@@ -946,7 +943,7 @@ class BadgerOptMonitor(QWidget):
         else:
             _, value = self.closest_ts(self.ins_obj.value())
         self.ins_obj.setValue(value)
-        if self.con_names:
+        if self.constraint_names:
             self.ins_con.setValue(value)
         if self.sta_names:
             self.ins_sta.setValue(value)
@@ -966,7 +963,7 @@ class BadgerOptMonitor(QWidget):
     def on_mouse_click(self, event):
         # https://stackoverflow.com/a/64081483
         coor_obj = self.plot_obj.vb.mapSceneToView(event._scenePos)
-        if self.con_names:
+        if self.constraint_names:
             coor_con = self.plot_con.vb.mapSceneToView(event._scenePos)
         if self.sta_names:
             coor_sta = self.plot_sta.vb.mapSceneToView(event._scenePos)
@@ -974,7 +971,7 @@ class BadgerOptMonitor(QWidget):
 
         flag = self.plot_obj.viewRect().contains(coor_obj) or \
             self.plot_var.viewRect().contains(coor_var)
-        if self.con_names:
+        if self.constraint_names:
             flag = flag or self.plot_con.viewRect().contains(coor_con)
         if self.sta_names:
             flag = flag or self.plot_sta.viewRect().contains(coor_sta)

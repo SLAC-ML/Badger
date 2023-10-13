@@ -1,6 +1,11 @@
 import os
 from datetime import datetime
 import logging
+
+from xopt import VOCS
+
+from .routine import Routine, build_routine
+
 logger = logging.getLogger(__name__)
 import yaml
 import sqlite3
@@ -69,7 +74,7 @@ def filter_routines(records, tags):
 
 
 @maybe_create_routines_db
-def save_routine(routine):
+def save_routine(routine: Routine):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
 
     con = sqlite3.connect(db_routine)
@@ -78,14 +83,14 @@ def save_routine(routine):
     cur.execute('select * from routine where name=:name', {'name': routine['name']})
     record = cur.fetchone()
 
-    runs = get_runs_by_routine(routine['name'])
+    runs = get_runs_by_routine(routine.name)
 
     if record and len(runs) == 0:  # update the record
         cur.execute('update routine set config = ?, savedAt = ? where name = ?',
-                    (yaml.dump(routine, sort_keys=False), datetime.now(), routine['name']))
+                    (routine.yaml(), datetime.now(), routine.name))
     else:  # insert a record
         cur.execute('insert into routine values (?, ?, ?)',
-                    (routine['name'], yaml.dump(routine, sort_keys=False), datetime.now()))
+                    (routine.name, routine.yaml(), datetime.now()))
 
     con.commit()
     con.close()
@@ -118,7 +123,7 @@ def remove_routine(name, remove_runs=False):
 
 
 @maybe_create_routines_db
-def load_routine(name):
+def load_routine(name: str):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
@@ -129,7 +134,8 @@ def load_routine(name):
     con.close()
 
     if len(records) == 1:
-        return yaml.safe_load(records[0][1]), records[0][2]
+        # return yaml.safe_load(records[0][1]), records[0][2]
+        return Routine(**yaml.safe_load(records[0][1])), records[0][2]
     elif len(records) == 0:
         # logger.warning(f'Routine {name} not found in the database!')
         return None, None

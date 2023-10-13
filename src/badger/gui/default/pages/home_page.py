@@ -1,5 +1,7 @@
 import os
 from importlib import resources
+from typing import List
+
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QLabel, QFileDialog
@@ -111,7 +113,7 @@ class BadgerHomePage(QWidget):
         routine_list.setSpacing(1)
         routine_list.setViewportMargins(0, 0, 17, 0)  # leave space for scrollbar
         self.refresh_routine_list()
-        self.prev_routine = None  # last selected routine
+        self.prev_routine_item = None  # last selected routine
         vbox_routine.addWidget(routine_list)
 
         # Action bar
@@ -254,15 +256,15 @@ class BadgerHomePage(QWidget):
         self.routine_editor.switch_mode(self.mode)
         self.toggle_lock(True, 0)
 
-    def select_routine(self, item):
-        if self.prev_routine:
+    def select_routine(self, routine_item: QListWidgetItem):
+        if self.prev_routine_item:
             try:
-                self.routine_list.itemWidget(self.prev_routine).deactivate()
-            except:
+                self.routine_list.itemWidget(self.prev_routine_item).deactivate()
+            except ValueError:
                 pass
 
-            if self.prev_routine.routine == item.routine:  # click a routine again to deselect
-                self.prev_routine = None
+            if self.prev_routine_item.routine_name == routine_item.routine:  # click a routine again to deselect
+                self.prev_routine_item = None
                 self.current_routine = None
                 self.load_all_runs()
                 if not self.cb_history.count():
@@ -270,10 +272,10 @@ class BadgerHomePage(QWidget):
                 self.sig_routine_activated.emit(False)
                 return
 
-        self.prev_routine = item  # note that prev_routine is an item!
+        self.prev_routine_item = routine_item  # note that prev_routine is an item!
         self.sig_routine_activated.emit(True)
 
-        routine, timestamp = load_routine(item.routine)
+        routine, timestamp = load_routine(routine_item.routine_name)
         self.current_routine = routine
         self.routine_editor.set_routine(routine)
         runs = get_runs_by_routine(routine['name'])
@@ -284,11 +286,11 @@ class BadgerHomePage(QWidget):
         if not runs:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
 
-        self.routine_list.itemWidget(item).activate()
+        self.routine_list.itemWidget(routine_item).activate()
 
-    def build_routine_list(self, routines, timestamps):
+    def build_routine_list(self, routines: list[str], timestamps: list[str]):
         try:
-            selected_routine = self.prev_routine.routine
+            selected_routine = self.prev_routine_item.routine_name
         except:
             selected_routine = None
         self.routine_list.clear()
@@ -296,13 +298,13 @@ class BadgerHomePage(QWidget):
             _item = BadgerRoutineItem(routine, timestamps[i])
             _item.sig_del.connect(self.delete_routine)
             item = QListWidgetItem(self.routine_list)
-            item.routine = routine  # dirty trick
+            item.routine_name = routine  # dirty trick
             item.setSizeHint(_item.sizeHint())
             self.routine_list.addItem(item)
             self.routine_list.setItemWidget(item, _item)
             if routine == selected_routine:
                 _item.activate()
-                self.prev_routine = item
+                self.prev_routine_item = item
 
     def get_current_routines(self):
         keyword = self.sbar.text()
@@ -402,7 +404,7 @@ class BadgerHomePage(QWidget):
         reset_table(self.run_table, header)
 
     def run_name(self, name):
-        if self.prev_routine:
+        if self.prev_routine_item:
             runs = get_runs_by_routine(self.current_routine['name'])
         else:
             runs = get_runs()
@@ -415,7 +417,7 @@ class BadgerHomePage(QWidget):
         run_name = self.cb_history.currentText()
         delete_run(run_name)
         # Reset current routine if no routine is selected
-        if not self.prev_routine:
+        if not self.prev_routine_item:
             self.current_routine = None
             runs = get_runs()
         else:
@@ -449,9 +451,9 @@ class BadgerHomePage(QWidget):
         self.routine_deleted(name)
 
     def routine_deleted(self, name=None):
-        if self.prev_routine:
-            if self.prev_routine.routine == name:
-                self.prev_routine = None
+        if self.prev_routine_item:
+            if self.prev_routine_item.routine_name == name:
+                self.prev_routine_item = None
                 self.current_routine = None
                 self.load_all_runs()
                 if not self.cb_history.count():

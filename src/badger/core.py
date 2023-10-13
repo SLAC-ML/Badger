@@ -153,7 +153,7 @@ def run_routine(
             continue
 
         # generate points to observe
-        candidates = routine.generate(1)[0]
+        candidates = routine.generator.generate(1)[0]
         candidates = DataFrame(candidates, index=[0])
         # generate_callback(generator, candidates)
         generate_callback(candidates)

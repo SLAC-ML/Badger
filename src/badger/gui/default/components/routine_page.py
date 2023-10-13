@@ -1,4 +1,5 @@
 import copy
+from typing import List
 
 from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
@@ -534,12 +535,13 @@ class BadgerRoutinePage(QWidget):
         self.env_box.list_sta.setItemWidget(item, sta_item)
         self.env_box.fit_content()
 
-    def _compose_vocs(self) -> VOCS:
+    def _compose_vocs(self) -> (VOCS, List[str]):
         # Compose the VOCS settings
         variables = self.env_box.var_table.export_variables()
         objectives = self.env_box.obj_table.export_objectives()
 
         constraints = []
+        critical_constraints = []
         for i in range(self.env_box.list_con.count()):
             item = self.env_box.list_con.item(i)
             item_widget = self.env_box.list_con.itemWidget(item)
@@ -550,7 +552,7 @@ class BadgerRoutinePage(QWidget):
             _dict = {}
             _dict[con_name] = [relation, value]
             if critical:
-                _dict[con_name].append('CRITICAL')
+                critical_constraints += [con_name]
             constraints.append(_dict)
 
         states = []
@@ -567,7 +569,7 @@ class BadgerRoutinePage(QWidget):
             constants=states
         )
 
-        return vocs
+        return vocs, critical_constraints
 
     def _compose_routine(self) -> Routine:
         # Compose the routine
@@ -579,17 +581,7 @@ class BadgerRoutinePage(QWidget):
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
-        vocs = self._compose_vocs()
-
-        # Tags
-        tag_obj = self.cbox_tags.cb_obj.currentText()
-        tag_reg = self.cbox_tags.cb_reg.currentText()
-        tag_gain = self.cbox_tags.cb_gain.currentText()
-        tags = {}
-        if tag_obj: tags['objective'] = tag_obj
-        if tag_reg: tags['region'] = tag_reg
-        if tag_gain: tags['gain'] = tag_gain
-        if not tags: tags = None
+        vocs, critical_constraints = self._compose_vocs()
 
         # Initial points
         init_points_df = pd.DataFrame.from_dict(
@@ -608,9 +600,7 @@ class BadgerRoutinePage(QWidget):
             init_points_df = init_points_df.astype(float)
             init_points = init_points_df
 
-        return build_routine(
-            name, vocs, algo_name, algo_params, env, env_params, init_points, tags
-        )
+        return None
 
     def review(self):
         try:
