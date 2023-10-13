@@ -1,12 +1,14 @@
 import copy
+from typing import Optional, Dict, List
 
+import numpy as np
+import pandas as pd
 from pandas import DataFrame
-from pydantic import BaseModel, ConfigDict
-from xopt import Generator
+from pydantic import BaseModel, ConfigDict, Field
+from xopt import Generator, VOCS
 from xopt.generators import get_generator
 
-from badger.core import instantiate_env
-from badger.environment import Environment
+from badger.environment import Environment, instantiate_env
 from badger.factory import get_env
 from badger.utils import merge_params
 
@@ -14,9 +16,12 @@ from badger.utils import merge_params
 class Routine(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    name: str
     environment: Environment
     generator: Generator
     initial_points: DataFrame
+    data: Optional[DataFrame] = Field(None, description="internal DataFrame object")
+    tags: Optional[Dict] = Field(None)
 
     # convenience properties
     @property
@@ -29,44 +34,45 @@ class Routine(BaseModel):
         """
         return self.generator.vocs
 
+    def add_data(self, new_data):
+        # Set internal dataframe.
+        if self.data is not None:
+            new_data = pd.DataFrame(new_data, copy=True)  # copy for reindexing
+            new_data.index = np.arange(
+                len(self.data) + 1, len(self.data) + len(new_data) + 1
+            )
 
-def build_routine(routine_config: dict):
+            self.data = pd.concat([self.data, new_data], axis=0)
+        else:
+            self.data = new_data
+        self.generator.add_data(new_data)
+
+
+def build_routine(
+        routine_name: str,
+        vocs: VOCS,
+        algo_name: str,
+        algo_params: dict,
+        env_name: str,
+        env_params: dict,
+        init_points: pd.DataFrame,
+        tags: List[str]
+):
     """ build routine object from configuration dict """
+    generator_class = get_generator(algo_name)
+    generator = generator_class(
+        vocs=vocs, **copy.deepcopy(algo_params)
+    )
 
-    Environment, configs_env = get_env(routine_config['env'])
+    env_class, configs_env = get_env(env_name)
     _configs_env = merge_params(
-        configs_env, {'params': routine_config['env_params']})
-    environment = instantiate_env(Environment, _configs_env)
+        configs_env, {'params': env_params})
+    environment = instantiate_env(env_class, _configs_env)
 
-    variables = {key: value for dictionary in routine_config['config']['variables']
-                 for key, value in dictionary.items()}
-    objectives = {key: value for dictionary in routine_config['config']['objectives']
-                  for key, value in dictionary.items()}
-    vocs = {
-        'variables': variables,
-        'objectives': objectives,
-    }
-    generator_class = get_generator(routine_config['algo'])
-    try:
-        del routine_config['algo_params']['start_from_current']
-    except KeyError:
-        pass
-    routine_copy = copy.deepcopy(routine_config['algo_params'])
-    # Note! The following line will remove all the name fields in
-    # generator params. That's why we make a copy here so the modification
-    # will not affect the routine to be saved (in archive)
-    generator = generator_class(vocs=vocs, **routine_copy)
-
-    try:
-        initial_points = routine_config['config']['init_points']
-        initial_points = DataFrame.from_dict(initial_points)
-        if initial_points.empty:
-            raise KeyError
-    except KeyError:  # start from current
-        initial_points = environment.get_variables(generator.vocs.variable_names)
-        initial_points = DataFrame(initial_points, index=[0])
-
-    routine = Routine(environment=environment, generator=generator,
-                           initial_points=initial_points)
-
-    return routine
+    return Routine(
+        name=routine_name,
+        environment=environment,
+        generator=generator,
+        initial_points=init_points,
+        tags=tags
+    )

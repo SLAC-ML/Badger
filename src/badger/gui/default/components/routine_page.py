@@ -1,3 +1,5 @@
+import copy
+
 from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -6,9 +8,13 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from coolname import generate_slug
+from xopt import VOCS
+from xopt.generators import get_generator
+
 from ....factory import list_algo, list_env, get_algo, get_env
-from ....utils import ystring, load_config, config_list_to_dict, strtobool
-from ....core import normalize_routine, instantiate_env, list_scaling_func, get_scaling_default_params
+from ....routine import Routine, build_routine
+from ....utils import ystring, load_config, config_list_to_dict, strtobool, merge_params
+from ....environment import instantiate_env
 from ....db import save_routine, remove_routine
 from .constraint_item import constraint_item
 from .state_item import state_item
@@ -41,7 +47,6 @@ class BadgerRoutinePage(QWidget):
         self.env = None
         self.routine = None
         self.script = ''
-        self.scaling_functions = list_scaling_func()
         self.window_docs = BadgerDocsWindow(self, '')
 
         # Limit variable ranges
@@ -98,7 +103,6 @@ class BadgerRoutinePage(QWidget):
         self.algo_box.btn_docs.clicked.connect(self.open_algo_docs)
         self.algo_box.check_use_script.stateChanged.connect(self.toggle_use_script)
         self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
-        self.algo_box.cb_scaling.currentIndexChanged.connect(self.select_scaling_func)
         self.env_box.cb.currentIndexChanged.connect(self.select_env)
         self.env_box.btn_env_play.clicked.connect(self.open_playground)
         self.env_box.btn_add_var.clicked.connect(self.add_var)
@@ -302,19 +306,6 @@ class BadgerRoutinePage(QWidget):
             self.algo_box.edit.setPlainText(ystring(params_algo))
         except Exception as e:
             QMessageBox.warning(self, 'Invalid script!', str(e))
-
-    def select_scaling_func(self, i):
-        if i == -1:
-            self.algo_box.edit_scaling.setPlainText('')
-            return
-
-        try:
-            name = self.scaling_functions[i]
-            default_params = get_scaling_default_params(name)
-            self.algo_box.edit_scaling.setPlainText(ystring(default_params))
-        except Exception as e:
-            self.algo_box.cb.setCurrentIndex(-1)
-            return QMessageBox.critical(self, 'Error!', str(e))
 
     def select_env(self, i):
         if i == -1:
@@ -543,7 +534,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.list_sta.setItemWidget(item, sta_item)
         self.env_box.fit_content()
 
-    def _compose_vocs(self):
+    def _compose_vocs(self) -> VOCS:
         # Compose the VOCS settings
         variables = self.env_box.var_table.export_variables()
         objectives = self.env_box.obj_table.export_objectives()
@@ -569,56 +560,26 @@ class BadgerRoutinePage(QWidget):
             sta_name = item_widget.cb_sta.currentText()
             states.append(sta_name)
 
-        vocs = {
-            'variables': variables,
-            'objectives': objectives,
-            'constraints': constraints,
-            'states': states,
-        }
+        vocs = VOCS(
+            variables=variables,
+            objectives=objectives,
+            constraints=constraints,
+            constants=states
+        )
 
         return vocs
 
-    def _compose_routine(self):
+    def _compose_routine(self) -> Routine:
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
-        algo = self.algo_box.cb.currentText()
-        assert algo, 'Please specify algorithm'
+        algo_name = self.algo_box.cb.currentText()
+        assert algo_name, 'Please specify algorithm'
         env = self.env_box.cb.currentText()
         assert env, 'Please specify environment'
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
-        variables = self.env_box.var_table.export_variables()
-        objectives = self.env_box.obj_table.export_objectives()
-
-        constraints = []
-        for i in range(self.env_box.list_con.count()):
-            item = self.env_box.list_con.item(i)
-            item_widget = self.env_box.list_con.itemWidget(item)
-            critical = item_widget.check_crit.isChecked()
-            con_name = item_widget.cb_obs.currentText()
-            relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
-            value = item_widget.sb.value()
-            _dict = {}
-            _dict[con_name] = [relation, value]
-            if critical:
-                _dict[con_name].append('CRITICAL')
-            constraints.append(_dict)
-
-        states = []
-        for i in range(self.env_box.list_sta.count()):
-            item = self.env_box.list_sta.item(i)
-            item_widget = self.env_box.list_sta.itemWidget(item)
-            sta_name = item_widget.cb_sta.currentText()
-            states.append(sta_name)
-
-        # Domain scaling
-        try:
-            scaling = self.algo_box.cb_scaling.currentText()
-            scaling_params = load_config(self.algo_box.edit_scaling.toPlainText())
-            domain_scaling = {'func': scaling, **scaling_params}
-        except:
-            domain_scaling = None
+        vocs = self._compose_vocs()
 
         # Tags
         tag_obj = self.cbox_tags.cb_obj.currentText()
@@ -638,42 +599,18 @@ class BadgerRoutinePage(QWidget):
                                                how='all')
         contains_na = init_points_df.isna().any().any()
         if contains_na:
-            raise BadgerRoutineError('Initial points are not valid, please fill in the missing values')
+            raise BadgerRoutineError(
+                'Initial points are not valid, please fill in the missing values'
+            )
         if init_points_df.empty:
             init_points = None
         else:
             init_points_df = init_points_df.astype(float)
-            init_points = init_points_df.to_dict('list')
+            init_points = init_points_df
 
-        configs = {
-            'variables': variables,
-            'objectives': objectives,
-            'constraints': constraints,
-            'states': states,
-            'domain_scaling': domain_scaling,
-            'tags': tags,
-            'init_points': init_points,
-        }
-        if self.algo_box.check_use_script.isChecked():
-            configs['script'] = self.script
-
-        routine = {
-            'name': name,
-            'algo': algo,
-            'env': env,
-            'algo_params': algo_params,
-            'env_params': env_params,
-            'env_vranges': config_list_to_dict(variables),
-            'config': configs,
-        }
-
-        # Sanity check and config normalization
-        try:
-            routine = normalize_routine(routine)
-        except Exception as e:
-            raise e
-
-        return routine
+        return build_routine(
+            name, vocs, algo_name, algo_params, env, env_params, init_points, tags
+        )
 
     def review(self):
         try:

@@ -54,7 +54,7 @@ class BadgerRoutineRunner(QRunnable):
                 self.routine,
                 active_callback=self.run_status,
                 generate_callback=self.before_evaluate_xopt,
-                evaluate_callback=self.after_evaluate_xopt,
+                evaluate_callback=self.after_evaluate,
                 states_callback=self.states_ready
             )
         except BadgerRunTerminatedError as e:
@@ -75,26 +75,21 @@ class BadgerRoutineRunner(QRunnable):
         if self.is_killed:
             raise BadgerRunTerminatedError
 
-    def after_evaluate(self, vars, obses, cons, stas):
+    def after_evaluate(self):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
         # stas: list
         ts = curr_ts()
         ts_float = ts.timestamp()
-        self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas), ts_float)
-
-        # Append solution to data
-        fmt = 'lcls-log-full' if self.use_full_ts else 'lcls-log'
-        solution = [ts.timestamp(), ts_to_str(ts, fmt)] + list(obses) + list(cons) + list(vars) + list(stas)
-        new_row = pd.Series(solution, index=self.data.columns)
-        self.data = pd.concat([self.data, new_row.to_frame().T], ignore_index=True)
+        #self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas),
+        # ts_float)
 
         # Try dump the run data and interface log to the disk
         dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
         if (self.last_dump_time is None) or (ts_float - self.last_dump_time > dump_period):
             self.last_dump_time = ts_float
-            run = archive_run(self.routine, self.data, self.states)
+            run = archive_run(self.routine, self.states)
             try:
                 path = run['path']
                 filename = run['filename'][:-4] + 'pickle'
@@ -113,7 +108,7 @@ class BadgerRoutineRunner(QRunnable):
         idx = tc_config['tc_idx']
         if idx == 0:
             max_eval = tc_config['max_eval']
-            if self.data.shape[0] >= max_eval:
+            if len(self.routine.data) >= max_eval:
                 raise BadgerRunTerminatedError
 
         elif idx == 1:
@@ -135,21 +130,6 @@ class BadgerRoutineRunner(QRunnable):
 
     def before_evaluate_xopt(self, candidates: DataFrame):
         pass
-
-    def after_evaluate_xopt(self, data: DataFrame):
-        vars = data[self.var_names].to_numpy()[0]
-        obses = data[self.obj_names].to_numpy()[0]
-        cons = data[self.con_names].to_numpy()
-        try:
-            cons = cons[0]
-        except IndexError:
-            pass
-        stas = data[self.sta_names].to_numpy()
-        try:
-            stas = stas[0]
-        except IndexError:
-            pass
-        self.after_evaluate(vars, obses, cons, stas)
 
     def env_ready(self, env):
         self.env = env
