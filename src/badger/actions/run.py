@@ -9,7 +9,6 @@ from coolname import generate_slug
 from ..utils import load_config, merge_params
 from ..utils import config_list_to_dict, curr_ts, ts_to_str
 from ..core import run_routine as run
-from ..core import normalize_routine
 from ..settings import read_value
 from ..errors import BadgerRunTerminatedError
 
@@ -162,11 +161,5 @@ def run_routine(args):
         'config': configs_routine,
     }
 
-    # Sanity check and config normalization
-    try:
-        routine = normalize_routine(routine)
-    except Exception as e:
-        logger.error(e)
-        return
 
     run_n_archive(routine, args.yes, args.save, args.verbose)
