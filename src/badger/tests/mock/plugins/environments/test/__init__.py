@@ -1,5 +1,5 @@
 import torch
-from typing import Dict
+from typing import Dict, List
 from badger import environment
 from badger.errors import BadgerNoInterfaceError
 
@@ -22,3 +22,6 @@ class Environment(environment.Environment):
         # Filling up the observations
         x = torch.tensor([full_outputs[f'x{i}'] for i in range(20)])
         self.interface.set_value('f', (x ** 2).sum().numpy())
+
+    def get_observables(self, observable_names: List[str]) -> Dict:
+        return {ele: 1.0 for ele in observable_names}

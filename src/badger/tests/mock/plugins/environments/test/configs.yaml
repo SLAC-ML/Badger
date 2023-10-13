@@ -1,6 +1,6 @@
 ---
 name: test
-description: "High-dimensional sphere test environment"
+description: "mock"
 version: "1.0"
 dependencies:
   - torch
