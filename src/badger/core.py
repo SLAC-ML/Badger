@@ -5,52 +5,19 @@ from typing import Callable
 import numpy as np
 from pandas import concat, DataFrame
 
-from .errors import (
+from badger.errors import (
     BadgerRunTerminatedError,
 )
-from .routine import Routine
-from .utils import (
+from badger.routine import Routine
+from badger.utils import (
     curr_ts_to_str,
     dump_state,
     ParetoFront,
-    parse_rule,
 )
-
-logger = logging.getLogger(__name__)
-
-
-def instantiate_env(env_class, configs, manager=None):
-    # Have to put here to avoid circular dependencies
-    from .factory import get_intf
-
-    # Configure interface
-    # TODO: figure out the correct logic
-    # It seems that the interface should be given rather than
-    # initialized here
-    try:
-        intf_name = configs["interface"][0]
-    except KeyError:
-        intf_name = None
-    except Exception as e:
-        logger.warning(e)
-        intf_name = None
-
-    if intf_name is not None:
-        if manager is None:
-            Interface, _ = get_intf(intf_name)
-            intf = Interface()
-        else:
-            intf = manager.Interface()
-    else:
-        intf = None
-
-    env = env_class(interface=intf, **configs["params"])
-
-    return env
 
 
 def evaluate_points(
-    points: DataFrame, routine: Routine, callback: Callable
+        points: DataFrame, routine: Routine, callback: Callable
 ) -> DataFrame:
     """
     Evaluates points using the environment
@@ -115,13 +82,12 @@ def check_run_status(active_callback):
 
 
 def run_routine(
-    routine: Routine,
-    active_callback: Callable,
-    generate_callback: Callable,
-    evaluate_callback: Callable,
-    pf_callback: Callable,
-    states_callback: Callable,
-    dump_file_callback: Callable = None,
+        routine: Routine,
+        active_callback: Callable,
+        generate_callback: Callable,
+        evaluate_callback: Callable,
+        states_callback: Callable,
+        dump_file_callback: Callable = None,
 ) -> None:
     """
     Run the provided routine object using Xopt.
@@ -156,15 +122,6 @@ def run_routine(
     environment = routine.environment
     initial_points = routine.initial_points
 
-    # Setup Pareto front: soon to die
-    directions = [
-        parse_rule(rule)["direction"] for rule
-        in routine.vocs.objectives.values()
-    ]
-    pf = ParetoFront(directions)
-    if pf_callback:
-        pf_callback(pf)
-
     # Save system states if applicable
     states = environment.get_system_states()
     if states_callback and (states is not None):
@@ -177,9 +134,6 @@ def run_routine(
 
     # add measurements to generator
     routine.generator.add_data(result)
-
-    eval_index = 0  # record current evaluation index
-    eval_index += add_to_pf(eval_index, initial_points, result, pf)
 
     # Prepare for dumping file
     if dump_file_callback:
@@ -199,7 +153,7 @@ def run_routine(
             continue
 
         # generate points to observe
-        candidates = routine.generator.generate(1)[0]
+        candidates = routine.generate(1)[0]
         candidates = DataFrame(candidates, index=[0])
         # generate_callback(generator, candidates)
         generate_callback(candidates)
@@ -208,8 +162,6 @@ def run_routine(
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
         result = evaluate_points(candidates, routine, evaluate_callback)
-
-        eval_index += add_to_pf(eval_index, candidates, result, pf)
 
         # Dump Xopt state after each step
         if dump_file_callback:
@@ -222,4 +174,4 @@ def run_routine(
             dump_state(dump_file, routine.generator, combined_results)
 
         # Add data to generator
-        routine.generator.add_data(result)
+        routine.add_data(result)

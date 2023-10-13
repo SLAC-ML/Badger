@@ -9,8 +9,8 @@ from badger.core import (
     run_routine_xopt,
     evaluate_points,
     Routine,
-    instantiate_env,
 )
+from badger.environment import instantiate_env
 from badger.errors import BadgerRunTerminatedError
 
 

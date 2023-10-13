@@ -7,8 +7,8 @@ from badger.utils import merge_params, ParetoFront
 from badger.core import (
     run_routine_xopt,
     Routine,
-    instantiate_env,
 )
+from badger.environment import instantiate_env
 from badger.errors import BadgerRunTerminatedError
 
 

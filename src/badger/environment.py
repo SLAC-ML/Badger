@@ -1,15 +1,17 @@
 from abc import ABC
+from logging import warning
 from typing import ClassVar, Dict, final, List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from .errors import (
+from badger.errors import (
     BadgerEnvObsError,
     BadgerEnvVarError,
     BadgerInterfaceChannelError,
     BadgerNoInterfaceError,
 )
-from .interface import Interface
+from badger.interface import Interface
+from badger.factory import get_intf
 
 
 def validate_variable_names(func):
@@ -221,3 +223,32 @@ class Environment(BaseModel, ABC):
             self.variables.update(self.get_bounds(variable_names_new))
 
         return {k: self.variables[k] for k in variable_names}
+
+
+def instantiate_env(env_class, configs, manager=None):
+    # Have to put here to avoid circular dependencies
+
+    # Configure interface
+    # TODO: figure out the correct logic
+    # It seems that the interface should be given rather than
+    # initialized here
+    try:
+        intf_name = configs["interface"][0]
+    except KeyError:
+        intf_name = None
+    except Exception as e:
+        warning(e)
+        intf_name = None
+
+    if intf_name is not None:
+        if manager is None:
+            Interface, _ = get_intf(intf_name)
+            intf = Interface()
+        else:
+            intf = manager.Interface()
+    else:
+        intf = None
+
+    env = env_class(interface=intf, **configs["params"])
+
+    return env
