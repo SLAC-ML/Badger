@@ -13,7 +13,7 @@ from xopt import VOCS
 from xopt.generators import get_generator
 
 from ....factory import list_algo, list_env, get_algo, get_env
-from ....routine import Routine, build_routine
+from ....routine import Routine
 from ....utils import ystring, load_config, config_list_to_dict, strtobool, merge_params
 from ....environment import instantiate_env
 from ....db import save_routine, remove_routine
@@ -88,7 +88,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(group_meta)
 
         # Algo box
-        self.algo_box = BadgerAlgoBox(None, self.algos, self.scaling_functions)
+        self.algo_box = BadgerAlgoBox(None, self.algos)
         self.algo_box.expand()  # expand the box initially
         vbox.addWidget(self.algo_box)
 
@@ -158,6 +158,8 @@ class BadgerRoutinePage(QWidget):
         try:
             idx_scaling = self.scaling_functions.index(name_scaling)
         except ValueError:
+            idx_scaling = -1
+        except AttributeError:  # no scaling_function attribute
             idx_scaling = -1
         self.algo_box.cb_scaling.setCurrentIndex(idx_scaling)
         self.algo_box.edit_scaling.setPlainText(ystring(params_scaling))
@@ -552,7 +554,7 @@ class BadgerRoutinePage(QWidget):
             _dict = {}
             _dict[con_name] = [relation, value]
             if critical:
-                critical_constraints += [con_name]
+                critical_constraints.append(con_name)
             constraints.append(_dict)
 
         states = []
@@ -600,7 +602,23 @@ class BadgerRoutinePage(QWidget):
             init_points_df = init_points_df.astype(float)
             init_points = init_points_df
 
-        return None
+        # Script that generates algo params
+        if self.algo_box.check_use_script.isChecked():
+            script = self.script
+        else:
+            script = None
+
+        return Routine(
+            # Xopt part
+            vocs=vocs,
+            # Badger part
+            name=name,
+            environment=None,
+            initial_points=init_points,
+            tags=None,
+            critical_constraint_names=critical_constraints,
+            script=script,
+        )
 
     def review(self):
         try:

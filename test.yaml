@@ -11,7 +11,7 @@ data:
   xopt_error:
     '0': false
   xopt_runtime:
-    '0': 0.0002344
+    '0': 0.000246998
 dump_file: null
 environment:
   interface: {}

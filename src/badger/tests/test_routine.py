@@ -24,13 +24,12 @@ class TestRoutine:
             },
             "env_params": {},
             "config": {
-                "variables":
-                    {
-                        "x0": [-1, 1],
-                        "x1": [-1, 1],
-                        "x2": [-1, 1],
-                        "x3": [-1, 1]
-                    },
+                "variables": {
+                    "x0": [-1, 1],
+                    "x1": [-1, 1],
+                    "x2": [-1, 1],
+                    "x3": [-1, 1]
+                },
                 "objectives": {"f": "MAXIMIZE"},
                 "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
             },

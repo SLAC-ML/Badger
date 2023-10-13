@@ -78,7 +78,8 @@ def save_routine(routine: Routine):
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    cur.execute('select * from routine where name=:name', {'name': routine.name})
+    cur.execute('select * from routine where name=:name',
+                {'name': routine.name})
     record = cur.fetchone()
 
     runs = get_runs_by_routine(routine.name)

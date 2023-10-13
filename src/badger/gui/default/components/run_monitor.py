@@ -581,7 +581,7 @@ class BadgerOptMonitor(QWidget):
 
     def start(self, use_tc=False):
         self.sig_new_run.emit()
-        self.init_plots(self.routine)
+        self.init_plots()
         self.init_routine_runner()
         if use_tc:
             self.routine_runner.set_termination_condition(self.termination_condition)
