@@ -2,15 +2,12 @@ import time
 import pandas as pd
 from PyQt5.QtCore import Qt
 
-from xopt import VOCS, Evaluator
+from xopt import VOCS
 from xopt.generators import RandomGenerator
-from badger.utils import merge_params
 
 
 def test_run_monitor(qtbot):
     from badger.routine import Routine
-    from badger.factory import get_env
-    from badger.environment import instantiate_env
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
 
     monitor = BadgerOptMonitor()
