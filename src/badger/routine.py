@@ -13,6 +13,7 @@ class Routine(Xopt):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
+    environment_name: str
     environment: Environment
     initial_points: DataFrame
     tags: Optional[List] = Field(None)
@@ -41,9 +42,9 @@ class Routine(Xopt):
                     {"vocs": data["vocs"]}
                 )
 
-            if isinstance(data["environment"], dict):
-                env_class, configs_env = get_env(data["environment"].pop("name"))
-                data["environment"] = instantiate_env(env_class, data["environment"])
+            # instantiate env
+            env_class, configs_env = get_env("name")
+            data["environment"] = instantiate_env(env_class, data["environment"])
 
             # create evaluator
             env = data["environment"]
