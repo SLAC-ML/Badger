@@ -160,6 +160,9 @@ class BadgerOptMonitor(QWidget):
             self.icon_opt = QIcon(str(icon_path))
         icon_ref = resources.files(__package__) / '../images/tools.png'
         with resources.as_file(icon_ref) as icon_path:
+            self.icon_config = QIcon(str(icon_path))
+        icon_ref = resources.files(__package__) / '../images/info.png'
+        with resources.as_file(icon_ref) as icon_path:
             self.icon_info = QIcon(str(icon_path))
 
         # self.main_panel = main_panel = QWidget(self)
@@ -320,24 +323,33 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
         # btn_stop.setToolTip('')
 
-        # Details button
-        self.btn_details = btn_details = QPushButton()
-        btn_details.setFixedSize(32, 32)
-        btn_details.setIcon(self.icon_info)
-        btn_details.setToolTip('Configure run')
-        # btn_details.setIconSize(QSize(24, 24))
+        # Config button
+        self.btn_config = btn_config = QPushButton()
+        btn_config.setFixedSize(32, 32)
+        btn_config.setIcon(self.icon_config)
+        btn_config.setToolTip('Configure run')
+        # btn_config.setIconSize(QSize(24, 24))
+
+        # Run info button
+        self.btn_info = btn_info = QPushButton()
+        btn_info.setFixedSize(32, 32)
+        btn_info.setIcon(self.icon_info)
+        btn_info.setToolTip('Run information')
 
         hbox_action.addWidget(btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(btn_log)
-        hbox_action.addWidget(btn_details)
         hbox_action.addStretch(1)
         hbox_action.addWidget(btn_opt)
         hbox_action.addWidget(btn_extensions)
         hbox_action.addWidget(btn_reset)
-        hbox_action.addWidget(btn_set)
         hbox_action.addWidget(btn_ctrl)
         hbox_action.addWidget(btn_stop)
+        hbox_action.addWidget(btn_opt)
+        hbox_action.addWidget(btn_set)
+        hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_config)
+        hbox_action.addWidget(btn_info)
 
         vbox.addWidget(config_bar)
         vbox.addWidget(monitor)
