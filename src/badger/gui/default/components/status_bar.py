@@ -18,9 +18,6 @@ class BadgerStatusBar(QWidget):
         icon_ref = resources.files(__package__) / '../images/gear.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_settings = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/info.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_info = QIcon(str(icon_path))
 
         hbox = QHBoxLayout(self)
         hbox.setContentsMargins(0, 0, 0, 0)
@@ -33,16 +30,9 @@ class BadgerStatusBar(QWidget):
         btn_settings.setIconSize(QSize(12, 12))
         btn_settings.setToolTip('Badger settings')
 
-        self.btn_info = btn_info = QPushButton()
-        btn_info.setFixedSize(24, 24)
-        btn_info.setIcon(self.icon_info)
-        btn_info.setIconSize(QSize(12, 12))
-        btn_info.setToolTip('Routine information')
-
         summary.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         summary.setAlignment(Qt.AlignCenter)
         hbox.addWidget(summary, 1)
-        hbox.addWidget(btn_info)
         hbox.addWidget(btn_settings)
 
     def config_logic(self):
