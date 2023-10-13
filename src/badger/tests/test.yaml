@@ -1,0 +1,60 @@
+critical_constraint_names: null
+data:
+  x0:
+    '0': 0.5
+  x1:
+    '0': 0.5
+  x2:
+    '0': 0.5
+  x3:
+    '0': 0.5
+  xopt_error:
+    '0': false
+  xopt_runtime:
+    '0': 0.0002344
+dump_file: null
+environment:
+  interface: {}
+environment_name: test
+evaluator:
+  function: badger.routine.Routine.validate_model.<locals>.evaluate_point
+  function_kwargs: {}
+  max_workers: 1
+  vectorized: false
+generator:
+  name: random
+initial_points:
+  x0:
+    '0': 0.5
+  x1:
+    '0': 0.5
+  x2:
+    '0': 0.5
+  x3:
+    '0': 0.5
+max_evaluations: null
+name: test
+script: null
+serialize_inline: false
+serialize_torch: false
+strict: true
+tags: null
+vocs:
+  constants: {}
+  constraints: {}
+  objectives:
+    f: MAXIMIZE
+  observables: []
+  variables:
+    x0:
+    - -1.0
+    - 1.0
+    x1:
+    - -1.0
+    - 1.0
+    x2:
+    - -1.0
+    - 1.0
+    x3:
+    - -1.0
+    - 1.0

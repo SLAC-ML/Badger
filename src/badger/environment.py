@@ -226,8 +226,6 @@ class Environment(BaseModel, ABC):
 
 
 def instantiate_env(env_class, configs, manager=None):
-    # Have to put here to avoid circular dependencies
-
     # Configure interface
     # TODO: figure out the correct logic
     # It seems that the interface should be given rather than

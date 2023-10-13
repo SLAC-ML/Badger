@@ -1,7 +1,9 @@
 from typing import Optional, List, Any
 
+import pandas as pd
 from pandas import DataFrame
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, model_validator, field_validator, \
+    FieldValidationInfo
 from xopt import Xopt, VOCS, Evaluator
 from xopt.generators import get_generator
 
@@ -14,11 +16,12 @@ class Routine(Xopt):
 
     name: str
     environment_name: str
-    environment: Environment
     initial_points: DataFrame
     tags: Optional[List] = Field(None)
     critical_constraint_names: Optional[List[str]] = Field(None)
     script: Optional[str] = Field(None)
+    environment: Optional[Environment] = Field(None)
+
 
     @model_validator(mode="before")
     @classmethod
@@ -42,9 +45,28 @@ class Routine(Xopt):
                     {"vocs": data["vocs"]}
                 )
 
+            # validate data (if it exists
+            if "data" in data:
+                if isinstance(data["data"], dict):
+                    try:
+                        data["data"] = pd.DataFrame(data["data"])
+                    except IndexError:
+                        data["data"] = pd.DataFrame(data["data"], index=[0])
+
+                    data["generator"].add_data(data["data"])
+
+            # process evaluator
+            if "environment" in data:
+                if data["environment"] is None:
+                    data["environment"] = {"params": {}}
+            else:
+                data["environment"] = {"params": {}}
+
             # instantiate env
-            env_class, configs_env = get_env("name")
-            data["environment"] = instantiate_env(env_class, data["environment"])
+            env_class, configs_env = get_env(data["environment_name"])
+            data["environment"] = instantiate_env(
+                env_class, data["environment"] | configs_env
+            )
 
             # create evaluator
             env = data["environment"]
@@ -58,3 +80,13 @@ class Routine(Xopt):
             data["evaluator"] = Evaluator(function=evaluate_point)
 
         return data
+
+    @field_validator("initial_points", mode="before")
+    def validate_data(cls, v, info: FieldValidationInfo):
+        if isinstance(v, dict):
+            try:
+                v = pd.DataFrame(v)
+            except IndexError:
+                v = pd.DataFrame(v, index=[0])
+
+        return v

@@ -1,10 +1,13 @@
+import os
+
 import pandas as pd
-from xopt import VOCS, Evaluator
+import pytest
+from xopt import VOCS
 from xopt.generators import RandomGenerator
 
 
 class TestRoutine:
-    def test_routine_init(self):
+    def create_routine(self):
         from badger.routine import Routine
 
         test_routine = {
@@ -12,25 +15,10 @@ class TestRoutine:
             "algo": "upper_confidence_bound",
             "env": "test",
             "algo_params": {
-                "model": None,
-                "turbo_controller": None,
-                "use_cuda": False,
                 "gp_constructor": {
                     "name": "standard",
                     "use_low_noise_prior": True,
-                    "covar_modules": {},
-                    "mean_modules": {},
-                    "trainable_mean_keys": [],
-                },
-                "numerical_optimizer": {
-                    "name": "LBFGS",
-                    "n_restarts": 20,
-                    "max_iter": 2000,
-                },
-                "max_travel_distances": None,
-                "fixed_features": None,
-                "n_candidates": 1,
-                "n_monte_carlo_samples": 128,
+                 },
                 "beta": 2.0,
                 "start_from_current": True,
             },
@@ -44,10 +32,6 @@ class TestRoutine:
                         "x3": [-1, 1]
                     },
                 "objectives": {"f": "MAXIMIZE"},
-                "constraints": None,
-                "states": None,
-                "domain_scaling": None,
-                "tags": None,
                 "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
             },
         }
@@ -59,23 +43,37 @@ class TestRoutine:
 
         generator = RandomGenerator(vocs=vocs)
 
-        routine = Routine(
+        return Routine(
             name="test",
             vocs=vocs,
             generator=generator,
             environment_name="test",
             initial_points=pd.DataFrame(test_routine["config"]["init_points"])
         )
+
+    def test_routine_init(self):
+        routine = self.create_routine()
         routine.evaluate_data(routine.initial_points)
 
         assert len(routine.data) == 1
 
     def test_routine_serialization(self):
-        routine = create_routine()
-        routine.evaluate_data(routine.initial_points)
+        from badger.routine import Routine
 
+        routine = self.create_routine()
+        routine.evaluate_data(routine.initial_points)
         routine.dump("test.yaml")
 
-        loaded_routine = Routine.from_file("test.yaml")
-        assert loaded_routine.environment == routine.environment
-        loaded_routine.evaluate_data(routine.initial_points)
+        lroutine = Routine.from_file("test.yaml")
+        assert lroutine.environment.variable_names == routine.environment.variable_names
+        lroutine.evaluate_data(routine.initial_points)
+
+        assert len(lroutine.data) == 2
+
+    @pytest.fixture(scope="module", autouse=True)
+    def clean_up(self):
+        yield
+        files = ["test.yml"]
+        for f in files:
+            if os.path.exists(f):
+                os.remove(f)
