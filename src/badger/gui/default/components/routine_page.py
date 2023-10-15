@@ -572,10 +572,14 @@ class BadgerRoutinePage(QWidget):
     def _compose_routine(self) -> Routine:
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
+
+        if self.algo_box.cb.currentIndex() == -1:
+            raise BadgerRoutineError("no algorithm selected")
+        if self.env_box.cb.currentIndex() == -1:
+            raise BadgerRoutineError("no environment selected")
+
         algo_name = self.algos[self.algo_box.cb.currentIndex()]
-        assert algo_name, 'Please specify algorithm'
         env_name = self.envs[self.env_box.cb.currentIndex()]
-        assert env_name, 'Please specify environment'
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
