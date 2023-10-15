@@ -17,9 +17,7 @@ def test_routine_page_init(qtbot):
 def test_routine_generation(qtbot):
     # test if a simple routine can be created
     from badger.gui.default.components.routine_page import BadgerRoutinePage
-
     window = BadgerRoutinePage()
-
     qtbot.addWidget(window)
 
     # test without anything selected
@@ -34,7 +32,7 @@ def test_routine_generation(qtbot):
     # finally add the test environment
     qtbot.keyClicks(window.env_box.cb, "test")
 
-    # click checkbox to select vars objectives
+    # click checkbox to select vars/objectives
     window.env_box.var_table.cellWidget(0, 0).setChecked(True)
     assert window.env_box.var_table.export_variables() == {"x0": [-1, 1]}
 
@@ -46,12 +44,6 @@ def test_routine_generation(qtbot):
     assert routine.vocs.objectives == {"f": "MINIMIZE"}
     assert routine.initial_points.empty
 
-    # test routine generation with fake current values selected
-    qtbot.mouseClick(window.env_box.btn_add_curr, Qt.LeftButton)
-    routine = window._compose_routine()
-    assert routine.initial_points.to_dict() == pd.DataFrame({"x0": 0},
-                                                            index=[0]).to_dict()
-
 
 def test_initial_points(qtbot):
     # test to make sure initial points widget works properly
@@ -61,11 +53,16 @@ def test_initial_points(qtbot):
     qtbot.addWidget(window)
 
     qtbot.keyClicks(window.env_box.cb, "test")
+    qtbot.keyClicks(window.algo_box.cb, "upper_confidence_bound")
+
     window.env_box.var_table.cellWidget(0, 0).setChecked(True)
     window.env_box.var_table.cellWidget(1, 0).setChecked(True)
     window.env_box.var_table.cellWidget(2, 0).setChecked(True)
 
     assert window.env_box.init_table.horizontalHeader().count() == 3
 
-
-
+    # test routine generation with fake current values selected
+    qtbot.mouseClick(window.env_box.btn_add_curr, Qt.LeftButton)
+    routine = window._compose_routine()
+    assert routine.initial_points.to_dict() == pd.DataFrame(
+        {"x0": 0, "x1": 0, "x2": 0}, index=[0]).to_dict()
