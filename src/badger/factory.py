@@ -203,10 +203,6 @@ def get_algo(name):
 
         params = get_algo_params(get_generator(name))
 
-    try:
-        _ = params["start_from_current"]
-    except KeyError:
-        params["start_from_current"] = True
     try:  # remove custom GP kernel to avoid yaml parsing error for now
         del params["model"]["function"]
     except KeyError:

@@ -1,36 +1,33 @@
-import copy
+import sqlite3
 from typing import List
 
-from PyQt5.QtWidgets import QLineEdit, QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
-from PyQt5.QtWidgets import QTableWidgetItem
-from PyQt5.QtCore import Qt
-import sqlite3
 import numpy as np
 import pandas as pd
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
+from PyQt5.QtWidgets import QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QTableWidgetItem
 from coolname import generate_slug
 from xopt import VOCS
-from xopt.generators import get_generator
 
-from ....factory import list_algo, list_env, get_algo, get_env
-from ....routine import Routine
-from ....utils import ystring, load_config, config_list_to_dict, strtobool, merge_params
-from ....environment import instantiate_env
-from ....db import save_routine, remove_routine
-from .constraint_item import constraint_item
-from .state_item import state_item
 from .algo_cbox import BadgerAlgoBox
+from .constraint_item import constraint_item
+from .data_table import get_table_content_as_dict, set_init_data_table
 from .env_cbox import BadgerEnvBox
 from .filter_cbox import BadgerFilterBox
+from .state_item import state_item
+from ..windows.docs_window import BadgerDocsWindow
+from ..windows.edit_script_dialog import BadgerEditScriptDialog
+from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
-from ..windows.edit_script_dialog import BadgerEditScriptDialog
-from ..windows.docs_window import BadgerDocsWindow
-from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
-from .data_table import get_table_content_as_dict, set_init_data_table
-from ....settings import read_value
+from ....db import save_routine, remove_routine
+from ....environment import instantiate_env
 from ....errors import BadgerRoutineError
-
+from ....factory import list_algo, list_env, get_algo, get_env
+from ....routine import Routine
+from ....settings import read_value
+from ....utils import ystring, load_config, strtobool
 
 CONS_RELATION_DICT = {
     '>': 'GREATER_THAN',
@@ -542,7 +539,7 @@ class BadgerRoutinePage(QWidget):
         variables = self.env_box.var_table.export_variables()
         objectives = self.env_box.obj_table.export_objectives()
 
-        constraints = []
+        constraints = {}
         critical_constraints = []
         for i in range(self.env_box.list_con.count()):
             item = self.env_box.list_con.item(i)
@@ -551,18 +548,17 @@ class BadgerRoutinePage(QWidget):
             con_name = item_widget.cb_obs.currentText()
             relation = CONS_RELATION_DICT[item_widget.cb_rel.currentText()]
             value = item_widget.sb.value()
-            _dict = {}
-            _dict[con_name] = [relation, value]
+            constraints[con_name] = [relation, value]
             if critical:
                 critical_constraints.append(con_name)
-            constraints.append(_dict)
 
-        states = []
+        states = {}
         for i in range(self.env_box.list_sta.count()):
-            item = self.env_box.list_sta.item(i)
-            item_widget = self.env_box.list_sta.itemWidget(item)
-            sta_name = item_widget.cb_sta.currentText()
-            states.append(sta_name)
+            raise NotImplementedError("constants/states has not been implemented yet!")
+            #item = self.env_box.list_sta.item(i)
+            #item_widget = self.env_box.list_sta.itemWidget(item)
+            #sta_name = item_widget.cb_sta.currentText()
+            #states[sta_name] =
 
         vocs = VOCS(
             variables=variables,
@@ -576,10 +572,10 @@ class BadgerRoutinePage(QWidget):
     def _compose_routine(self) -> Routine:
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
-        algo_name = self.algo_box.cb.currentText()
+        algo_name = self.algos[self.algo_box.cb.currentIndex()]
         assert algo_name, 'Please specify algorithm'
-        env = self.env_box.cb.currentText()
-        assert env, 'Please specify environment'
+        env_name = self.envs[self.env_box.cb.currentIndex()]
+        assert env_name, 'Please specify environment'
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
@@ -596,11 +592,6 @@ class BadgerRoutinePage(QWidget):
             raise BadgerRoutineError(
                 'Initial points are not valid, please fill in the missing values'
             )
-        if init_points_df.empty:
-            init_points = None
-        else:
-            init_points_df = init_points_df.astype(float)
-            init_points = init_points_df
 
         # Script that generates algo params
         if self.algo_box.check_use_script.isChecked():
@@ -611,14 +602,17 @@ class BadgerRoutinePage(QWidget):
         return Routine(
             # Xopt part
             vocs=vocs,
+            generator={"name": algo_name} | algo_params,
             # Badger part
             name=name,
-            environment=None,
-            initial_points=init_points,
+            initial_points=init_points_df.astype("double"),
             tags=None,
+            environment_name=env_name,
+            environment=env_params,
             critical_constraint_names=critical_constraints,
             script=script,
         )
+
 
     def review(self):
         try:

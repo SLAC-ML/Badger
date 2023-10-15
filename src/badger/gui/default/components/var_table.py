@@ -202,7 +202,7 @@ class VariableTable(QTableWidget):
         self.all_variables.append(var)
         self.bounds[name] = [lb, ub]
 
-    def export_variables(self):
+    def export_variables(self) -> dict:
         variables_exported = {}
         for var in self.all_variables:
             name = next(iter(var))

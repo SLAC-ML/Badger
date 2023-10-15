@@ -50,13 +50,15 @@ class TestDB:
         )
 
     def test_save_routine(self):
-        from badger.db import save_routine
+        from badger.db import save_routine, remove_routine
 
         routine = self.create_routine()
         save_routine(routine)
 
+        remove_routine("test")
+
     def test_load_routine(self):
-        from badger.db import save_routine, load_routine
+        from badger.db import save_routine, load_routine, remove_routine
 
         routine = self.create_routine()
         save_routine(routine)
@@ -64,3 +66,6 @@ class TestDB:
         new_routine, time = load_routine("test")
         assert new_routine.generator == routine.generator
         assert new_routine.vocs == routine.vocs
+
+        remove_routine("test")
+
