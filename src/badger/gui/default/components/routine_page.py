@@ -3,6 +3,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import yaml
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
 from PyQt5.QtWidgets import QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
@@ -111,7 +112,8 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_clear.clicked.connect(self.clear_init_table)
         self.env_box.btn_add_row.clicked.connect(self.add_row_to_init_table)
 
-    def refresh_ui(self, routine: Routine):
+
+    def refresh_ui(self, routine: Routine = None):
         self.routine = routine  # save routine for future reference
 
         self.algos = list_algo()
@@ -140,72 +142,55 @@ class BadgerRoutinePage(QWidget):
         name_algo = routine.generator.name
         idx_algo = self.algos.index(name_algo)
         self.algo_box.cb.setCurrentIndex(idx_algo)
-        self.algo_box.edit.setPlainText(ystring(
-            routine.generator.model_dump()))
-        self.script = routine.script
-        params_scaling = None
-        idx_scaling = -1
-        self.algo_box.cb_scaling.setCurrentIndex(idx_scaling)
-        self.algo_box.edit_scaling.setPlainText(ystring(params_scaling))
+        self.algo_box.edit.setPlainText(routine.generator.yaml())
+        try:
+            self.script = routine.script
+        except KeyError:
+            self.script = None
 
-        idx_env = self.envs.index(routine.environment.name)
+        name_env = routine.environment.name
+        idx_env = self.envs.index(name_env)
         self.env_box.cb.setCurrentIndex(idx_env)
         self.env_box.edit.setPlainText(
-            ystring(routine.environment.model_dump()))
+            yaml.dump(routine.environment.model_dump_json()))
 
         # Config the vocs panel
+        variables = routine.vocs.variable_names
         self.env_box.check_only_var.setChecked(True)
         self.env_box.edit_var.clear()
-        self.env_box.var_table.set_selected(routine.vocs.variable_names)
+        self.env_box.var_table.set_selected(variables)
         self.env_box.var_table.set_bounds(routine.vocs.variables)
 
-        set_init_data_table(self.env_box.init_table, routine.initial_points)
+        try:
+            init_points = routine.initial_points
+            set_init_data_table(self.env_box.init_table, init_points)
+        except KeyError:
+            set_init_data_table(self.env_box.init_table, None)
 
+        objectives = routine.vocs.objective_names
         self.env_box.check_only_obj.setChecked(True)
         self.env_box.edit_obj.clear()
-        self.env_box.obj_table.set_selected(routine.vocs.objective_names)
+        self.env_box.obj_table.set_selected(objectives)
         self.env_box.obj_table.set_rules(routine.vocs.objectives)
 
-        if routine.vocs.constraints:  # constraints should be an ordered dict
-            for i in range(len(routine['config']['constraints'])):
-                name = next(iter(routine['config']['constraints'][i]))
-                relation, thres = routine['config']['constraints'][i][name][:2]
-                try:
-                    routine['config']['constraints'][i][name][2]
-                    critical = True
-                except:
-                    critical = False
+        constraints = routine.vocs.constraints
+        if len(constraints):
+            for name, val in constraints.items():
+                relation, thres = val
+                critical = name in routine.critical_constraint_names
                 relation = ['GREATER_THAN', 'LESS_THAN',
                             'EQUAL_TO'].index(relation)
                 self.add_constraint(name, relation, thres, critical)
 
-        try:
-            config_states = routine.states
-        except AttributeError:
-            config_states = None
-        if config_states is not None:
-            for name_sta in config_states:
+
+        constants = routine.vocs.constants
+        if len(constants):
+            for name_sta, val in constants.items():
                 self.add_state(name_sta)
 
         # Config the metadata
         self.edit_save.setPlaceholderText(generate_slug(2))
-        self.edit_save.setText(routine.name)
 
-        tags = routine.tags
-        try:
-            self.cbox_tags.cb_obj.setCurrentText(tags['objective'])
-        except:
-            self.cbox_tags.cb_obj.setCurrentIndex(0)
-        try:
-            self.cbox_tags.cb_reg.setCurrentText(tags['region'])
-        except:
-            self.cbox_tags.cb_reg.setCurrentIndex(0)
-        try:
-            self.cbox_tags.cb_gain.setCurrentText(tags['gain'])
-        except:
-            self.cbox_tags.cb_gain.setCurrentIndex(0)
-
-        self.algo_box.check_use_script.setChecked(not not self.script)
 
     def select_algo(self, i):
         # Reset the script
@@ -329,16 +314,7 @@ class BadgerRoutinePage(QWidget):
 
         vars_env = configs['variables']
         vars_combine = [*vars_env]
-        if self.routine:  # check for the temp variables in vocs
-            var_names_vocs = self.routine.vocs.variable_names
-            var_names_env = [next(iter(var)) for var in vars_env]
-            for name in var_names_vocs:
-                if name in var_names_env:
-                    continue
 
-                _var = {}
-                _var[name] = [-100, 100]  # TODO: how to get better default bounds?
-                vars_combine.append(_var)
         self.env_box.check_only_var.setChecked(False)
         self.env_box.var_table.update_variables(vars_combine)
 
@@ -562,18 +538,6 @@ class BadgerRoutinePage(QWidget):
 
         # VOCS
         vocs, critical_constraints = self._compose_vocs()
-
-        # Generator
-        generator_class = get_generator(algo_name)
-        algo_params_copy = copy.deepcopy(algo_params)
-        try:
-            del algo_params_copy['start_from_current']
-        except KeyError:
-            pass
-        # Note! The following line will remove all the name fields in
-        # generator params. That's why we make a copy here so the modification
-        # will not affect the routine to be saved (in archive)
-        generator = generator_class(vocs=vocs, **algo_params_copy)
 
         # Initial points
         init_points_df = pd.DataFrame.from_dict(

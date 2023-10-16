@@ -15,48 +15,6 @@ from badger.utils import (
     ParetoFront,
 )
 
-
-def evaluate_points(
-        points: DataFrame, routine: Routine, callback: Callable
-) -> DataFrame:
-    """
-    Evaluates points using the environment
-
-    Parameters
-    ----------
-    points : DataFrame
-    routine : Routine
-    callback : Callable
-
-    Returns
-    -------
-    evaluated_points : DataFrame
-    """
-
-    env = routine.environment
-    vocs = routine.vocs
-
-    obj_list = []
-    for i in range(points.shape[0]):
-        env._set_variables(points.iloc[i].to_dict())  # point is a series!
-        obj = env._get_observables(vocs.objective_names)
-        obj_df = DataFrame(obj, index=[0])
-        obj_list.append(obj_df)
-
-        # Have to call the callback after each evaluation
-        # since we need the time information
-        # Note: point here is a dataframe!
-        point_eval = concat([points.iloc[i:i + 1].reset_index(drop=True),
-                             obj_df], axis=1)
-        if callback:
-            callback(point_eval)
-
-    points_obj = concat(obj_list, axis=0).reset_index(drop=True)
-    points_eval = concat([points, points_obj], axis=1)
-
-    return points_eval
-
-
 def add_to_pf(idx: int, candidate: DataFrame, result: DataFrame,
               pf: ParetoFront) -> None:
     n_sol, n_var = candidate.shape
@@ -130,10 +88,9 @@ def run_routine(
     # evaluate initial points:
     # Nikita: more care about the setting var logic,
     # wait or consider timeout/retry
-    result = evaluate_points(initial_points, routine, evaluate_callback)
-
-    # add measurements to generator
-    routine.generator.add_data(result)
+    # TODO: need to evaluate a single point at the time
+    for index, ele in initial_points.iterrows():
+        routine.evaluate_data(ele.to_dict())
 
     # Prepare for dumping file
     if dump_file_callback:
@@ -161,7 +118,7 @@ def run_routine(
         check_run_status(active_callback)
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
-        result = evaluate_points(candidates, routine, evaluate_callback)
+        result = routine.evaluate_data(candidates)
 
         # Dump Xopt state after each step
         if dump_file_callback:
@@ -172,6 +129,3 @@ def run_routine(
                 combined_results = result
 
             dump_state(dump_file, routine.generator, combined_results)
-
-        # Add data to generator
-        routine.add_data(result)

@@ -3,6 +3,7 @@ import pytest
 from PyQt5.QtCore import Qt
 
 from badger.errors import BadgerRoutineError
+from badger.tests.utils import create_routine
 
 
 def test_routine_page_init(qtbot):
@@ -66,3 +67,18 @@ def test_initial_points(qtbot):
     routine = window._compose_routine()
     assert routine.initial_points.to_dict() == pd.DataFrame(
         {"x0": 0, "x1": 0, "x2": 0}, index=[0]).to_dict()
+
+
+def test_ui_update(qtbot):
+    # test to make sure initial points widget works properly
+    from badger.gui.default.components.routine_page import BadgerRoutinePage
+
+    window = BadgerRoutinePage()
+
+    # test with none
+    window.refresh_ui()
+
+    routine = create_routine()
+    window.refresh_ui(routine)
+
+    assert window.algo_box.edit.toPlainText() == "{}\n"

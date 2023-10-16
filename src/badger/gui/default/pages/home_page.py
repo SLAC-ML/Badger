@@ -263,7 +263,8 @@ class BadgerHomePage(QWidget):
             except ValueError:
                 pass
 
-            if self.prev_routine_item.routine_name == routine_item.routine:  # click a routine again to deselect
+            if self.prev_routine_item.routine_name == routine_item.routine_name:  #
+                # click a routine again to deselect
                 self.prev_routine_item = None
                 self.current_routine = None
                 self.load_all_runs()
@@ -324,7 +325,7 @@ class BadgerHomePage(QWidget):
 
         self.build_routine_list(routines, timestamps)
 
-    def go_run(self, i):
+    def go_run(self, i: int):
         if self.cb_history.itemText(0) == 'Optimization in progress...':
             return
         # if self.cb_history.currentText() == 'Optimization in progress...':

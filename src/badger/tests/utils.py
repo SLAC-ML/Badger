@@ -1,14 +1,9 @@
-
 import pandas as pd
-import pytest
-from PyQt5.QtCore import Qt
 from xopt import VOCS
 from xopt.generators import RandomGenerator
 
-from badger.errors import BadgerRoutineError
 
-
-def create_routine(self):
+def create_routine():
     from badger.routine import Routine
 
     test_routine = {
@@ -50,21 +45,3 @@ def create_routine(self):
         environment_name="test",
         initial_points=pd.DataFrame(test_routine["config"]["init_points"])
     )
-
-def test_home_page_init(qtbot):
-    from badger.gui.default.pages.home_page import BadgerHomePage
-
-    window = BadgerHomePage()
-
-    qtbot.addWidget(window)
-
-
-def test_homepage_select_routine(qtbot):
-    from badger.gui.default.pages.home_page import BadgerHomePage
-
-    window = BadgerHomePage()
-
-    qtbot.addWidget(window)
-
-    routine = self.create_routine()
-

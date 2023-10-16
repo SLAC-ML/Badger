@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 import time
@@ -21,8 +22,27 @@ class BadgerRoutineSignals(QObject):
 
 
 class BadgerRoutineRunner(QRunnable):
+    """
+        Seperate thread to run routine using code in core.py
 
-    def __init__(self, routine: Routine, save, verbose=2, use_full_ts=False):
+    """
+
+    def __init__(self, routine: Routine, save: bool, verbose=2, use_full_ts=False):
+        """
+        Parameters
+        ----------
+        routine: Routine
+            Defined routine for runner
+
+        save: bool
+            Flag to enable saving to database
+
+        verbose: int, default: 2
+            Verbostiy level (higher is more output)
+
+        use_full_ts: bool
+            If true use full time stamp info when dumping to database
+        """
         super().__init__()
 
         # Signals should belong to instance rather than class
@@ -45,14 +65,14 @@ class BadgerRoutineRunner(QRunnable):
     def set_termination_condition(self, termination_condition):
         self.termination_condition = termination_condition
 
-    def run(self):
+    def run(self) -> None:
         self.start_time = time.time()
         self.last_dump_time = None  # reset the timer
 
         try:
             run_routine(
                 self.routine,
-                active_callback=self.run_status,
+                active_callback=self.check_run_status,
                 generate_callback=self.before_evaluate_xopt,
                 evaluate_callback=self.after_evaluate,
                 states_callback=self.states_ready
@@ -87,7 +107,8 @@ class BadgerRoutineRunner(QRunnable):
 
         # Try dump the run data and interface log to the disk
         dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
-        if (self.last_dump_time is None) or (ts_float - self.last_dump_time > dump_period):
+        if (self.last_dump_time is None) or (
+                ts_float - self.last_dump_time > dump_period):
             self.last_dump_time = ts_float
             run = archive_run(self.routine, self.states)
             try:
@@ -104,25 +125,29 @@ class BadgerRoutineRunner(QRunnable):
         if self.termination_condition is None:
             return
 
-        tc_config = self.termination_condition
-        idx = tc_config['tc_idx']
-        if idx == 0:
-            max_eval = tc_config['max_eval']
-            if len(self.routine.data) >= max_eval:
-                raise BadgerRunTerminatedError
+    def check_run_status(self):
+        """
+        check for termination condition
 
-        elif idx == 1:
-            max_time = tc_config['max_time']
-            dt = time.time() - self.start_time
-            if dt >= max_time:
-                raise BadgerRunTerminatedError
-        # elif idx == 2:
-        #     ftol = tc_config['ftol']
-        #     # Do something
+        - checks for internal triggers (max eval, max time) and external triggers
 
-    def run_status(self):
+        """
+        if self.termination_condition:
+            tc_config = self.termination_condition
+            idx = tc_config['tc_idx']
+            if idx == 0:
+                max_eval = tc_config['max_eval']
+                if len(self.routine.data) >= max_eval:
+                    raise BadgerRunTerminatedError
+
+            elif idx == 1:
+                max_time = tc_config['max_time']
+                dt = time.time() - self.start_time
+                if dt >= max_time:
+                    raise BadgerRunTerminatedError
+
         if self.is_killed:
-            return 2
+            raise BadgerRunTerminatedError
         elif self.is_paused:
             return 1
         else:

@@ -4,6 +4,9 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from .routine_page import BadgerRoutinePage
 
+from ....routine import Routine
+
+
 
 class BadgerRoutineEditor(QWidget):
     sig_saved = pyqtSignal()
@@ -71,9 +74,8 @@ class BadgerRoutineEditor(QWidget):
         self.btn_cancel.clicked.connect(self.cancel_create_routine)
         self.btn_save.clicked.connect(self.save_routine)
 
-    def set_routine(self, routine):
-        if routine:
-            self.routine_edit.setText(routine.yaml())
+    def set_routine(self, routine: Routine):
+        self.routine_edit.setText(routine.yaml())
         self.routine_page.refresh_ui(routine)
 
     def edit_routine(self):
