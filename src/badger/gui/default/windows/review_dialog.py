@@ -1,9 +1,11 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QTextBrowser, QVBoxLayout
+
+from ....routine import Routine
 from ....utils import ystring
 
 
 class BadgerReviewDialog(QDialog):
-    def __init__(self, parent, routine):
+    def __init__(self, parent, routine: Routine):
         super().__init__(parent)
 
         self.routine = routine
@@ -12,7 +14,7 @@ class BadgerReviewDialog(QDialog):
         self.config_logic()
 
     def init_ui(self):
-        name = self.routine['name']
+        name = self.routine.name
         self.setWindowTitle(f'Review routine {name}')
 
         vbox = QVBoxLayout(self)

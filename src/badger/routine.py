@@ -16,12 +16,11 @@ class Routine(Xopt):
 
     name: str
     environment_name: str
-    initial_points: DataFrame
+    initial_points: Optional[DataFrame] = Field(None)
     tags: Optional[List] = Field(None)
     critical_constraint_names: Optional[List[str]] = Field(None)
     script: Optional[str] = Field(None)
     environment: Optional[Environment] = Field(None)
-
 
     @model_validator(mode="before")
     @classmethod

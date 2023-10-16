@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QTextEdit, QStackedWidget, QScrollArea
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from .routine_page import BadgerRoutinePage
-from ....utils import ystring
 
 
 class BadgerRoutineEditor(QWidget):
@@ -73,7 +72,8 @@ class BadgerRoutineEditor(QWidget):
         self.btn_save.clicked.connect(self.save_routine)
 
     def set_routine(self, routine):
-        self.routine_edit.setText(ystring(routine))
+        if routine:
+            self.routine_edit.setText(routine.yaml())
         self.routine_page.refresh_ui(routine)
 
     def edit_routine(self):

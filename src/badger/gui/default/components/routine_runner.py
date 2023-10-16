@@ -82,7 +82,7 @@ class BadgerRoutineRunner(QRunnable):
         # stas: list
         ts = curr_ts()
         ts_float = ts.timestamp()
-        #self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas),
+        # self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas),
         # ts_float)
 
         # Try dump the run data and interface log to the disk

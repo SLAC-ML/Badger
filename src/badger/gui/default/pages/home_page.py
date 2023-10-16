@@ -278,7 +278,7 @@ class BadgerHomePage(QWidget):
         routine, timestamp = load_routine(routine_item.routine_name)
         self.current_routine = routine
         self.routine_editor.set_routine(routine)
-        runs = get_runs_by_routine(routine['name'])
+        runs = get_runs_by_routine(routine.name)
         self.cb_history.updateItems(runs)
         if not self.cb_history.count():
             self.go_run(-1)  # sometimes we need to trigger this manually
@@ -340,7 +340,7 @@ class BadgerHomePage(QWidget):
                 self.routine_editor.clear()
                 self.status_bar.set_summary('no active routine')
             else:
-                self.status_bar.set_summary(f'current routine: {self.current_routine["name"]}')
+                self.status_bar.set_summary(f'current routine: {self.current_routine.name}')
             return
 
         run_filename = self.cb_history.currentText()
@@ -352,7 +352,7 @@ class BadgerHomePage(QWidget):
         update_table(self.run_table, run['data'])
         self.run_monitor.init_plots(run['routine'], run['data'], run_filename)
         self.routine_editor.set_routine(run['routine'])
-        self.status_bar.set_summary(f'current routine: {self.current_routine["name"]}')
+        self.status_bar.set_summary(f'current routine: {self.current_routine.name}')
 
     def go_prev_run(self):
         self.cb_history.selectPreviousItem()
@@ -405,7 +405,7 @@ class BadgerHomePage(QWidget):
 
     def run_name(self, name):
         if self.prev_routine_item:
-            runs = get_runs_by_routine(self.current_routine['name'])
+            runs = get_runs_by_routine(self.current_routine.name)
         else:
             runs = get_runs()
         self.cb_history.updateItems(runs)
@@ -421,7 +421,7 @@ class BadgerHomePage(QWidget):
             self.current_routine = None
             runs = get_runs()
         else:
-            runs = get_runs_by_routine(self.current_routine['name'])
+            runs = get_runs_by_routine(self.current_routine.name)
         self.cb_history.updateItems(runs)
         if not self.cb_history.count():
             self.go_run(-1)  # sometimes we need to trigger this manually

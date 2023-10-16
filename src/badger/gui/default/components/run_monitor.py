@@ -306,7 +306,6 @@ class BadgerOptMonitor(QWidget):
         # add button for extensions
         self.btn_activate_extensions = btn_extensions = QPushButton("Extensions")
 
-
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
         menu.setFixedWidth(128)
@@ -393,7 +392,10 @@ class BadgerOptMonitor(QWidget):
     #         print('Yo')
     #         self.sender().showMenu()
 
-    def init_plots(self, data=None, run_filename=None):
+    def init_plots(self, routine=None, data=None, run_filename=None):
+        if routine:
+            self.routine = routine
+
         self.obj_names = self.routine.vocs.objective_names
         self.var_names = self.routine.vocs.variable_names
         self.constraint_names = self.routine.vocs.constraint_names
@@ -571,7 +573,7 @@ class BadgerOptMonitor(QWidget):
             self.routine_runner = None
 
     def calc_optimals(self):
-        rules = [d[next(iter(d))] for d in self.routine['config']['objectives']]
+        rules = list(self.routine.vocs.objectives.values())
         self.pf = pf = ParetoFront(rules)
 
         for i, v in enumerate(self.vars):
@@ -606,7 +608,7 @@ class BadgerOptMonitor(QWidget):
         if not self.constraint_names:
             return False, None
 
-        constraints = self.routine['config']['constraints']
+        constraints = self.routine.vocs.constraints
         for i, con_dict in enumerate(constraints):
             name = self.constraint_names[i]
             if len(con_dict[name]) != 3:

@@ -134,7 +134,9 @@ def load_routine(name: str):
 
     if len(records) == 1:
         # return yaml.safe_load(records[0][1]), records[0][2]
-        return Routine(**yaml.safe_load(records[0][1])), records[0][2]
+        routine_dict = yaml.safe_load(records[0][1])
+        # routine_dict['evaluator'] = None
+        return Routine(**routine_dict), records[0][2]
     elif len(records) == 0:
         # logger.warning(f'Routine {name} not found in the database!')
         return None, None

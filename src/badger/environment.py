@@ -2,7 +2,7 @@ from abc import ABC
 from logging import warning
 from typing import ClassVar, Dict, final, List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from badger.errors import (
     BadgerEnvObsError,
@@ -71,7 +71,7 @@ class Environment(BaseModel, ABC):
     )
 
     # Class variables
-    name: ClassVar[str]
+    name: ClassVar[str] = Field(description="environment name", exclude=False)
     variables: ClassVar[Dict[str, List]]  # bounds list could be empty for var
     observables: ClassVar[List[str]]
 

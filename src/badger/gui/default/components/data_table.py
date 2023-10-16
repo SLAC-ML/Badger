@@ -1,3 +1,4 @@
+from pandas import DataFrame
 from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
@@ -147,8 +148,12 @@ def update_init_data_table(table, variable_names):
                 table.setItem(row, col, QTableWidgetItem(''))
 
 
-def set_init_data_table(table, data_dict):
+def set_init_data_table(table, data: DataFrame):
     variable_names = get_horizontal_header_as_list(table)
+    try:
+        data_dict = data.to_dict('list')
+    except AttributeError:
+        data_dict = None
 
     # Clear the table
     for col, name in enumerate(variable_names):

@@ -111,7 +111,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_clear.clicked.connect(self.clear_init_table)
         self.env_box.btn_add_row.clicked.connect(self.add_row_to_init_table)
 
-    def refresh_ui(self, routine):
+    def refresh_ui(self, routine: Routine):
         self.routine = routine  # save routine for future reference
 
         self.algos = list_algo()
@@ -137,55 +137,36 @@ class BadgerRoutinePage(QWidget):
             return
 
         # Fill in the algo and env configs
-        name_algo = routine['algo']
+        name_algo = routine.generator.name
         idx_algo = self.algos.index(name_algo)
         self.algo_box.cb.setCurrentIndex(idx_algo)
-        self.algo_box.edit.setPlainText(ystring(routine['algo_params']))
-        try:
-            self.script = routine['config']['script']
-        except KeyError:
-            self.script = None
-        try:
-            name_scaling = routine['config']['domain_scaling']['func']
-            params_scaling = routine['config']['domain_scaling'].copy()
-            del params_scaling['func']
-        except:
-            name_scaling = None
-            params_scaling = None
-        try:
-            idx_scaling = self.scaling_functions.index(name_scaling)
-        except ValueError:
-            idx_scaling = -1
-        except AttributeError:  # no scaling_function attribute
-            idx_scaling = -1
+        self.algo_box.edit.setPlainText(ystring(
+            routine.generator.model_dump()))
+        self.script = routine.script
+        params_scaling = None
+        idx_scaling = -1
         self.algo_box.cb_scaling.setCurrentIndex(idx_scaling)
         self.algo_box.edit_scaling.setPlainText(ystring(params_scaling))
 
-        name_env = routine['env']
-        idx_env = self.envs.index(name_env)
+        idx_env = self.envs.index(routine.environment.name)
         self.env_box.cb.setCurrentIndex(idx_env)
-        self.env_box.edit.setPlainText(ystring(routine['env_params']))
+        self.env_box.edit.setPlainText(
+            ystring(routine.environment.model_dump()))
 
         # Config the vocs panel
-        variables = [next(iter(v)) for v in routine['config']['variables']]
         self.env_box.check_only_var.setChecked(True)
         self.env_box.edit_var.clear()
-        self.env_box.var_table.set_selected(variables)
-        self.env_box.var_table.set_bounds(routine['config']['variables'])
+        self.env_box.var_table.set_selected(routine.vocs.variable_names)
+        self.env_box.var_table.set_bounds(routine.vocs.variables)
 
-        try:
-            init_points = routine['config']['init_points']
-            set_init_data_table(self.env_box.init_table, init_points)
-        except KeyError:
-            set_init_data_table(self.env_box.init_table, None)
+        set_init_data_table(self.env_box.init_table, routine.initial_points)
 
-        objectives = [next(iter(v)) for v in routine['config']['objectives']]
         self.env_box.check_only_obj.setChecked(True)
         self.env_box.edit_obj.clear()
-        self.env_box.obj_table.set_selected(objectives)
-        self.env_box.obj_table.set_rules(routine['config']['objectives'])
+        self.env_box.obj_table.set_selected(routine.vocs.objective_names)
+        self.env_box.obj_table.set_rules(routine.vocs.objectives)
 
-        if routine['config']['constraints'] is not None:
+        if routine.vocs.constraints:  # constraints should be an ordered dict
             for i in range(len(routine['config']['constraints'])):
                 name = next(iter(routine['config']['constraints'][i]))
                 relation, thres = routine['config']['constraints'][i][name][:2]
@@ -199,21 +180,18 @@ class BadgerRoutinePage(QWidget):
                 self.add_constraint(name, relation, thres, critical)
 
         try:
-            config_states = routine['config']['states']
-        except KeyError:
+            config_states = routine.states
+        except AttributeError:
             config_states = None
         if config_states is not None:
             for name_sta in config_states:
                 self.add_state(name_sta)
 
         # Config the metadata
-        name = routine['name']
         self.edit_save.setPlaceholderText(generate_slug(2))
-        self.edit_save.setText(name)
-        try:
-            tags = routine['config']['tags']
-        except:
-            tags = {}
+        self.edit_save.setText(routine.name)
+
+        tags = routine.tags
         try:
             self.cbox_tags.cb_obj.setCurrentText(tags['objective'])
         except:
@@ -352,8 +330,7 @@ class BadgerRoutinePage(QWidget):
         vars_env = configs['variables']
         vars_combine = [*vars_env]
         if self.routine:  # check for the temp variables in vocs
-            vars_vocs = self.routine['config']['variables']
-            var_names_vocs = [next(iter(var)) for var in vars_vocs]
+            var_names_vocs = self.routine.vocs.variable_names
             var_names_env = [next(iter(var)) for var in vars_env]
             for name in var_names_vocs:
                 if name in var_names_env:
@@ -563,8 +540,8 @@ class BadgerRoutinePage(QWidget):
         vocs = VOCS(
             variables=variables,
             objectives=objectives,
-            constraints=constraints,
-            constants=states
+            constraints={},
+            constants={}
         )
 
         return vocs, critical_constraints
@@ -583,7 +560,20 @@ class BadgerRoutinePage(QWidget):
         algo_params = load_config(self.algo_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
+        # VOCS
         vocs, critical_constraints = self._compose_vocs()
+
+        # Generator
+        generator_class = get_generator(algo_name)
+        algo_params_copy = copy.deepcopy(algo_params)
+        try:
+            del algo_params_copy['start_from_current']
+        except KeyError:
+            pass
+        # Note! The following line will remove all the name fields in
+        # generator params. That's why we make a copy here so the modification
+        # will not affect the routine to be saved (in archive)
+        generator = generator_class(vocs=vocs, **algo_params_copy)
 
         # Initial points
         init_points_df = pd.DataFrame.from_dict(
@@ -617,7 +607,6 @@ class BadgerRoutinePage(QWidget):
             script=script,
         )
 
-
     def review(self):
         try:
             routine = self._compose_routine()
@@ -636,8 +625,9 @@ class BadgerRoutinePage(QWidget):
         try:
             save_routine(routine)
         except sqlite3.IntegrityError:
-            return QMessageBox.critical(self, 'Error!',
-                f'Routine {routine["name"]} already existed in the database! Please choose another name.')
+            return QMessageBox.critical(
+                self, 'Error!',
+                f'Routine {routine.name} already existed in the database! Please choose another name.')
 
         return 0
 
