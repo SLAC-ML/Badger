@@ -172,23 +172,19 @@ def curr_ts_to_str(format="lcls-log"):
 
 def get_header(routine):
     try:
-        obj_names = [next(iter(d)) for d in routine["config"]["objectives"]]
+        obj_names = routine.vocs.objective_names
     except Exception:
         obj_names = []
     try:
-        var_names = [next(iter(d)) for d in routine["config"]["variables"]]
+        var_names = routine.vocs.variable_names
     except Exception:
         var_names = []
     try:
-        if routine["config"]["constraints"]:
-            con_names = [next(iter(d)) for d in
-                         routine["config"]["constraints"]]
-        else:
-            con_names = []
+        con_names = routine.vocs.constraint_names
     except Exception:
         con_names = []
     try:
-        sta_names = routine["config"]["states"] or []
+        sta_names = routine.vocs.constant_names
     except KeyError:
         sta_names = []
 

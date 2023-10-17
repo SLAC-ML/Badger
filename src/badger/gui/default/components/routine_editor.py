@@ -75,7 +75,10 @@ class BadgerRoutineEditor(QWidget):
         self.btn_save.clicked.connect(self.save_routine)
 
     def set_routine(self, routine: Routine):
-        self.routine_edit.setText(routine.yaml())
+        try:
+            self.routine_edit.setText(routine.yaml())
+        except AttributeError:
+            self.routine_edit.setText("")
         self.routine_page.refresh_ui(routine)
 
     def edit_routine(self):

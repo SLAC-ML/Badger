@@ -112,7 +112,6 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_clear.clicked.connect(self.clear_init_table)
         self.env_box.btn_add_row.clicked.connect(self.add_row_to_init_table)
 
-
     def refresh_ui(self, routine: Routine = None):
         self.routine = routine  # save routine for future reference
 
@@ -142,17 +141,17 @@ class BadgerRoutinePage(QWidget):
         name_algo = routine.generator.name
         idx_algo = self.algos.index(name_algo)
         self.algo_box.cb.setCurrentIndex(idx_algo)
-        self.algo_box.edit.setPlainText(routine.generator.yaml())
-        try:
-            self.script = routine.script
-        except KeyError:
-            self.script = None
+        # self.algo_box.edit.setPlainText(routine.generator.yaml())
+        self.algo_box.edit.setPlainText(
+            ystring(routine.generator.model_dump()))
+        self.script = routine.script
 
         name_env = routine.environment.name
         idx_env = self.envs.index(name_env)
         self.env_box.cb.setCurrentIndex(idx_env)
-        self.env_box.edit.setPlainText(
-            yaml.dump(routine.environment.model_dump_json()))
+        env_params = routine.environment.model_dump()
+        del env_params["interface"]
+        self.env_box.edit.setPlainText(ystring(env_params))
 
         # Config the vocs panel
         variables = routine.vocs.variable_names
@@ -182,7 +181,6 @@ class BadgerRoutinePage(QWidget):
                             'EQUAL_TO'].index(relation)
                 self.add_constraint(name, relation, thres, critical)
 
-
         constants = routine.vocs.constants
         if len(constants):
             for name_sta, val in constants.items():
@@ -190,7 +188,9 @@ class BadgerRoutinePage(QWidget):
 
         # Config the metadata
         self.edit_save.setPlaceholderText(generate_slug(2))
+        self.edit_save.setText(routine.name)
 
+        self.algo_box.check_use_script.setChecked(not not self.script)
 
     def select_algo(self, i):
         # Reset the script

@@ -1,3 +1,4 @@
+import json
 from typing import Optional, List, Any
 
 import pandas as pd
@@ -62,6 +63,10 @@ class Routine(Xopt):
                 data["environment"] = {"params": {}}
 
             # instantiate env
+            try:
+                del data["environment"]["interface"]
+            except KeyError:  # no interface at all, which is good
+                pass
             env_class, configs_env = get_env(data["environment_name"])
             data["environment"] = instantiate_env(
                 env_class, data["environment"] | configs_env
@@ -72,7 +77,7 @@ class Routine(Xopt):
 
             def evaluate_point(point: dict):
                 env._set_variables(point)
-                obs = env._get_observables(data["vocs"].observables)
+                obs = env._get_observables(data["vocs"].objective_names)
 
                 return obs
 
@@ -89,3 +94,13 @@ class Routine(Xopt):
                 v = pd.DataFrame(v, index=[0])
 
         return v
+
+    # def json(self, **kwargs) -> str:
+    #     """Handle custom serialization of environment"""
+    #     result = super().to_json(**kwargs)
+    #     dict_result = json.loads(result)
+    #     dict_result["environment"] = {"name": self.environment.name} | dict_result[
+    #         "environment"
+    #     ]
+
+    #     return json.dumps(dict_result)

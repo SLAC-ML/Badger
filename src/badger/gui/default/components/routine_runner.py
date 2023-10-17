@@ -73,7 +73,7 @@ class BadgerRoutineRunner(QRunnable):
             run_routine(
                 self.routine,
                 active_callback=self.check_run_status,
-                generate_callback=self.before_evaluate_xopt,
+                generate_callback=self.before_evaluate,
                 evaluate_callback=self.after_evaluate,
                 states_callback=self.states_ready
             )
@@ -85,7 +85,7 @@ class BadgerRoutineRunner(QRunnable):
             self.signals.finished.emit()
             self.signals.error.emit(e)
 
-    def before_evaluate(self, vars):
+    def before_evaluate(self, candidates: DataFrame):
         # vars: ndarray
         while self.is_paused:
             time.sleep(0)
@@ -95,35 +95,35 @@ class BadgerRoutineRunner(QRunnable):
         if self.is_killed:
             raise BadgerRunTerminatedError
 
-    def after_evaluate(self):
+    def after_evaluate(self, data: DataFrame):
         # vars: ndarray
         # obses: ndarray
         # cons: ndarray
         # stas: list
         ts = curr_ts()
         ts_float = ts.timestamp()
-        # self.signals.progress.emit(list(vars), list(obses), list(cons), list(stas),
-        # ts_float)
+        self.signals.progress.emit(
+            list(data[self.routine.vocs.variable_names].to_numpy()[0]),
+            list(data[self.routine.vocs.objective_names].to_numpy()[0]),
+            list(data[self.routine.vocs.constraint_names].to_numpy()[0]),
+            list(data[self.routine.vocs.constant_names].to_numpy()[0]),
+            ts_float)
 
         # Try dump the run data and interface log to the disk
-        dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
-        if (self.last_dump_time is None) or (
-                ts_float - self.last_dump_time > dump_period):
-            self.last_dump_time = ts_float
-            run = archive_run(self.routine, self.states)
-            try:
-                path = run['path']
-                filename = run['filename'][:-4] + 'pickle'
-                self.env.interface.stop_recording(os.path.join(path, filename))
-            except:
-                pass
+        # dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))
+        # if (self.last_dump_time is None) or (
+        #         ts_float - self.last_dump_time > dump_period):
+        #     self.last_dump_time = ts_float
+        #     run = archive_run(self.routine, self.states)
+        #     try:
+        #         path = run['path']
+        #         filename = run['filename'][:-4] + 'pickle'
+        #         self.env.interface.stop_recording(os.path.join(path, filename))
+        #     except:
+        #         pass
 
         # Take a break to let the outside signal to change the status
         time.sleep(0.1)
-
-        # Check if termination condition has been satisfied
-        if self.termination_condition is None:
-            return
 
     def check_run_status(self):
         """
@@ -132,29 +132,28 @@ class BadgerRoutineRunner(QRunnable):
         - checks for internal triggers (max eval, max time) and external triggers
 
         """
+        # Check if termination condition has been satisfied
         if self.termination_condition:
             tc_config = self.termination_condition
             idx = tc_config['tc_idx']
             if idx == 0:
                 max_eval = tc_config['max_eval']
                 if len(self.routine.data) >= max_eval:
-                    raise BadgerRunTerminatedError
+                    return 2
 
             elif idx == 1:
                 max_time = tc_config['max_time']
                 dt = time.time() - self.start_time
                 if dt >= max_time:
-                    raise BadgerRunTerminatedError
+                    return 2
 
+        # External triggers
         if self.is_killed:
-            raise BadgerRunTerminatedError
+            return 2
         elif self.is_paused:
             return 1
         else:
-            return 0  # running
-
-    def before_evaluate_xopt(self, candidates: DataFrame):
-        pass
+            return 0  # continue to run
 
     def env_ready(self, env):
         self.env = env

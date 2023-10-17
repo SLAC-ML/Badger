@@ -2,7 +2,7 @@ from abc import ABC
 from logging import warning
 from typing import ClassVar, Dict, final, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field  # , model_serializer
 
 from badger.errors import (
     BadgerEnvObsError,
@@ -71,7 +71,7 @@ class Environment(BaseModel, ABC):
     )
 
     # Class variables
-    name: ClassVar[str] = Field(description="environment name", exclude=False)
+    name: ClassVar[str] = Field(description="environment name")
     variables: ClassVar[Dict[str, List]]  # bounds list could be empty for var
     observables: ClassVar[List[str]]
 
@@ -114,6 +114,17 @@ class Environment(BaseModel, ABC):
     # Should return a dict if not None
     def get_system_states(self) -> Optional[Dict]:
         return None
+
+    ############################################################
+    # Expert level of customization
+    ############################################################
+
+    # @model_serializer
+    # def ser_model(self, **kwargs) -> Dict[str, Any]:
+    #     default_dict = super().model_dump(**kwargs)
+    #     default_dict["name"] = self.name
+
+    #     return default_dict
 
     ############################################################
     # Should never be overridden

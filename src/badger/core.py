@@ -89,8 +89,10 @@ def run_routine(
     # Nikita: more care about the setting var logic,
     # wait or consider timeout/retry
     # TODO: need to evaluate a single point at the time
-    for index, ele in initial_points.iterrows():
-        routine.evaluate_data(ele.to_dict())
+    for _, ele in initial_points.iterrows():
+        result = routine.evaluate_data(ele.to_dict())
+        if evaluate_callback:
+            evaluate_callback(result)
 
     # Prepare for dumping file
     if dump_file_callback:
@@ -119,6 +121,8 @@ def run_routine(
         # if still active evaluate the points and add to generator
         # check active_callback evaluate point
         result = routine.evaluate_data(candidates)
+        if evaluate_callback:
+            evaluate_callback(result)
 
         # Dump Xopt state after each step
         if dump_file_callback:
