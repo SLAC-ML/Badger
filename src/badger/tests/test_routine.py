@@ -25,6 +25,23 @@ class TestRoutine:
 
         assert len(lroutine.data) == 2
 
+    def test_routine_env_dump(self):
+        from badger.routine import Routine
+        from badger.environment import Environment
+
+        routine = create_routine()
+        assert isinstance(routine.environment, Environment)
+
+        routine.environment.flag = 1
+        assert routine.environment.flag == 1
+
+        routine_str = routine.yaml()
+        # print(routine.environment, 'raw env')
+        # print(routine_str, 'yaml')
+        # print(routine.json(), 'json')
+        routine_re = Routine.from_yaml(routine_str)
+        assert routine_re.environment.flag == 1
+
     @pytest.fixture(scope="module", autouse=True)
     def clean_up(self):
         yield

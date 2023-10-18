@@ -1,5 +1,7 @@
 critical_constraint_names: null
 data:
+  f:
+    '0': 1.0
   x0:
     '0': 0.5
   x1:
@@ -11,11 +13,11 @@ data:
   xopt_error:
     '0': false
   xopt_runtime:
-    '0': 0.000246998
+    '0': 2.6228e-05
 dump_file: null
 environment:
-  interface: {}
-environment_name: test
+  interface: null
+  name: test
 evaluator:
   function: badger.routine.Routine.validate_model.<locals>.evaluate_point
   function_kwargs: {}

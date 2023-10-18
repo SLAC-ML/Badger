@@ -407,13 +407,13 @@ class BadgerRoutinePage(QWidget):
 
     def set_vrange(self):
         vname_selected = []
-        vrange = []
+        vrange = {}
 
         for var in self.env_box.var_table.all_variables:
             name = next(iter(var))
             if self.env_box.var_table.is_checked(name):
                 vname_selected.append(name)
-                vrange.append({name: var[name]})
+                vrange[name] = var[name]
 
         env = self.create_env()
         var_curr = env._get_variables(vname_selected)
@@ -422,20 +422,20 @@ class BadgerRoutinePage(QWidget):
         if option_idx:
             ratio = self.limit_option['ratio_full']
             for i, name in enumerate(vname_selected):
-                hard_bounds = vrange[i][name]
+                hard_bounds = vrange[name]
                 delta = 0.5 * ratio * (hard_bounds[1] - hard_bounds[0])
                 bounds = [var_curr[name] - delta, var_curr[name] + delta]
                 bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1]).tolist()
-                vrange[i][name] = bounds
+                vrange[name] = bounds
         else:
             ratio = self.limit_option['ratio_curr']
             for i, name in enumerate(vname_selected):
-                hard_bounds = vrange[i][name]
+                hard_bounds = vrange[name]
                 sign = np.sign(var_curr[name])
                 bounds = [var_curr[name] * (1 - 0.5 * sign * ratio),
                           var_curr[name] * (1 + 0.5 * sign * ratio)]
                 bounds = np.clip(bounds, hard_bounds[0], hard_bounds[1]).tolist()
-                vrange[i][name] = bounds
+                vrange[name] = bounds
 
         self.env_box.var_table.set_bounds(vrange)
 
@@ -563,11 +563,10 @@ class BadgerRoutinePage(QWidget):
             generator={"name": algo_name} | algo_params,
             # Badger part
             name=name,
+            environment={"name": env_name} | env_params,
             initial_points=init_points_df.astype("double"),
-            tags=None,
-            environment_name=env_name,
-            environment=env_params,
             critical_constraint_names=critical_constraints,
+            tags=None,
             script=script,
         )
 

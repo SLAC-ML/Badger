@@ -1,4 +1,5 @@
 import json
+import yaml
 from typing import Optional, List, Any
 
 import pandas as pd
@@ -16,12 +17,11 @@ class Routine(Xopt):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
-    environment_name: str
-    initial_points: Optional[DataFrame] = Field(None)
-    tags: Optional[List] = Field(None)
-    critical_constraint_names: Optional[List[str]] = Field(None)
-    script: Optional[str] = Field(None)
     environment: Optional[Environment] = Field(None)
+    initial_points: Optional[DataFrame] = Field(None)
+    critical_constraint_names: Optional[List[str]] = Field(None)
+    tags: Optional[List] = Field(None)
+    script: Optional[str] = Field(None)
 
     @model_validator(mode="before")
     @classmethod
@@ -55,22 +55,21 @@ class Routine(Xopt):
 
                     data["generator"].add_data(data["data"])
 
-            # process evaluator
-            if "environment" in data:
-                if data["environment"] is None:
-                    data["environment"] = {"params": {}}
-            else:
-                data["environment"] = {"params": {}}
-
             # instantiate env
-            try:
-                del data["environment"]["interface"]
-            except KeyError:  # no interface at all, which is good
+            if isinstance(data["environment"], dict):
+                # TODO: Actually we need this interface info, but
+                # should be put somewhere else (in parallel with env?)
+                try:
+                    del data["environment"]["interface"]
+                except KeyError:  # no interface at all, which is good
+                    pass
+                name = data["environment"].pop("name")
+                env_class, configs_env = get_env(name)
+                data["environment"] = instantiate_env(
+                    env_class, data["environment"] | configs_env
+                )
+            else:  # should be an instantiated env already
                 pass
-            env_class, configs_env = get_env(data["environment_name"])
-            data["environment"] = instantiate_env(
-                env_class, data["environment"] | configs_env
-            )
 
             # create evaluator
             env = data["environment"]
@@ -95,12 +94,52 @@ class Routine(Xopt):
 
         return v
 
-    # def json(self, **kwargs) -> str:
-    #     """Handle custom serialization of environment"""
-    #     result = super().to_json(**kwargs)
-    #     dict_result = json.loads(result)
-    #     dict_result["environment"] = {"name": self.environment.name} | dict_result[
-    #         "environment"
-    #     ]
+    def json(self, **kwargs) -> str:
+        """Handle custom serialization of environment"""
 
-    #     return json.dumps(dict_result)
+        print(self.environment)
+
+        result = super().json(**kwargs)
+        dict_result = json.loads(result)
+
+        print(dict_result, 'routine json')
+
+        # Remove extra fields
+        # extra_fields = [
+        #     "data"
+        # ]
+        # dict_result.pop('no exist')
+        # dict_result["environment"].pop()
+        # try:
+        #     del dict_result["data"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["dump_file"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["evaluator"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["max_evaluations"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["serialize_inline"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["serialize_torch"]
+        # except KeyError:
+        #     pass
+        # try:
+        #     del dict_result["strict"]
+        # except KeyError:
+        #     pass
+
+        dict_result["environment"] = {"name": self.environment.name} |\
+            dict_result["environment"]
+
+        return json.dumps(dict_result)

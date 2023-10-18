@@ -757,19 +757,22 @@ class BadgerOptMonitor(QWidget):
         self.sig_lock.emit(False)
 
         try:
-            run = archive_run(self.routine_runner.routine_name, self.routine_runner.data,
-                              self.routine_runner.states)
+            run = archive_run(self.routine.name,
+                              self.routine.data,
+                              states=None)  # TODO: fill in the states
             self.routine_runner.run_filename = run['filename']
+            env = self.routine.environment
             try:
                 path = run['path']
                 filename = run['filename'][:-4] + 'pickle'
-                self.env.interface.stop_recording(os.path.join(path, filename))
+                env.interface.stop_recording(os.path.join(path, filename))
             except:
                 pass
             self.sig_run_name.emit(run['filename'])
 
             QMessageBox.information(
-                self, 'Success!', f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
+                self, 'Success!',
+                f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
 
         except Exception as e:
             self.sig_run_name.emit(None)
@@ -870,13 +873,17 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
-        _var_dict = self.env._get_variables(self.var_names)
+        env = self.routine.environment
+        var_names = self.routine.vocs.variable_names
+
+        _var_dict = env._get_variables(self.var_names)
         current_vars = [_var_dict[v] for v in self.var_names]
-        self.env._set_variables(dict(zip(self.var_names, self.init_vars)))
-        _var_dict = self.env._get_variables(self.var_names)
-        after_vars = [_var_dict[v] for v in self.var_names]
-        QMessageBox.information(
-            self, 'Reset Environment', f'Env vars {current_vars} -> {after_vars}')
+        self.env._set_variables(
+            dict(zip(self.routine.vocs.variable_names, self.init_vars)))
+        _var_dict = self.env._get_variables(var_names)
+        after_vars = [_var_dict[v] for v in var_names]
+        QMessageBox.information(self, 'Reset Environment',
+                                f'Env vars {current_vars} -> {after_vars}')
 
     def jump_to_optimal(self):
         try:
