@@ -2,7 +2,9 @@ import os
 
 import pytest
 
+from badger.environment import Environment
 from badger.tests.utils import create_routine
+from badger.routine import Routine
 
 
 class TestRoutine:
@@ -26,14 +28,12 @@ class TestRoutine:
         assert len(lroutine.data) == 2
 
     def test_routine_env_dump(self):
-        from badger.routine import Routine
-        from badger.environment import Environment
 
         routine = create_routine()
         assert isinstance(routine.environment, Environment)
 
-        routine.environment.flag = 1
-        assert routine.environment.flag == 1
+        routine.environment.my_flag = 1
+        assert routine.environment.my_flag == 1
 
         routine_str = routine.yaml()
         # print(routine.environment, 'raw env')

@@ -5,7 +5,7 @@ from typing import Optional, List, Any
 import pandas as pd
 from pandas import DataFrame
 from pydantic import ConfigDict, Field, model_validator, field_validator, \
-    FieldValidationInfo
+    FieldValidationInfo, SerializeAsAny
 from xopt import Xopt, VOCS, Evaluator
 from xopt.generators import get_generator
 
@@ -17,7 +17,7 @@ class Routine(Xopt):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
-    environment: Optional[Environment] = Field(None)
+    environment: SerializeAsAny[Environment]
     initial_points: Optional[DataFrame] = Field(None)
     critical_constraint_names: Optional[List[str]] = Field(None)
     tags: Optional[List] = Field(None)
