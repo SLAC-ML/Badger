@@ -1,11 +1,9 @@
 import json
-from typing import Optional, Dict, List
+from typing import Dict, List
 
-from pydantic import SerializeAsAny
+from xopt.resources.testing import TEST_VOCS_BASE
 
 from badger.environment import Environment
-from badger.routine import Routine
-from xopt.resources.testing import TEST_VOCS_BASE
 
 
 class TestEnvironment(Environment):
@@ -32,10 +30,14 @@ class TestEnv:
         result = dict(env)
         assert result["my_flag"] == 1
 
-        result = json.loads(env.json())
+        result = json.loads(env.model_dump_json())
         assert result["my_flag"] == 1
 
+
     def test_env_in_routine(self):
+        from badger.environment import Environment
+        from badger.routine import Routine
+
         env = TestEnvironment()
         vocs = TEST_VOCS_BASE
 
@@ -51,4 +53,25 @@ class TestEnv:
         routine.environment.my_flag = 1
         result = json.loads(routine.json())
         assert result["environment"]["my_flag"] == 1
+
+    def test_env_from_get_env(self):
+        from badger.factory import get_env
+        from badger.environment import Environment
+        from badger.routine import Routine
+
+        env = get_env("test")
+        vocs = TEST_VOCS_BASE
+
+        routine = Routine(
+            name="test_routine",
+            environment=env,
+            vocs=vocs,
+            generator="random"
+        )
+        result = json.loads(routine.json())
+        assert result["environment"]["flag"] == 0
+
+        routine.environment.flag = 1
+        result = json.loads(routine.json())
+        assert result["environment"]["flag"] == 1
 
