@@ -6,21 +6,6 @@ from badger.errors import BadgerNoInterfaceError
 
 class Environment(environment.Environment):
 
-    name = 'test'
-    variables = {f'x{i}': [-1, 1] for i in range(20)}
-    observables = ['f']
-
-    flag: Optional[int] = 0
-
-    def set_variables(self, variable_inputs: Dict[str, float]):
-        pass
-
-    def get_observables(self, observable_names: List[str]) -> Dict:
-        return {ele: 1.0 for ele in observable_names}
-
-
-class TestEnvironmentWithInterface(environment.Environment):
-
     name = 'test_w_interface'
     variables = {f'x{i}': [-1, 1] for i in range(20)}
     observables = ['f']

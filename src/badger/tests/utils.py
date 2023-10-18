@@ -5,7 +5,6 @@ from xopt.generators import RandomGenerator
 
 def create_routine():
     from badger.routine import Routine
-    from badger.tests.mock.plugins.environments.test import TestEnvironment
 
     test_routine = {
         "name": "routine-for-core-test",
@@ -43,6 +42,6 @@ def create_routine():
         name="test",
         vocs=vocs,
         generator=generator,
-        environment=TestEnvironment(),
+        environment={"name": "test"},
         initial_points=pd.DataFrame(test_routine["config"]["init_points"])
     )
