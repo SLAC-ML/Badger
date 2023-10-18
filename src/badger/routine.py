@@ -1,5 +1,4 @@
 import json
-import yaml
 from typing import Optional, List, Any
 
 import pandas as pd
@@ -65,9 +64,8 @@ class Routine(Xopt):
                     pass
                 name = data["environment"].pop("name")
                 env_class, configs_env = get_env(name)
-                data["environment"] = instantiate_env(
-                    env_class, data["environment"] | configs_env
-                )
+                configs_env["params"] |= data["environment"]
+                data["environment"] = instantiate_env(env_class, configs_env)
             else:  # should be an instantiated env already
                 pass
 
@@ -101,41 +99,26 @@ class Routine(Xopt):
         dict_result = json.loads(result)
 
         # Remove extra fields
-        # extra_fields = [
-        #     "data"
-        # ]
-        # dict_result.pop('no exist')
-        # dict_result["environment"].pop()
-        # try:
-        #     del dict_result["data"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["dump_file"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["evaluator"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["max_evaluations"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["serialize_inline"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["serialize_torch"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["strict"]
-        # except KeyError:
-        #     pass
+        fields_to_be_removed = [
+            "dump_file",
+            "evaluator",
+            "max_evaluations",
+            "serialize_inline",
+            "serialize_torch",
+            "strict"
+        ]
+        for field in fields_to_be_removed:
+            dict_result.pop(field, None)
 
         dict_result["environment"] = {"name": self.environment.name} |\
             dict_result["environment"]
+        try:
+            dict_result["environment"]["interface"] = {
+                "name": self.environment.interface.name} |\
+                dict_result["environment"]["interface"]
+        except KeyError:
+            pass
+        except AttributeError:
+            pass
 
         return json.dumps(dict_result)
