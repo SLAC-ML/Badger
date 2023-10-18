@@ -2,7 +2,7 @@ from abc import ABC
 from logging import warning
 from typing import ClassVar, Dict, final, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field  # , model_serializer
+from pydantic import BaseModel, ConfigDict, Field, SerializeAsAny
 
 from badger.errors import (
     BadgerEnvObsError,
@@ -76,7 +76,7 @@ class Environment(BaseModel, ABC):
     observables: ClassVar[List[str]]
 
     # Interface
-    interface: Optional[Interface] = None
+    interface: Optional[SerializeAsAny[Interface]] = None
     # Put all other env params here
     # params: float = Field(..., description='Example env parameter')
 
