@@ -9,7 +9,7 @@ class TestEnv:
     def test_basic_env(self):
         from badger.environment import Environment
 
-        class TestEnvironment(Environment):
+        class Environment(Environment):
             name = 'test'
             variables = {f'x{i}': [-1, 1] for i in range(20)}
             observables = ['f']
@@ -22,7 +22,7 @@ class TestEnv:
             def get_observables(self, observable_names: List[str]) -> Dict:
                 return {ele: 1.0 for ele in observable_names}
 
-        env = TestEnvironment()
+        env = Environment()
         result = dict(env)
         assert result["my_flag"] == 0
 
@@ -36,7 +36,7 @@ class TestEnv:
     def test_env_in_routine(self):
         from badger.environment import Environment
 
-        class TestEnvironment(Environment):
+        class Environment(Environment):
             name = 'test'
             variables = {f'x{i}': [-1, 1] for i in range(20)}
             observables = ['f']
@@ -51,7 +51,7 @@ class TestEnv:
 
         from badger.routine import Routine
 
-        env = TestEnvironment()
+        env = Environment()
         vocs = TEST_VOCS_BASE
 
         routine = Routine(
@@ -71,12 +71,13 @@ class TestEnv:
         from badger.factory import get_env
         from badger.routine import Routine
 
-        env = get_env("test")
+        env, config = get_env("test")
+        config.pop("interface")
         vocs = TEST_VOCS_BASE
 
         routine = Routine(
             name="test_routine",
-            environment=env,
+            environment=env(**config),
             vocs=vocs,
             generator="random"
         )

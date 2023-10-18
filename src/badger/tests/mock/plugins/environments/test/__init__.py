@@ -4,7 +4,7 @@ from badger import environment
 from badger.errors import BadgerNoInterfaceError
 
 
-class TestEnvironment(environment.Environment):
+class Environment(environment.Environment):
 
     name = 'test'
     variables = {f'x{i}': [-1, 1] for i in range(20)}
@@ -21,7 +21,7 @@ class TestEnvironment(environment.Environment):
 
 class TestEnvironmentWithInterface(environment.Environment):
 
-    name = 'test'
+    name = 'test_w_interface'
     variables = {f'x{i}': [-1, 1] for i in range(20)}
     observables = ['f']
 

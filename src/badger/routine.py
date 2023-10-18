@@ -97,47 +97,8 @@ class Routine(Xopt):
     def json(self, **kwargs) -> str:
         """Handle custom serialization of environment"""
 
-        print(self.environment)
-
         result = super().json(**kwargs)
         dict_result = json.loads(result)
-
-        print(dict_result, 'routine json')
-
-        # Remove extra fields
-        # extra_fields = [
-        #     "data"
-        # ]
-        # dict_result.pop('no exist')
-        # dict_result["environment"].pop()
-        # try:
-        #     del dict_result["data"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["dump_file"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["evaluator"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["max_evaluations"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["serialize_inline"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["serialize_torch"]
-        # except KeyError:
-        #     pass
-        # try:
-        #     del dict_result["strict"]
-        # except KeyError:
-        #     pass
 
         dict_result["environment"] = {"name": self.environment.name} |\
             dict_result["environment"]
