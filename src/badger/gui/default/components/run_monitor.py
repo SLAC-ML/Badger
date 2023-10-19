@@ -392,7 +392,7 @@ class BadgerOptMonitor(QWidget):
     #         print('Yo')
     #         self.sender().showMenu()
 
-    def init_plots(self, routine=None, data=None, run_filename=None):
+    def init_plots(self, routine=None, run_filename=None):
         if routine:
             self.routine = routine
 
@@ -513,6 +513,10 @@ class BadgerOptMonitor(QWidget):
         self.enable_auto_range()
 
         # Fill in data
+        try:
+            data = routine.data
+        except AttributeError:
+            data = None
         self.data = data
         self.vars = []
         self.objs = []
@@ -543,7 +547,7 @@ class BadgerOptMonitor(QWidget):
         for sta in self.sta_names:
             self.stas.append(data[sta])
         self.stas = np.array(self.stas).T.tolist()
-        self.ts = data['timestamp_raw']
+        self.ts = data['timestamp']
 
         self.update_curves()
 
@@ -757,9 +761,8 @@ class BadgerOptMonitor(QWidget):
         self.sig_lock.emit(False)
 
         try:
-            run = archive_run(self.routine.name,
-                              self.routine.data,
-                              states=None)  # TODO: fill in the states
+            # TODO: fill in the states
+            run = archive_run(self.routine, states=None)
             self.routine_runner.run_filename = run['filename']
             env = self.routine.environment
             try:
@@ -775,6 +778,7 @@ class BadgerOptMonitor(QWidget):
                 f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
 
         except Exception as e:
+            raise e
             self.sig_run_name.emit(None)
 
             QMessageBox.critical(self, 'Archive failed!', f'Archive failed: {str(e)}')

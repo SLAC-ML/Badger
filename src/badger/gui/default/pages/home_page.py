@@ -346,13 +346,13 @@ class BadgerHomePage(QWidget):
 
         run_filename = self.cb_history.currentText()
         try:
-            run = load_run(run_filename)
-        except:
+            routine = load_run(run_filename)
+        except IndexError:
             return
-        self.current_routine = run['routine']  # update the current routine
-        update_table(self.run_table, run['data'])
-        self.run_monitor.init_plots(run['routine'], run['data'], run_filename)
-        self.routine_editor.set_routine(run['routine'])
+        self.current_routine = routine  # update the current routine
+        update_table(self.run_table, routine.data)
+        self.run_monitor.init_plots(routine, run_filename)
+        self.routine_editor.set_routine(routine)
         self.status_bar.set_summary(f'current routine: {self.current_routine.name}')
 
     def go_prev_run(self):

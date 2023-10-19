@@ -178,9 +178,9 @@ def save_run(run):
     cur = con.cursor()
 
     # Insert or update a record
-    routine_name = run['routine']['name']
+    routine_name = run['routine'].name
     run_filename = run['filename']
-    timestamps = run['data']['timestamp_raw']
+    timestamps = run['data']['timestamp']
     time_start = datetime.fromtimestamp(timestamps[0])
     time_finish = datetime.fromtimestamp(timestamps[-1])
 

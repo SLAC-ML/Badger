@@ -40,8 +40,7 @@ def update_table(table, data=None):
         return table
 
     _data = data.copy()
-    m = len(_data['timestamp_raw'])
-    del _data['timestamp_raw']
+    m = len(_data['timestamp'])
     del _data['timestamp']
     n = len(_data)
 

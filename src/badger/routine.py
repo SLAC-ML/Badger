@@ -10,6 +10,7 @@ from xopt.generators import get_generator
 
 from badger.environment import Environment, instantiate_env
 from badger.factory import get_env
+from badger.utils import curr_ts
 
 
 class Routine(Xopt):
@@ -75,6 +76,9 @@ class Routine(Xopt):
             def evaluate_point(point: dict):
                 env._set_variables(point)
                 obs = env._get_observables(data["vocs"].objective_names)
+
+                ts = curr_ts()
+                obs['timestamp'] = ts.timestamp()
 
                 return obs
 

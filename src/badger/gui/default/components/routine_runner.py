@@ -1,15 +1,10 @@
 import logging
 
 logger = logging.getLogger(__name__)
-import os
 import time
-import pandas as pd
 from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from ....utils import curr_ts, ts_to_str
 from ....core import run_routine, Routine
-from ....settings import read_value
-from ....archive import archive_run
 from ....errors import BadgerRunTerminatedError
 
 
@@ -70,6 +65,7 @@ class BadgerRoutineRunner(QRunnable):
         self.last_dump_time = None  # reset the timer
 
         try:
+            self.routine.data = None  # reset data
             run_routine(
                 self.routine,
                 active_callback=self.check_run_status,
@@ -96,12 +92,7 @@ class BadgerRoutineRunner(QRunnable):
             raise BadgerRunTerminatedError
 
     def after_evaluate(self, data: DataFrame):
-        # vars: ndarray
-        # obses: ndarray
-        # cons: ndarray
-        # stas: list
-        ts = curr_ts()
-        ts_float = ts.timestamp()
+        ts_float = float(data['timestamp'][0])
         self.signals.progress.emit(
             list(data[self.routine.vocs.variable_names].to_numpy()[0]),
             list(data[self.routine.vocs.objective_names].to_numpy()[0]),
