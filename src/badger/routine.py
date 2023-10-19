@@ -4,7 +4,7 @@ from typing import Optional, List, Any
 import pandas as pd
 from pandas import DataFrame
 from pydantic import ConfigDict, Field, model_validator, field_validator, \
-    FieldValidationInfo, SerializeAsAny
+    ValidationInfo, SerializeAsAny
 from xopt import Xopt, VOCS, Evaluator
 from xopt.generators import get_generator
 
@@ -83,7 +83,7 @@ class Routine(Xopt):
         return data
 
     @field_validator("initial_points", mode="before")
-    def validate_data(cls, v, info: FieldValidationInfo):
+    def validate_data(cls, v, info: ValidationInfo):
         if isinstance(v, dict):
             try:
                 v = pd.DataFrame(v)
