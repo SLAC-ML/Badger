@@ -45,7 +45,7 @@ class TestDB:
             name="test",
             vocs=vocs,
             generator=generator,
-            environment_name="test",
+            environment={"name": "test"},
             initial_points=pd.DataFrame(test_routine["config"]["init_points"])
         )
 

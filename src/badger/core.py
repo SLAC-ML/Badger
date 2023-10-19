@@ -15,6 +15,7 @@ from badger.utils import (
     ParetoFront,
 )
 
+
 def add_to_pf(idx: int, candidate: DataFrame, result: DataFrame,
               pf: ParetoFront) -> None:
     n_sol, n_var = candidate.shape

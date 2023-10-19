@@ -5,12 +5,6 @@ import pandas as pd
 from typing import Type
 from xopt.generators import get_generator
 from badger.utils import merge_params, ParetoFront
-from badger.core import (
-    run_routine_xopt,
-    evaluate_points,
-    Routine,
-)
-from badger.environment import instantiate_env
 from badger.errors import BadgerRunTerminatedError
 
 
@@ -51,12 +45,14 @@ class TestCore:
             )
         ]
 
-    def mock_routine(self) -> Type[Routine]:
+    def mock_routine(self):
         """
         A method that creates a Routine class object
         filled with sample data for testing purposes.
         """
         from badger.factory import get_env
+        from badger.routine import Routine
+        from badger.environment import instantiate_env
 
         test_routine = {
             "name": "routine-for-core-test",
@@ -196,15 +192,17 @@ class TestCore:
         """
         return "test.yaml"
 
-    def test_run_routine_xopt(self) -> None:
+    def test_run_routine(self) -> None:
         """
         A unit test to ensure the core functionality
         of run_routine_xopt is functioning as intended.
         """
+        from badger.core import run_routine
+
         routine = self.mock_routine()
 
         with pytest.raises(BadgerRunTerminatedError):
-            run_routine_xopt(
+            run_routine(
                 routine,
                 self.mock_active_callback,
                 self.mock_generate_callback,
@@ -242,7 +240,7 @@ class TestCore:
             "x1": 0,
             "x2": 0,
         }
-        evaluate_points_result = evaluate_points(
+        evaluate_points_result = routine.evaluate_data(
             self.points, routine, self.mock_evaluate_points_callback
         )
 

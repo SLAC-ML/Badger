@@ -4,11 +4,6 @@ import pandas as pd
 from typing import Type
 from xopt.generators import get_generator
 from badger.utils import merge_params, ParetoFront
-from badger.core import (
-    run_routine_xopt,
-    Routine,
-)
-from badger.environment import instantiate_env
 from badger.errors import BadgerRunTerminatedError
 
 
@@ -39,12 +34,14 @@ class TestTuRBORun:
 
         self.points_eval_target = pd.DataFrame(data_eval_target)
 
-    def mock_routine(self) -> Type[Routine]:
+    def mock_routine(self):
         """
         A method that creates a Routine class object
         filled with sample data for testing purposes.
         """
         from badger.factory import get_env
+        from badger.routine import Routine
+        from badger.environment import instantiate_env
 
         test_routine = {
             "name": "routine-for-core-test",
@@ -181,10 +178,12 @@ class TestTuRBORun:
         """
         A unit test to ensure TuRBO can run in Badger.
         """
+        from badger.core import run_routine
+
         routine = self.mock_routine()
 
         with pytest.raises(BadgerRunTerminatedError):
-            run_routine_xopt(
+            run_routine(
                 routine,
                 self.mock_active_callback,
                 self.mock_generate_callback,

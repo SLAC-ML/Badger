@@ -78,7 +78,7 @@ def test_run_monitor(qtbot):
         name="test",
         vocs=vocs,
         generator=generator,
-        environment_name=test_routine["env"],
+        environment={"name": test_routine["env"]},
         initial_points=pd.DataFrame(test_routine["config"]["init_points"])
     )
 

@@ -22,7 +22,6 @@ def archive_run(routine, data, states=None):
     # data: pandas dataframe
 
     data_dict = data.to_dict('list')
-    print(data_dict)
     ts_float = data_dict['timestamp_raw'][0]  # time of the first evaluated point
     suffix = ts_float_to_str(ts_float, "lcls-fname")
     tokens = suffix.split('-')
