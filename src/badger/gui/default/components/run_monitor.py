@@ -731,7 +731,6 @@ class BadgerOptMonitor(QWidget):
             self.sig_stop.emit()
 
     def env_ready(self, init_vars):
-        self.env = self.routine_runner.env
         self.init_vars = init_vars
 
         self.btn_log.setDisabled(False)
@@ -880,32 +879,22 @@ class BadgerOptMonitor(QWidget):
         env = self.routine.environment
         var_names = self.routine.vocs.variable_names
 
-        _var_dict = env._get_variables(self.var_names)
-        current_vars = [_var_dict[v] for v in self.var_names]
-        self.env._set_variables(
-            dict(zip(self.routine.vocs.variable_names, self.init_vars)))
-        _var_dict = self.env._get_variables(var_names)
+        _var_dict = env._get_variables(var_names)
+        current_vars = [_var_dict[v] for v in var_names]
+        env._set_variables(
+            dict(zip(var_names, self.init_vars)))
+        _var_dict = env._get_variables(var_names)
         after_vars = [_var_dict[v] for v in var_names]
         QMessageBox.information(self, 'Reset Environment',
                                 f'Env vars {current_vars} -> {after_vars}')
 
     def jump_to_optimal(self):
-        try:
-            in_a_run = not self.routine_runner.is_killed
-        except:
-            in_a_run = False
+        best_idx, _ = self.routine.vocs.select_best(
+            self.routine.data, n=1)
+        best_idx = int(best_idx[0])
 
-        if in_a_run:
-            pf = self.routine_runner.pf
-        else:
-            pf = self.pf
-
-        if pf is None:
-            return
-
-        idx = pf.pareto_set[0][0]
-        self.jump_to_solution(int(idx))
-        self.sig_inspect.emit(idx)
+        self.jump_to_solution(best_idx)
+        self.sig_inspect.emit(best_idx)
 
     def jump_to_solution(self, idx):
         if self.plot_x_axis:  # x-axis is time
@@ -921,12 +910,12 @@ class BadgerOptMonitor(QWidget):
         self.ins_var.setValue(value)
 
     def set_vars(self):
-        df = self.routine_runner.data
+        df = self.routine.data
         if self.plot_x_axis:  # x-axis is time
             pos, idx = self.closest_ts(self.ins_obj.value())
         else:
             pos = idx = int(self.ins_obj.value())
-        solution = df.loc[idx, self.var_names].to_numpy()
+        solution = df[self.var_names].to_numpy()[idx]
 
         reply = QMessageBox.question(self,
                                      'Apply Solution',
@@ -935,7 +924,8 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
-        self.env._set_variables(dict(zip(self.var_names, solution)))
+        self.routine.environment._set_variables(
+            dict(zip(self.var_names, solution)))
         # center around the inspector
         x_range = self.plot_var.getViewBox().viewRange()[0]
         delta = (x_range[1] - x_range[0]) / 2
