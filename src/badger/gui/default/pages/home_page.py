@@ -346,7 +346,9 @@ class BadgerHomePage(QWidget):
 
         run_filename = self.cb_history.currentText()
         try:
-            routine = load_run(run_filename)
+            _routine = load_run(run_filename)
+            routine, _ = load_routine(_routine.name)  # get the initial routine
+            routine.data = _routine.data
         except IndexError:
             return
         self.current_routine = routine  # update the current routine
