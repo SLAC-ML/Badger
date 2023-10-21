@@ -3,7 +3,6 @@ import logging
 import os
 from datetime import datetime
 
-import numpy as np
 import yaml
 
 from .errors import BadgerLoadConfigError

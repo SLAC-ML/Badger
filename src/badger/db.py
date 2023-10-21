@@ -1,12 +1,10 @@
 import os
 from datetime import datetime
 import logging
-
-from .routine import Routine
-
 logger = logging.getLogger(__name__)
 import yaml
 import sqlite3
+from .routine import Routine
 from .settings import read_value
 from .utils import ystring
 from .errors import BadgerConfigError, BadgerDBError

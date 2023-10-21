@@ -172,11 +172,11 @@ def scan_extensions(root):
 
 def get_algo_params(cls):
     params = {}
-    for k in cls.__fields__:
+    for k in cls.model_fields:
         if k in ['vocs', 'data']:
             continue
 
-        v = cls.__fields__[k]
+        v = cls.model_fields[k]
         try:
             _ = v.default
         except AttributeError:
