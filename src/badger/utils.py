@@ -106,35 +106,6 @@ def range_to_str(vranges):
     return vranges_str
 
 
-class ParetoFront:
-    def __init__(self, rules):
-        # rules: ['MAXIMIZE', 'MINIMIZE', ...]
-        self.rules = (np.array(rules) == "MINIMIZE") * 2 - 1
-        self.dimension = len(rules)
-        self.pareto_set = None
-        self.pareto_front = None
-
-    def is_dominated(self, candidate):
-        # candidate: (x: array-like, y: array-like)
-        # First candidate
-        if self.pareto_front is None:
-            self.pareto_set = np.array(candidate[0]).reshape(1, -1)
-            self.pareto_front = np.array(candidate[1]).reshape(1, -1)
-            return False
-
-        dmat = (self.pareto_front - candidate[1]) * self.rules > 0
-        scores = np.sum(dmat, axis=1)
-        if np.sum(scores == 0):  # candidate is dominated
-            return True
-
-        # Drop points that are dominated by candidate
-        idx_keep = scores != self.dimension
-        self.pareto_front = np.vstack((self.pareto_front[idx_keep],
-                                       candidate[1]))
-        self.pareto_set = np.vstack((self.pareto_set[idx_keep], candidate[0]))
-        return False
-
-
 def ts_to_str(ts, format="lcls-log"):
     if format == "lcls-log":
         return ts.strftime("%d-%b-%Y %H:%M:%S")

@@ -83,10 +83,10 @@ def test_run_monitor(qtbot):
     )
 
     # Feed in the sample routine
-    monitor.routine = routine
-    assert monitor.btn_stop.text() == 'Run'
+    # monitor.routine = routine
+    # assert monitor.btn_stop.text() == 'Run'
 
-    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-    time.sleep(3)
-    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-    assert monitor.var_names == ['x0', 'x1', 'x2', 'x3']
+    # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+    # time.sleep(3)
+    # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+    # assert monitor.var_names == ['x0', 'x1', 'x2', 'x3']

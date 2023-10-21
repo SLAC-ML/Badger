@@ -1,8 +1,6 @@
-import logging
 import time
 from typing import Callable
 
-import numpy as np
 from pandas import concat, DataFrame
 
 from badger.errors import (
@@ -12,20 +10,7 @@ from badger.routine import Routine
 from badger.utils import (
     curr_ts_to_str,
     dump_state,
-    ParetoFront,
 )
-
-
-def add_to_pf(idx: int, candidate: DataFrame, result: DataFrame,
-              pf: ParetoFront) -> None:
-    n_sol, n_var = candidate.shape
-    for i in range(n_sol):  # loop through each solution
-        inputs = candidate.iloc[i].values
-        inputs = np.insert(inputs, 0, idx + i)
-        outputs = result.iloc[i][n_var:].values[:]  # copy to avoid troubles
-        pf.is_dominated((inputs, outputs))
-
-    return n_sol  # number of points inserted
 
 
 def check_run_status(active_callback):
@@ -70,9 +55,6 @@ def run_routine(
     evaluate_callback : Callable
         Callback function called after evaluating points that takes the form
         `f(data: DataFrame)`.
-
-    pf_callback : Callable
-        Callback function called after Pareto Front object is instantiated
 
     states_callback : Callable
         Callback function called after system states is fetched

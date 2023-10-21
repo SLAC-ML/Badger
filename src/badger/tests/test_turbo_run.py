@@ -3,7 +3,7 @@ import pytest
 import pandas as pd
 from typing import Type
 from xopt.generators import get_generator
-from badger.utils import merge_params, ParetoFront
+from badger.utils import merge_params
 from badger.errors import BadgerRunTerminatedError
 
 
@@ -160,13 +160,6 @@ class TestTuRBORun:
         self.points_eval_list.append(points_eval)
         self.count += 1
 
-    def mock_pf_callback(self, pf: Type[ParetoFront]) -> None:
-        """
-        A mock pareto callback method to test
-        if pareto callback is functioning properly.
-        """
-        self.pf = pf
-
     def mock_states_callback(self, states: dict) -> None:
         """
         A mock states callback method to test
@@ -188,7 +181,6 @@ class TestTuRBORun:
                 self.mock_active_callback,
                 self.mock_generate_callback,
                 self.mock_evaluate_callback,
-                self.mock_pf_callback,
                 self.mock_states_callback,
                 dump_file_callback=None,
             )

@@ -12,7 +12,7 @@ from .analysis_extensions import DataViewer
 from .routine_runner import BadgerRoutineRunner
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
-from ....utils import norm, ParetoFront
+from ....utils import norm
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ....archive import archive_run, BADGER_ARCHIVE_ROOT
 
@@ -120,8 +120,6 @@ class BadgerOptMonitor(QWidget):
         self.thread_pool = None
         self.routine_runner = None
         self.running = False
-        # Analysis tool for history runs
-        self.pf = None
         # Fix the auto range issue
         self.eval_count = 0
         # Termination condition for the run
@@ -551,7 +549,6 @@ class BadgerOptMonitor(QWidget):
 
         self.update_curves()
 
-        self.calc_optimals()
         self.btn_del.setDisabled(False)
         self.btn_log.setDisabled(False)
         self.btn_opt.setDisabled(False)
@@ -575,15 +572,6 @@ class BadgerOptMonitor(QWidget):
             self.sig_pause.disconnect()
             self.sig_stop.disconnect()
             self.routine_runner = None
-
-    def calc_optimals(self):
-        rules = list(self.routine.vocs.objectives.values())
-        self.pf = pf = ParetoFront(rules)
-
-        for i, v in enumerate(self.vars):
-            o = self.objs[i]
-            idx = [i,] + v
-            pf.is_dominated((idx, o))
 
     def start(self, use_tc=False):
         self.sig_new_run.emit()

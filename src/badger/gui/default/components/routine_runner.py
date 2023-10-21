@@ -154,9 +154,6 @@ class BadgerRoutineRunner(QRunnable):
         init_vars = list(var_dict.values())
         self.signals.env_ready.emit(init_vars)
 
-    def pf_ready(self, pf):
-        self.pf = pf
-
     def states_ready(self, states):
         self.states = states
 
