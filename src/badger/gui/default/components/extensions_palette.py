@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, \
     QWidget, QLabel
-from badger.gui.default.components.analysis_extensions import DataViewer, \
-    AnalysisExtension
+from badger.gui.default.components.analysis_extensions import AnalysisExtension, \
+    ParetoFrontViewer
 
 
 class ExtensionsPalette(QMainWindow):
@@ -19,14 +19,14 @@ class ExtensionsPalette(QMainWindow):
         layout = QVBoxLayout()
 
         self.text_box = QLabel("0", self)
-        self.btn_data_viewer = QPushButton('Data Viewer')
+        self.btn_data_viewer = QPushButton('ParetoFrontViewer')
 
         layout.addWidget(self.text_box)
         layout.addWidget(self.btn_data_viewer)
 
         central_widget.setLayout(layout)
 
-        self.btn_data_viewer.clicked.connect(self.add_data_viewer)
+        self.btn_data_viewer.clicked.connect(self.add_pf_viewer)
 
     def update_palette(self):
         self.text_box.setText(str(len(self.run_monitor.active_extensions)))
@@ -38,7 +38,7 @@ class ExtensionsPalette(QMainWindow):
 
         self.update_palette()
 
-    def add_data_viewer(self):
-        self.add_child_window_to_monitor(DataViewer())
+    def add_pf_viewer(self):
+        self.add_child_window_to_monitor(ParetoFrontViewer())
 
 

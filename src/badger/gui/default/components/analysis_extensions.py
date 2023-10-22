@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod, ABC
 
+import pyqtgraph as pg
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QDialog, QLineEdit, QVBoxLayout, QLabel, QWidget
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QWidget
 
 from badger.core import Routine
-import pyqtgraph as pg
 
 
 class AnalysisExtension(QDialog):
@@ -22,34 +22,7 @@ class AnalysisExtension(QDialog):
         super().closeEvent(event)
 
 
-class ScatterPlotViewer(QWidget):
-    def __init__(self):
-        super(ScatterPlotViewer, self).__init__()
-        self.init_ui()
-
-    def init_ui(self):
-        self.layout = QVBoxLayout(self)
-
-        # Create a PyQtGraph plot widget
-        self.plot_widget = pg.PlotWidget()
-        self.layout.addWidget(self.plot_widget)
-
-        self.scatter_plot = self.plot_widget.plot(pen=None, symbol='o', symbolSize=10)
-
-    def update_plot(self, routine: Routine):
-        # Extract x and y data from the DataFrame
-        x = routine.data[routine.vocs.objective_names[0]]
-        y = routine.data[routine.vocs.objective_names[0]]
-
-        # Update the scatter plot
-        self.scatter_plot.setData(x=x, y=y)
-
-        # set labels
-        self.plot_widget.setLabel("left", routine.vocs.objective_names[0])
-        self.plot_widget.setLabel("bottom", routine.vocs.objective_names[0])
-
-
-class DataViewer(AnalysisExtension):
+class ParetoFrontViewer(AnalysisExtension):
     def __init__(self):
         super().__init__()
 
@@ -57,14 +30,28 @@ class DataViewer(AnalysisExtension):
 
         self.text_box = QLabel("Enter text here", self)
 
-        self.plot_window = ScatterPlotViewer()
+        self.plot_widget = pg.PlotWidget()
+
+        self.scatter_plot = self.plot_widget.plot(pen=None, symbol='o', symbolSize=10)
 
         layout = QVBoxLayout()
         layout.addWidget(self.text_box)
-        layout.addWidget(self.plot_window)
+        layout.addWidget(self.plot_widget)
         self.setLayout(layout)
 
     def update_window(self, routine: Routine):
-        print(len(routine.data))
+        assert len(routine.vocs.objective_names) == 2
         self.text_box.setText(str(len(routine.data)))
-        self.plot_window.update_plot(routine)
+
+        x_name = routine.vocs.objective_names[0]
+        y_name = routine.vocs.objective_names[1]
+
+        x = routine.data[x_name]
+        y = routine.data[y_name]
+
+        # Update the scatter plot
+        self.scatter_plot.setData(x=x, y=y)
+
+        # set labels
+        self.plot_widget.setLabel("left", y_name)
+        self.plot_widget.setLabel("bottom", x_name)

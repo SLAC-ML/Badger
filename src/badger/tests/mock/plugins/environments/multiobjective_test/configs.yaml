@@ -1,0 +1,9 @@
+---
+name: test
+description: "mock"
+version: "1.0"
+dependencies:
+  - torch
+  - badger-opt
+interface:
+  - test

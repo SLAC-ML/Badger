@@ -2,7 +2,7 @@ import os
 
 from PyQt5.QtCore import Qt
 
-from badger.gui.default.components.analysis_extensions import DataViewer
+from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
 
 
 def test_run_monitor(qtbot):
@@ -39,7 +39,7 @@ def test_add_extensions(qtbot):
     monitor.open_extensions_palette()
     monitor.extensions_palette.add_data_viewer()
 
-    assert isinstance(monitor.active_extensions[0], DataViewer)
+    assert isinstance(monitor.active_extensions[0], ParetoFrontViewer)
 
     # test opening and closing windows
     monitor = BadgerOptMonitor()
@@ -47,7 +47,7 @@ def test_add_extensions(qtbot):
 
     qtbot.mouseClick(monitor.btn_open_extensions_palette, Qt.LeftButton)
     qtbot.mouseClick(monitor.extensions_palette.btn_data_viewer, Qt.LeftButton)
-    assert isinstance(monitor.active_extensions[0], DataViewer)
+    assert isinstance(monitor.active_extensions[0], ParetoFrontViewer)
     assert len(monitor.active_extensions) == 1
 
     # test closing window -- should remove element from active extensions

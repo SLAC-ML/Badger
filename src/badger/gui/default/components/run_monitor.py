@@ -8,7 +8,6 @@ from PyQt5.QtCore import pyqtSignal, QThreadPool, QSize
 from PyQt5.QtGui import QFont, QIcon
 import pyqtgraph as pg
 
-from .analysis_extensions import DataViewer
 from .extensions_palette import ExtensionsPalette
 from .routine_runner import BadgerRoutineRunner
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
