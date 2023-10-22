@@ -9,6 +9,7 @@ from PyQt5.QtGui import QFont, QIcon
 import pyqtgraph as pg
 
 from .analysis_extensions import DataViewer
+from .extensions_palette import ExtensionsPalette
 from .routine_runner import BadgerRoutineRunner
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
@@ -125,7 +126,8 @@ class BadgerOptMonitor(QWidget):
         # Termination condition for the run
         self.termination_condition = None
 
-        self.active_analysis_extensions = []
+        self.extensions_palette = ExtensionsPalette(self)
+        self.active_extensions = []
 
         self.init_ui()
         self.config_logic()
@@ -302,7 +304,7 @@ class BadgerOptMonitor(QWidget):
         btn_stop.setStyleSheet(stylesheet_run)
 
         # add button for extensions
-        self.btn_activate_extensions = btn_extensions = QPushButton("Extensions")
+        self.btn_open_extensions_palette = btn_extensions = QPushButton("Extensions")
 
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
@@ -352,6 +354,7 @@ class BadgerOptMonitor(QWidget):
         vbox.addWidget(monitor)
         vbox.addWidget(action_bar)
 
+    # noinspection PyUnresolvedReferences
     def config_logic(self):
         # Sync the inspector lines
         self.ins_obj.sigDragged.connect(self.ins_obj_dragged)
@@ -376,7 +379,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_ctrl.clicked.connect(self.ctrl_routine)
         self.run_action.triggered.connect(self.set_run_action)
         self.run_until_action.triggered.connect(self.set_run_until_action)
-        self.btn_activate_extensions.clicked.connect(self.activate_extensions)
+        self.btn_open_extensions_palette.clicked.connect(self.open_extensions_palette)
 
         # Visualization
         self.cb_plot_x.currentIndexChanged.connect(self.select_x_axis)
@@ -673,15 +676,17 @@ class BadgerOptMonitor(QWidget):
                 else:
                     self.curves_sta[i].setData(np.array(self.stas)[:, i])
 
-    def activate_extensions(self):
-        self.active_analysis_extensions += [DataViewer()]
-
-        for ele in self.active_analysis_extensions:
-            ele.show()
+    def open_extensions_palette(self):
+        self.extensions_palette.show()
 
     def update_analysis_extensions(self):
-        for ele in self.active_analysis_extensions:
+        for ele in self.active_extensions:
             ele.update_window(self.routine)
+
+    def extension_window_closed(self, child_window):
+        self.active_extensions.remove(child_window)
+        self.extensions_palette.update_palette()
+
 
     def update(self, vars, objs, cons, stas, ts):
         self.vars.append(vars)
@@ -693,6 +698,7 @@ class BadgerOptMonitor(QWidget):
         self.update_curves()
 
         self.update_analysis_extensions()
+        self.extensions_palette.update_palette()
 
         # Quick-n-dirty fix to the auto range issue
         self.eval_count += 1

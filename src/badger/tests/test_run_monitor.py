@@ -1,5 +1,9 @@
 import os
 
+from PyQt5.QtCore import Qt
+
+from badger.gui.default.components.analysis_extensions import DataViewer
+
 
 def test_run_monitor(qtbot):
     from badger.db import BADGER_DB_ROOT
@@ -22,3 +26,31 @@ def test_run_monitor(qtbot):
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
     # assert monitor.var_names == ['x0', 'x1', 'x2', 'x3']
+
+
+def test_add_extensions(qtbot):
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
+
+    # test w/o using qtbot
+    monitor = BadgerOptMonitor()
+    monitor.show()
+    qtbot.addWidget(monitor)
+
+    monitor.open_extensions_palette()
+    monitor.extensions_palette.add_data_viewer()
+
+    assert isinstance(monitor.active_extensions[0], DataViewer)
+
+    # test opening and closing windows
+    monitor = BadgerOptMonitor()
+    qtbot.addWidget(monitor)
+
+    qtbot.mouseClick(monitor.btn_open_extensions_palette, Qt.LeftButton)
+    qtbot.mouseClick(monitor.extensions_palette.btn_data_viewer, Qt.LeftButton)
+    assert isinstance(monitor.active_extensions[0], DataViewer)
+    assert len(monitor.active_extensions) == 1
+
+    # test closing window -- should remove element from active extensions
+    monitor.active_extensions[0].close()
+    assert len(monitor.active_extensions) == 0
+    assert monitor.extensions_palette.text_box.text() == "0"
