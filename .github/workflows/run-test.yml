@@ -5,9 +5,9 @@ name: Build Status
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "**" ]
 
 permissions:
   contents: read
@@ -21,7 +21,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.9, 3.11]
-        pyqt-version: [5.15.9]
     env:
       DISPLAY: ':99.0'
       QT_MAC_WANTS_LAYER: 1  # PyQT gui tests involving qtbot interaction on macOS will fail without this
@@ -39,10 +38,10 @@ jobs:
       shell: bash -el {0}
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
-          mamba install flake8 zipp pyqt=${{ matrix.pyqt-version }}
+          mamba install flake8 zipp 
           mamba install --file requirements.txt --file windows-dev-requirements.txt
         else
-          mamba install flake8 zipp pyqt=${{ matrix.pyqt-version }} $(cat requirements.txt dev-requirements.txt)
+          mamba install flake8 zipp $(cat requirements.txt dev-requirements.txt)
         fi
     - name: Install packages for testing a pyqt app on linux
       shell: bash -el {0}
