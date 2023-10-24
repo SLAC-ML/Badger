@@ -1,8 +1,7 @@
 import os
-
+import time
 from PyQt5.QtCore import Qt
-
-from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
 def test_run_monitor(qtbot):
@@ -19,17 +18,19 @@ def test_run_monitor(qtbot):
     routine = create_routine()
 
     # Feed in the sample routine
-    # monitor.routine = routine
-    # assert monitor.btn_stop.text() == 'Run'
+    monitor.routine = routine
+    assert monitor.btn_stop.text() == 'Run'
 
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+
     # assert monitor.var_names == ['x0', 'x1', 'x2', 'x3']
 
 
 def test_add_extensions(qtbot):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
     from badger.tests.utils import create_routine
 
     routine = create_routine()

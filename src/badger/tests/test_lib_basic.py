@@ -8,7 +8,7 @@
 def test_env_api():
     from badger.factory import list_env, get_env
 
-    assert len(list_env()) == 1
+    assert len(list_env()) == 2
 
     _, configs = get_env('test')
     assert configs['name'] == 'test'
