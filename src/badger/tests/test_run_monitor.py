@@ -28,6 +28,26 @@ def test_run_monitor(qtbot):
     # assert monitor.var_names == ['x0', 'x1', 'x2', 'x3']
 
 
+def test_routine_identity(qtbot):
+    from badger.db import BADGER_DB_ROOT
+    from badger.tests.utils import create_routine
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
+
+    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+
+    monitor = BadgerOptMonitor()
+    monitor.show()
+    qtbot.addWidget(monitor)
+
+    routine = create_routine()
+
+    # Feed in the sample routine
+    monitor.routine = routine
+    monitor.init_routine_runner()
+
+    assert monitor.routine_runner.routine == monitor.routine
+
+
 def test_add_extensions(qtbot):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
     from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
