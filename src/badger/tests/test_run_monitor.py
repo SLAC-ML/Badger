@@ -30,14 +30,22 @@ def test_run_monitor(qtbot):
 
 def test_add_extensions(qtbot):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine
+
+    routine = create_routine()
+    routine.vocs.objectives = {
+        "f1": "MINIMIZE",
+        "f2": "MAXIMIZE"
+    }
 
     # test w/o using qtbot
     monitor = BadgerOptMonitor()
+    monitor.routine = routine
     monitor.show()
     qtbot.addWidget(monitor)
 
     monitor.open_extensions_palette()
-    monitor.extensions_palette.add_data_viewer()
+    monitor.extensions_palette.add_pf_viewer()
 
     assert isinstance(monitor.active_extensions[0], ParetoFrontViewer)
 
@@ -53,4 +61,4 @@ def test_add_extensions(qtbot):
     # test closing window -- should remove element from active extensions
     monitor.active_extensions[0].close()
     assert len(monitor.active_extensions) == 0
-    assert monitor.extensions_palette.text_box.text() == "0"
+    assert monitor.extensions_palette.n_active_extensions == 0

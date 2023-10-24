@@ -10,15 +10,17 @@ class ExtensionsPalette(QMainWindow):
 
         self.run_monitor = run_monitor
 
-        self.setWindowTitle('PyQt Button Window')
-        self.setGeometry(100, 100, 400, 200)
+        self.setWindowTitle('Badger Extensions Palette')
+        self.setGeometry(100, 100, 200, 200)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
         layout = QVBoxLayout()
 
-        self.text_box = QLabel("0", self)
+        self.base_text = "Number of active exensions: "
+        self.text_box = QLabel(self.base_text + "0", self)
+
         self.btn_data_viewer = QPushButton('ParetoFrontViewer')
 
         layout.addWidget(self.text_box)
@@ -28,17 +30,27 @@ class ExtensionsPalette(QMainWindow):
 
         self.btn_data_viewer.clicked.connect(self.add_pf_viewer)
 
+    @property
+    def n_active_extensions(self):
+        return len(self.run_monitor.active_extensions)
+
     def update_palette(self):
-        self.text_box.setText(str(len(self.run_monitor.active_extensions)))
+        self.text_box.setText(
+            self.base_text + str(self.n_active_extensions))
+
+    def add_pf_viewer(self):
+        self.add_child_window_to_monitor(ParetoFrontViewer())
 
     def add_child_window_to_monitor(self, child_window: AnalysisExtension):
         child_window.show()
         child_window.window_closed.connect(self.run_monitor.extension_window_closed)
         self.run_monitor.active_extensions.append(child_window)
 
-        self.update_palette()
+        if self.run_monitor.routine is not None:
+            self.run_monitor.active_extensions[-1].update_window(
+                self.run_monitor.routine
+            )
 
-    def add_pf_viewer(self):
-        self.add_child_window_to_monitor(ParetoFrontViewer())
+        self.update_palette()
 
 

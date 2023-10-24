@@ -26,31 +26,28 @@ class ParetoFrontViewer(AnalysisExtension):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("New Window")
-
-        self.text_box = QLabel("Enter text here", self)
+        self.setWindowTitle("Pareto Front Viewer")
 
         self.plot_widget = pg.PlotWidget()
 
         self.scatter_plot = self.plot_widget.plot(pen=None, symbol='o', symbolSize=10)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.text_box)
         layout.addWidget(self.plot_widget)
         self.setLayout(layout)
 
     def update_window(self, routine: Routine):
         assert len(routine.vocs.objective_names) == 2
-        self.text_box.setText(str(len(routine.data)))
 
         x_name = routine.vocs.objective_names[0]
         y_name = routine.vocs.objective_names[1]
 
-        x = routine.data[x_name]
-        y = routine.data[y_name]
+        if routine.data is not None:
+            x = routine.data[x_name]
+            y = routine.data[y_name]
 
-        # Update the scatter plot
-        self.scatter_plot.setData(x=x, y=y)
+            # Update the scatter plot
+            self.scatter_plot.setData(x=x, y=y)
 
         # set labels
         self.plot_widget.setLabel("left", y_name)
