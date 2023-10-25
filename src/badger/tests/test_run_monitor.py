@@ -6,6 +6,23 @@ from PyQt5.QtTest import QSignalSpy, QTest
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
+def create_test_run_monitor():
+    from badger.db import BADGER_DB_ROOT
+    from badger.tests.utils import create_routine
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
+
+    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+
+    monitor = BadgerOptMonitor()
+    monitor.testing = True
+
+    routine = create_routine()
+    routine.random_evaluate(10)
+    monitor.init_plots(routine)
+
+    return monitor
+
+
 def test_run_monitor(qtbot):
     from badger.db import BADGER_DB_ROOT
     from badger.tests.utils import create_routine
@@ -47,11 +64,10 @@ def test_run_monitor(qtbot):
     )
     assert spy.isValid()
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-    time.sleep(3)
+    time.sleep(1)
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
     print(len(spy))
-
 
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
@@ -76,6 +92,39 @@ def test_routine_identity(qtbot):
     monitor.init_routine_runner()
 
     assert monitor.routine_runner.routine == monitor.routine
+
+
+def test_relative_plotting(qtbot):
+    monitor = create_test_run_monitor()
+    raise NotImplementedError()
+
+
+def test_x_axis_specification(qtbot):
+    raise NotImplementedError()
+
+
+def test_y_axis_specification(qtbot):
+    raise NotImplementedError()
+
+
+def test_pause_play(qtbot):
+    raise NotImplementedError()
+
+
+def test_jump_to_optimum(qtbot):
+    raise NotImplementedError()
+
+
+def test_reset_envrionment(qtbot):
+    raise NotImplementedError()
+
+
+def test_dial_in_solutin(qtbot):
+    raise NotImplementedError()
+
+
+def test_run_until(qtbot):
+    raise NotImplementedError()
 
 
 def test_add_extensions(qtbot):
