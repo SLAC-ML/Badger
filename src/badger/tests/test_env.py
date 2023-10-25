@@ -57,7 +57,7 @@ def test_list_observables():
     Environment, _ = get_env("test")
     env = Environment()
 
-    assert env.observables == ['f']
+    assert env.observables == ['f', "c"]
 
 
 def test_get_variables():

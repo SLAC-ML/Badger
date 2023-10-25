@@ -11,7 +11,7 @@ from ....errors import BadgerRunTerminatedError
 class BadgerRoutineSignals(QObject):
     env_ready = pyqtSignal(list)
     finished = pyqtSignal()
-    progress = pyqtSignal(list, list, list, list, float)
+    progress = pyqtSignal()
     error = pyqtSignal(Exception)
     info = pyqtSignal(str)
 
@@ -41,7 +41,7 @@ class BadgerRoutineRunner(QRunnable):
         super().__init__()
 
         # Signals should belong to instance rather than class
-        # Since there could be multiple runners runing in parallel
+        # Since there could be multiple runners running in parallel
         self.signals = BadgerRoutineSignals()
 
         self.routine = routine
@@ -79,7 +79,7 @@ class BadgerRoutineRunner(QRunnable):
             self.signals.finished.emit()
             self.signals.info.emit(str(e))
         except Exception as e:
-            logger.exception(e)
+            print(e)
             self.signals.finished.emit()
             self.signals.error.emit(e)
 
@@ -94,13 +94,7 @@ class BadgerRoutineRunner(QRunnable):
             raise BadgerRunTerminatedError
 
     def after_evaluate(self, data: DataFrame):
-        ts_float = float(data['timestamp'][0])
-        self.signals.progress.emit(
-            list(data[self.routine.vocs.variable_names].to_numpy()[0]),
-            list(data[self.routine.vocs.objective_names].to_numpy()[0]),
-            list(data[self.routine.vocs.constraint_names].to_numpy()[0]),
-            list(data[self.routine.vocs.constant_names].to_numpy()[0]),
-            ts_float)
+        self.signals.progress.emit()
 
         # Try dump the run data and interface log to the disk
         # dump_period = float(read_value('BADGER_DATA_DUMP_PERIOD'))

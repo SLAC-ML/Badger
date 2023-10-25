@@ -12,7 +12,7 @@ def create_routine():
         "env": "test",
         "algo_params": {},
         "env_params": {},
-        "config": {
+        "vocs": {
             "variables": {
                 "x0": [-1, 1],
                 "x1": [-1, 1],
@@ -20,14 +20,12 @@ def create_routine():
                 "x3": [-1, 1]
             },
             "objectives": {"f": "MAXIMIZE"},
-            "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
+            "constraints": {"c": ["GREATER_THAN",0]}
         },
+        "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
     }
 
-    vocs = VOCS(
-        variables=test_routine["config"]["variables"],
-        objectives=test_routine["config"]["objectives"],
-    )
+    vocs = VOCS(**test_routine["vocs"])
 
     generator = RandomGenerator(vocs=vocs)
 
@@ -36,7 +34,7 @@ def create_routine():
         vocs=vocs,
         generator=generator,
         environment={"name": "test"},
-        initial_points=pd.DataFrame(test_routine["config"]["init_points"])
+        initial_points=pd.DataFrame(test_routine["init_points"])
     )
 
 

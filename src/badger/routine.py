@@ -14,14 +14,15 @@ from badger.utils import curr_ts
 
 
 class Routine(Xopt):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
     environment: SerializeAsAny[Environment]
     initial_points: Optional[DataFrame] = Field(None)
-    critical_constraint_names: Optional[List[str]] = Field(None)
+    critical_constraint_names: Optional[List[str]] = Field([])
     tags: Optional[List] = Field(None)
     script: Optional[str] = Field(None)
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @model_validator(mode="before")
     @classmethod
@@ -74,8 +75,10 @@ class Routine(Xopt):
             env = data["environment"]
 
             def evaluate_point(point: dict):
+                # sanitize inputs
+                point = pd.Series(point).explode().to_dict()
                 env._set_variables(point)
-                obs = env._get_observables(data["vocs"].objective_names)
+                obs = env._get_observables(data["vocs"].output_names)
 
                 ts = curr_ts()
                 obs['timestamp'] = ts.timestamp()

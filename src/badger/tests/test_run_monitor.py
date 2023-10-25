@@ -1,6 +1,8 @@
 import os
+import sys
 import time
 from PyQt5.QtCore import Qt
+from PyQt5.QtTest import QSignalSpy, QTest
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
@@ -12,16 +14,45 @@ def test_run_monitor(qtbot):
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
 
     monitor = BadgerOptMonitor()
-    monitor.show()
+    monitor.testing = True
     qtbot.addWidget(monitor)
 
     routine = create_routine()
 
-    # Feed in the sample routine
-    monitor.routine = routine
+    # test initialization - first w/o routine
+    monitor.init_plots()
     assert monitor.btn_stop.text() == 'Run'
 
-    # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+    # test initialization - then w/ routine
+    monitor.init_plots(routine)
+    assert monitor.btn_stop.text() == 'Run'
+
+    # add some data
+    monitor.routine.step()
+    assert len(monitor.routine.data) == 1
+
+    # test updating plots
+    monitor.update_curves()
+    assert set(monitor.curves_variable.keys()) == {"x0", "x1", "x2", "x3"}
+    assert set(monitor.curves_objective.keys()) == {"f"}
+    assert set(monitor.curves_constraint.keys()) == {"c"}
+
+    # set up run monitor and test it
+    monitor.init_routine_runner()
+    monitor.routine_runner.set_termination_condition(
+        {"tc_idx": 0, "max_eval": 2}
+    )
+    spy = QSignalSpy(
+        monitor.routine_runner.signals.progress
+    )
+    assert spy.isValid()
+    QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+    time.sleep(3)
+    QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+
+    print(len(spy))
+
+
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
@@ -36,7 +67,6 @@ def test_routine_identity(qtbot):
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
 
     monitor = BadgerOptMonitor()
-    monitor.show()
     qtbot.addWidget(monitor)
 
     routine = create_routine()
@@ -62,7 +92,6 @@ def test_add_extensions(qtbot):
     # test w/o using qtbot
     monitor = BadgerOptMonitor()
     monitor.routine = routine
-    monitor.show()
     qtbot.addWidget(monitor)
 
     monitor.open_extensions_palette()
