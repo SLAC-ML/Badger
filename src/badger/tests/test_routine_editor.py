@@ -11,9 +11,13 @@ def test_init(qtbot):
     BadgerRoutineEditor()
 
 
-def test_routine_set(qtbot):
+def test_routine_set_and_save(qtbot):
     from badger.gui.default.components.routine_editor import BadgerRoutineEditor
     window = BadgerRoutineEditor()
 
     routine = create_routine()
     window.set_routine(routine)
+
+    window.save_routine()
+
+

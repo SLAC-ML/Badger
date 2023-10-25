@@ -22,11 +22,11 @@ def test_cli_main():
     assert len(outlines) == 8
 
     # Check name
-    assert outlines[0] == 'name: Badger the optimizer'
+    assert outlines[0] == 'name: Badger the optimizer\r'
 
     # Check version
     version = metadata.version('badger-opt')
-    assert outlines[1] == f'version: {version}'
+    assert outlines[1] == f'version: {version}\r'
 
 
 # def test_cli_run(mock_config_root):

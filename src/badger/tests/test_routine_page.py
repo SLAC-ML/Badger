@@ -11,7 +11,6 @@ def test_routine_page_init(qtbot):
 
     window = BadgerRoutinePage()
 
-    window.show()
     qtbot.addWidget(window)
 
 
