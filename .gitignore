@@ -7,3 +7,6 @@ __pycache__
 /environment*.yml
 /requirements*.txt
 .idea/
+*.yaml
+*.pickle
+*.db
