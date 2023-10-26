@@ -165,9 +165,15 @@ class BadgerRoutineRunner(QRunnable):
                      for key, value in dictionary.items()}
         objectives = {key: value for dictionary in routine['config']['objectives']
                       for key, value in dictionary.items()}
+        # TODO: consider critical ones
+        constraints = {key: value[:2] for dictionary in routine['config']['constraints']
+                       for key, value in dictionary.items()}
+        states = routine['config']['states'] or []
         vocs = {
             'variables': variables,
             'objectives': objectives,
+            'constraints': constraints,
+            'observables': states,
         }
         generator_class = get_generator(routine['algo'])
         try:

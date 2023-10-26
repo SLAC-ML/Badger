@@ -541,7 +541,9 @@ def evaluate_points(
     obj_list = []
     for i in range(points.shape[0]):
         env._set_variables(points.iloc[i].to_dict())  # point is a series!
-        obj = env._get_observables(vocs.objective_names)
+        observable_names = vocs.objective_names + vocs.constraint_names + \
+            vocs.observable_names
+        obj = env._get_observables(observable_names)
         obj_df = DataFrame(obj, index=[0])
         obj_list.append(obj_df)
 
