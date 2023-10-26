@@ -34,6 +34,7 @@ jobs:
         miniforge-variant: Mambaforge
         miniforge-version: latest
         activate-environment: badger-env
+        environment-file: environment-dev.yml
     - name: Install python packages
       shell: bash -el {0}
       run: |

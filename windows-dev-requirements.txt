@@ -1,3 +1,4 @@
+pytorch
 codecov
 pytest>=3.6
 pytest-qt
