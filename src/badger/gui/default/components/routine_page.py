@@ -1,4 +1,5 @@
 import sqlite3
+import traceback
 from typing import List
 
 import numpy as np
@@ -209,9 +210,13 @@ class BadgerRoutinePage(QWidget):
 
             # Update the docs
             self.window_docs.update_docs(name)
-        except Exception as e:
+        except:
             self.algo_box.cb.setCurrentIndex(-1)
-            return QMessageBox.critical(self, 'Error!', str(e))
+            return QMessageBox.critical(
+                self,
+                'Error!',
+                traceback.format_exc()
+            )
 
     def toggle_use_script(self):
         if self.algo_box.check_use_script.isChecked():
@@ -299,7 +304,7 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_lim_vrange.setDisabled(False)
             if self.algo_box.check_use_script.isChecked():
                 self.refresh_params_algo()
-        except Exception as e:
+        except:
             self.configs = None
             self.env = None
             self.env_box.cb.setCurrentIndex(-1)
@@ -308,7 +313,11 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_add_var.setDisabled(True)
             self.env_box.btn_lim_vrange.setDisabled(True)
             self.routine = None
-            return QMessageBox.critical(self, 'Error!', str(e))
+            return QMessageBox.critical(
+                self,
+                'Error!',
+                traceback.format_exc()
+            )
 
         self.env_box.edit.setPlainText(ystring(configs['params']))
 
@@ -573,8 +582,12 @@ class BadgerRoutinePage(QWidget):
     def review(self):
         try:
             routine = self._compose_routine()
-        except Exception as e:
-            return QMessageBox.critical(self, 'Error!', str(e))
+        except:
+            return QMessageBox.critical(
+                self,
+                'Error!',
+                traceback.format_exc()
+            )
 
         dlg = BadgerReviewDialog(self, routine)
         dlg.exec()
@@ -582,8 +595,12 @@ class BadgerRoutinePage(QWidget):
     def save(self):
         try:
             routine = self._compose_routine()
-        except Exception as e:
-            return QMessageBox.critical(self, 'Error!', str(e))
+        except:
+            return QMessageBox.critical(
+                self,
+                'Error!',
+                traceback.format_exc()
+            )
 
         try:
             save_routine(routine)

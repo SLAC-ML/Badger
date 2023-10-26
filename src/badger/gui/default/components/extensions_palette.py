@@ -1,3 +1,5 @@
+import traceback
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, \
     QWidget, QLabel
 from badger.gui.default.components.analysis_extensions import AnalysisExtension, \
@@ -107,9 +109,12 @@ class ExtensionsPalette(QMainWindow):
         self.run_monitor.active_extensions.append(child_window)
 
         if self.run_monitor.routine is not None:
-            self.run_monitor.active_extensions[-1].update_window(
-                self.run_monitor.routine
-            )
+            try:
+                self.run_monitor.active_extensions[-1].update_window(
+                    self.run_monitor.routine
+                )
+            except ValueError:
+                traceback.print_exc()
 
         self.update_palette()
 

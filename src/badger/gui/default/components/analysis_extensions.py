@@ -37,7 +37,9 @@ class ParetoFrontViewer(AnalysisExtension):
         self.setLayout(layout)
 
     def update_window(self, routine: Routine):
-        assert len(routine.vocs.objective_names) == 2
+        if len(routine.vocs.objective_names) != 2:
+            raise ValueError("cannot use pareto front viewer unless there are 2 "
+                             "objectives")
 
         x_name = routine.vocs.objective_names[0]
         y_name = routine.vocs.objective_names[1]

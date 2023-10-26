@@ -1,4 +1,5 @@
 import os
+import traceback
 from copy import deepcopy
 from importlib import resources
 import numpy as np
@@ -697,7 +698,10 @@ class BadgerOptMonitor(QWidget):
 
     def update_analysis_extensions(self):
         for ele in self.active_extensions:
-            ele.update_window(self.routine)
+            try:
+                ele.update_window(self.routine)
+            except ValueError:
+                traceback.print_exc()
 
     def env_ready(self, init_vars):
         self.init_vars = init_vars
