@@ -113,7 +113,7 @@ class BadgerEnvBox(CollapsibleBox):
         self.var_table = VariableTable()
         vbox_var_edit.addWidget(self.var_table)
 
-        cbox_init = CollapsibleBox(self, ' Initial Points', tooltip='If set, it takes precedence over the start from current setting in algorithm configuration.')
+        cbox_init = CollapsibleBox(self, ' Initial Points', tooltip='If set, it takes precedence over the start from current setting in generatorrithm configuration.')
         vbox_var_edit.addWidget(cbox_init)
         vbox_init = QVBoxLayout()
         vbox_init.setContentsMargins(8, 8, 8, 8)

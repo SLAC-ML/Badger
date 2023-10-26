@@ -38,12 +38,12 @@ sys.path.append(BADGER_PLUGIN_ROOT)
 def scan_plugins(root):
     factory = {}
 
-    # Do not scan local algorithms if option disabled
+    # Do not scan local generatorrithms if option disabled
     if LOAD_LOCAL_ALGO:
-        ptype_list = ['algorithm', 'interface', 'environment']
+        ptype_list = ['generatorrithm', 'interface', 'environment']
     else:
         ptype_list = ['interface', 'environment']
-        factory['algorithm'] = {}
+        factory['generatorrithm'] = {}
 
     for ptype in ptype_list:
         factory[ptype] = {}
@@ -65,7 +65,7 @@ def scan_plugins(root):
 
 
 def load_plugin(root, pname, ptype):
-    assert ptype in ['algorithm', 'interface',
+    assert ptype in ['generatorrithm', 'interface',
                      'environment'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
@@ -88,7 +88,7 @@ def load_plugin(root, pname, ptype):
         _e.configs = configs  # attach information to the exception
         raise _e
 
-    if ptype == 'algorithm':
+    if ptype == 'generatorrithm':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
         params = module.Interface.model_json_schema()['properties']
@@ -135,7 +135,7 @@ def load_plugin(root, pname, ptype):
 
 
 def load_docs(root, pname, ptype):
-    assert ptype in ['algorithm', 'interface',
+    assert ptype in ['generatorrithm', 'interface',
                      'environment'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
@@ -172,7 +172,7 @@ def scan_extensions(root):
     return extensions
 
 
-def get_algo_docs(name):
+def get_generator_docs(name):
     return generators[name].__doc__
 
 

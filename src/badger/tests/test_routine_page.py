@@ -24,8 +24,8 @@ def test_routine_generation(qtbot):
     with pytest.raises(BadgerRoutineError):
         window._compose_routine()
 
-    # add algorithm -- still should raise error for no environment
-    qtbot.keyClicks(window.algo_box.cb, "upper_confidence_bound")
+    # add generatorrithm -- still should raise error for no environment
+    qtbot.keyClicks(window.generator_box.cb, "upper_confidence_bound")
     with pytest.raises(BadgerRoutineError):
         window._compose_routine()
 
@@ -53,7 +53,7 @@ def test_initial_points(qtbot):
     qtbot.addWidget(window)
 
     qtbot.keyClicks(window.env_box.cb, "test")
-    qtbot.keyClicks(window.algo_box.cb, "upper_confidence_bound")
+    qtbot.keyClicks(window.generator_box.cb, "random")
 
     window.env_box.var_table.cellWidget(0, 0).setChecked(True)
     window.env_box.var_table.cellWidget(1, 0).setChecked(True)
@@ -80,4 +80,4 @@ def test_ui_update(qtbot):
     routine = create_routine()
     window.refresh_ui(routine)
 
-    assert window.algo_box.edit.toPlainText() == "{}\n"
+    assert window.generator_box.edit.toPlainText() == "{}\n"

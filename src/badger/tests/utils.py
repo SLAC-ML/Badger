@@ -8,9 +8,9 @@ def create_routine():
 
     test_routine = {
         "name": "routine-for-core-test",
-        "algo": "random",
+        "generator": "random",
         "env": "test",
-        "algo_params": {},
+        "generator_params": {},
         "env_params": {},
         "vocs": {
             "variables": {
@@ -43,9 +43,9 @@ def create_routine_turbo():
 
     test_routine = {
         "name": "routine-for-turbo-test",
-        "algo": "upper_confidence_bound",
+        "generator": "upper_confidence_bound",
         "env": "test",
-        "algo_params": {
+        "generator_params": {
             "turbo_controller": "optimize",
             "gp_constructor": {
                 "name": "standard",
@@ -72,7 +72,7 @@ def create_routine_turbo():
     )
 
     generator = UpperConfidenceBoundGenerator(
-        vocs=vocs, ** test_routine["algo_params"])
+        vocs=vocs, ** test_routine["generator_params"])
 
     return Routine(
         name="test-turbo",

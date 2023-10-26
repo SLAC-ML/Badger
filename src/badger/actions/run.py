@@ -120,7 +120,7 @@ def run_n_archive(routine, yes=False, save=False, verbose=2,
 
 def run_routine(args):
     try:
-        from ..factory import get_algo, get_env
+        from ..factory import get_generator, get_env
     except Exception as e:
         logger.error(e)
         return
@@ -129,17 +129,17 @@ def run_routine(args):
         # Get env params
         _, configs_env = get_env(args.env)
 
-        # Get algo params
-        _, configs_algo = get_algo(args.algo)
+        # Get generator params
+        _, configs_generator = get_generator(args.generator)
 
-        # Normalize the algo and env params
+        # Normalize the generator and env params
         params_env = load_config(args.env_params)
-        params_algo = load_config(args.algo_params)
+        params_generator = load_config(args.generator_params)
     except Exception as e:
         logger.error(e)
         return
     params_env = merge_params(configs_env['params'], params_env)
-    params_algo = merge_params(configs_algo['params'], params_algo)
+    params_generator = merge_params(configs_generator['params'], params_generator)
 
     # Load routine configs
     try:
@@ -151,9 +151,9 @@ def run_routine(args):
     # Compose the routine
     routine = {
         'name': args.save or generate_slug(2),
-        'algo': args.algo,
+        'generator': args.generator,
         'env': args.env,
-        'algo_params': params_algo,
+        'generator_params': params_generator,
         'env_params': params_env,
         # env_vranges is an additional info for the normalization
         # Will be removed after the normalization

@@ -6,7 +6,7 @@ from .settings import init_settings
 from .actions import show_info
 from .actions.doctor import self_check
 from .actions.routine import show_routine
-from .actions.algo import show_algo
+from .actions.generator import show_generator
 from .actions.env import show_env
 from .actions.install import plugin_install
 from .actions.uninstall import plugin_remove
@@ -49,10 +49,10 @@ def main():
                                 help='verbose level of optimization progress')
     parser_routine.set_defaults(func=show_routine)
 
-    # Parser for the 'algo' command
-    parser_algo = subparsers.add_parser('algo', help='Badger algorithms')
-    parser_algo.add_argument('algo_name', nargs='?', type=str, default=None)
-    parser_algo.set_defaults(func=show_algo)
+    # Parser for the 'generator' command
+    parser_generator = subparsers.add_parser('generator', help='Badger generatorrithms')
+    parser_generator.add_argument('generator_name', nargs='?', type=str, default=None)
+    parser_generator.set_defaults(func=show_generator)
 
     # Parser for the 'intf' command
     parser_intf = subparsers.add_parser('intf', help='Badger interfaces')
@@ -79,10 +79,10 @@ def main():
     
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='run routines')
-    parser_run.add_argument('-a', '--algo', required=True,
-                            help='algorithm to use')
-    parser_run.add_argument('-ap', '--algo_params',
-                            help='parameters for the algorithm')
+    parser_run.add_argument('-a', '--generator', required=True,
+                            help='generatorrithm to use')
+    parser_run.add_argument('-ap', '--generator_params',
+                            help='parameters for the generatorrithm')
     parser_run.add_argument('-e', '--env', required=True,
                             help='environment to use')
     parser_run.add_argument('-ep', '--env_params',

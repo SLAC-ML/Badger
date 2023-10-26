@@ -26,7 +26,7 @@ def send_to_logbook(routine, data, widget=None):
 
     log_text = ''
     routine_name = routine['name']
-    algo_name = routine['algo']
+    generator_name = routine['generator']
     data_path = BADGER_ARCHIVE_ROOT
     obj_name = obj_names[0]
     obj_start = data[obj_name][0]
@@ -38,7 +38,7 @@ def send_to_logbook(routine, data, widget=None):
     log_text += f'Time cost: {round(duration, 2)}s\n'
     log_text += f'Points requested: {n_point}\n'
     log_text += f'Routine name: {routine_name}\n'
-    log_text += f'Type of optimization: {algo_name}\n'
+    log_text += f'Type of optimization: {generator_name}\n'
     log_text += f'Data location: {data_path}\n'
     try:
         log_text += f'Log location: {BADGER_LOGBOOK_ROOT}\n'

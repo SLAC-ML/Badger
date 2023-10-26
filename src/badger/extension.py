@@ -13,14 +13,14 @@ class Extension(ABC):
     def __init__(self):
         pass
 
-    # List all available algorithms
+    # List all available generatorrithms
     @abstractmethod
-    def list_algo(self) -> List[str]:
+    def list_generator(self) -> List[str]:
         pass
 
-    # Get config of an algorithm
+    # Get config of an generatorrithm
     @abstractmethod
-    def get_algo_config(self, name: str):
+    def get_generator_config(self, name: str):
         pass
 
     # Run an optimization with an array-style evaluate function

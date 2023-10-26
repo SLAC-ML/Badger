@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from xopt import VOCS
 from xopt.generators import get_generator_defaults
 
-from .algo_cbox import BadgerAlgoBox
+from .generator_cbox import BadgerAlgoBox
 from .constraint_item import constraint_item
 from .data_table import get_table_content_as_dict, set_init_data_table
 from .env_cbox import BadgerEnvBox
@@ -44,7 +44,7 @@ class BadgerRoutinePage(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.algos = list_generators()
+        self.generators = list_generators()
         self.envs = list_env()
         self.env = None
         self.routine = None
@@ -89,9 +89,9 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(group_meta)
 
         # Algo box
-        self.algo_box = BadgerAlgoBox(None, self.algos)
-        self.algo_box.expand()  # expand the box initially
-        vbox.addWidget(self.algo_box)
+        self.generator_box = BadgerAlgoBox(None, self.generators)
+        self.generator_box.expand()  # expand the box initially
+        vbox.addWidget(self.generator_box)
 
         # Env box
         self.env_box = BadgerEnvBox(None, self.envs)
@@ -101,10 +101,10 @@ class BadgerRoutinePage(QWidget):
         vbox.addStretch()
 
     def config_logic(self):
-        self.algo_box.cb.currentIndexChanged.connect(self.select_algo)
-        self.algo_box.btn_docs.clicked.connect(self.open_algo_docs)
-        self.algo_box.check_use_script.stateChanged.connect(self.toggle_use_script)
-        self.algo_box.btn_edit_script.clicked.connect(self.edit_script)
+        self.generator_box.cb.currentIndexChanged.connect(self.select_generator)
+        self.generator_box.btn_docs.clicked.connect(self.open_generator_docs)
+        self.generator_box.check_use_script.stateChanged.connect(self.toggle_use_script)
+        self.generator_box.btn_edit_script.clicked.connect(self.edit_script)
         self.env_box.cb.currentIndexChanged.connect(self.select_env)
         self.env_box.btn_env_play.clicked.connect(self.open_playground)
         self.env_box.btn_add_var.clicked.connect(self.add_var)
@@ -118,15 +118,15 @@ class BadgerRoutinePage(QWidget):
     def refresh_ui(self, routine: Routine = None):
         self.routine = routine  # save routine for future reference
 
-        self.algos = list_generators()
+        self.generators = list_generators()
         self.envs = list_env()
         # Clean up the constraints/states list
         self.env_box.list_con.clear()
         self.env_box.list_sta.clear()
 
         if routine is None:
-            # Reset the algo and env configs
-            self.algo_box.cb.setCurrentIndex(-1)
+            # Reset the generator and env configs
+            self.generator_box.cb.setCurrentIndex(-1)
             self.env_box.cb.setCurrentIndex(-1)
 
             # Reset the routine configs check box status
@@ -140,12 +140,12 @@ class BadgerRoutinePage(QWidget):
 
             return
 
-        # Fill in the algo and env configs
-        name_algo = routine.generator.name
-        idx_algo = self.algos.index(name_algo)
-        self.algo_box.cb.setCurrentIndex(idx_algo)
-        # self.algo_box.edit.setPlainText(routine.generator.yaml())
-        self.algo_box.edit.setPlainText(
+        # Fill in the generator and env configs
+        name_generator = routine.generator.name
+        idx_generator = self.generators.index(name_generator)
+        self.generator_box.cb.setCurrentIndex(idx_generator)
+        # self.generator_box.edit.setPlainText(routine.generator.yaml())
+        self.generator_box.edit.setPlainText(
             get_yaml_string(routine.generator.model_dump()))
         self.script = routine.script
 
@@ -193,42 +193,42 @@ class BadgerRoutinePage(QWidget):
         self.edit_save.setPlaceholderText(generate_slug(2))
         self.edit_save.setText(routine.name)
 
-        self.algo_box.check_use_script.setChecked(not not self.script)
+        self.generator_box.check_use_script.setChecked(not not self.script)
 
-    def select_algo(self, i):
+    def select_generator(self, i):
         # Reset the script
         self.script = ''
-        self.algo_box.check_use_script.setChecked(False)
+        self.generator_box.check_use_script.setChecked(False)
 
         if i == -1:
-            self.algo_box.edit.setPlainText('')
-            self.algo_box.cb_scaling.setCurrentIndex(-1)
+            self.generator_box.edit.setPlainText('')
+            self.generator_box.cb_scaling.setCurrentIndex(-1)
             return
 
-        name = self.algos[i]
+        name = self.generators[i]
         default_config = get_generator_defaults(name)
-        self.algo_box.edit.setPlainText(get_yaml_string(default_config))
+        self.generator_box.edit.setPlainText(get_yaml_string(default_config))
 
         # Update the docs
         self.window_docs.update_docs(name)
 
     def toggle_use_script(self):
-        if self.algo_box.check_use_script.isChecked():
-            self.algo_box.btn_edit_script.show()
-            self.algo_box.edit.setReadOnly(True)
-            self.refresh_params_algo()
+        if self.generator_box.check_use_script.isChecked():
+            self.generator_box.btn_edit_script.show()
+            self.generator_box.edit.setReadOnly(True)
+            self.refresh_params_generator()
         else:
-            self.algo_box.btn_edit_script.hide()
-            self.algo_box.edit.setReadOnly(False)
+            self.generator_box.btn_edit_script.hide()
+            self.generator_box.edit.setReadOnly(False)
 
     def edit_script(self):
-        algo = self.algo_box.cb.currentText()
-        dlg = BadgerEditScriptDialog(self, algo, self.script, self.script_updated)
+        generator = self.generator_box.cb.currentText()
+        dlg = BadgerEditScriptDialog(self, generator, self.script, self.script_updated)
         dlg.exec()
 
     def script_updated(self, text):
         self.script = text
-        self.refresh_params_algo()
+        self.refresh_params_generator()
 
     def create_env(self):
         env_params = load_config(self.env_box.edit.toPlainText())
@@ -244,7 +244,7 @@ class BadgerRoutinePage(QWidget):
 
         return env
 
-    def refresh_params_algo(self):
+    def refresh_params_generator(self):
         if not self.script:
             return
 
@@ -264,8 +264,8 @@ class BadgerRoutinePage(QWidget):
             except Exception:
                 vocs = None
             # Function generate comes from the script
-            params_algo = tmp['generate'](env, vocs)
-            self.algo_box.edit.setPlainText(get_yaml_string(params_algo))
+            params_generator = tmp['generate'](env, vocs)
+            self.generator_box.edit.setPlainText(get_yaml_string(params_generator))
         except Exception as e:
             QMessageBox.warning(self, 'Invalid script!', str(e))
 
@@ -296,8 +296,8 @@ class BadgerRoutinePage(QWidget):
             self.env_box.btn_add_sta.setDisabled(False)
             self.env_box.btn_add_var.setDisabled(False)
             self.env_box.btn_lim_vrange.setDisabled(False)
-            if self.algo_box.check_use_script.isChecked():
-                self.refresh_params_algo()
+            if self.generator_box.check_use_script.isChecked():
+                self.refresh_params_generator()
         except:
             self.configs = None
             self.env = None
@@ -382,7 +382,7 @@ class BadgerRoutinePage(QWidget):
     def open_playground(self):
         pass
 
-    def open_algo_docs(self):
+    def open_generator_docs(self):
         self.window_docs.show()
 
     def add_var(self):
@@ -529,14 +529,14 @@ class BadgerRoutinePage(QWidget):
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
 
-        if self.algo_box.cb.currentIndex() == -1:
-            raise BadgerRoutineError("no algorithm selected")
+        if self.generator_box.cb.currentIndex() == -1:
+            raise BadgerRoutineError("no generatorrithm selected")
         if self.env_box.cb.currentIndex() == -1:
             raise BadgerRoutineError("no environment selected")
 
-        algo_name = self.algos[self.algo_box.cb.currentIndex()]
+        generator_name = self.generators[self.generator_box.cb.currentIndex()]
         env_name = self.envs[self.env_box.cb.currentIndex()]
-        algo_params = load_config(self.algo_box.edit.toPlainText())
+        generator_params = load_config(self.generator_box.edit.toPlainText())
         env_params = load_config(self.env_box.edit.toPlainText())
 
         # VOCS
@@ -554,8 +554,8 @@ class BadgerRoutinePage(QWidget):
                 'Initial points are not valid, please fill in the missing values'
             )
 
-        # Script that generates algo params
-        if self.algo_box.check_use_script.isChecked():
+        # Script that generates generator params
+        if self.generator_box.check_use_script.isChecked():
             script = self.script
         else:
             script = None
@@ -563,7 +563,7 @@ class BadgerRoutinePage(QWidget):
         return Routine(
             # Xopt part
             vocs=vocs,
-            generator={"name": algo_name} | algo_params,
+            generator={"name": generator_name} | generator_params,
             # Badger part
             name=name,
             environment={"name": env_name} | env_params,
