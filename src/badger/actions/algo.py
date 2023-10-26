@@ -5,13 +5,13 @@ from ..utils import yprint
 
 def show_algo(args):
     try:
-        from ..factory import list_algo, get_algo
+        from ..factory import list_generators, get_algo
     except Exception as e:
         logger.error(e)
         return
 
     if args.algo_name is None:
-        yprint(list_algo())
+        yprint(list_generators())
         return
 
     try:

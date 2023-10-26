@@ -10,7 +10,9 @@ from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePoli
 from PyQt5.QtWidgets import QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QTableWidgetItem
 from coolname import generate_slug
+from pydantic import ValidationError
 from xopt import VOCS
+from xopt.generators import get_generator_defaults
 
 from .algo_cbox import BadgerAlgoBox
 from .constraint_item import constraint_item
@@ -26,10 +28,10 @@ from ..windows.var_dialog import BadgerVariableDialog
 from ....db import save_routine, remove_routine
 from ....environment import instantiate_env
 from ....errors import BadgerRoutineError
-from ....factory import list_algo, list_env, get_algo, get_env
+from ....factory import list_generators, list_env, get_env
 from ....routine import Routine
 from ....settings import read_value
-from ....utils import ystring, load_config, strtobool
+from ....utils import get_yaml_string, load_config, strtobool
 
 CONS_RELATION_DICT = {
     '>': 'GREATER_THAN',
@@ -42,7 +44,7 @@ class BadgerRoutinePage(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.algos = list_algo()
+        self.algos = list_generators()
         self.envs = list_env()
         self.env = None
         self.routine = None
@@ -116,7 +118,7 @@ class BadgerRoutinePage(QWidget):
     def refresh_ui(self, routine: Routine = None):
         self.routine = routine  # save routine for future reference
 
-        self.algos = list_algo()
+        self.algos = list_generators()
         self.envs = list_env()
         # Clean up the constraints/states list
         self.env_box.list_con.clear()
@@ -144,7 +146,7 @@ class BadgerRoutinePage(QWidget):
         self.algo_box.cb.setCurrentIndex(idx_algo)
         # self.algo_box.edit.setPlainText(routine.generator.yaml())
         self.algo_box.edit.setPlainText(
-            ystring(routine.generator.model_dump()))
+            get_yaml_string(routine.generator.model_dump()))
         self.script = routine.script
 
         name_env = routine.environment.name
@@ -152,7 +154,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.cb.setCurrentIndex(idx_env)
         env_params = routine.environment.model_dump()
         del env_params["interface"]
-        self.env_box.edit.setPlainText(ystring(env_params))
+        self.env_box.edit.setPlainText(get_yaml_string(env_params))
 
         # Config the vocs panel
         variables = routine.vocs.variable_names
@@ -204,19 +206,11 @@ class BadgerRoutinePage(QWidget):
             return
 
         name = self.algos[i]
-        try:
-            _, configs = get_algo(name)
-            self.algo_box.edit.setPlainText(ystring(configs['params']))
+        default_config = get_generator_defaults(name)
+        self.algo_box.edit.setPlainText(get_yaml_string(default_config))
 
-            # Update the docs
-            self.window_docs.update_docs(name)
-        except:
-            self.algo_box.cb.setCurrentIndex(-1)
-            return QMessageBox.critical(
-                self,
-                'Error!',
-                traceback.format_exc()
-            )
+        # Update the docs
+        self.window_docs.update_docs(name)
 
     def toggle_use_script(self):
         if self.algo_box.check_use_script.isChecked():
@@ -271,7 +265,7 @@ class BadgerRoutinePage(QWidget):
                 vocs = None
             # Function generate comes from the script
             params_algo = tmp['generate'](env, vocs)
-            self.algo_box.edit.setPlainText(ystring(params_algo))
+            self.algo_box.edit.setPlainText(get_yaml_string(params_algo))
         except Exception as e:
             QMessageBox.warning(self, 'Invalid script!', str(e))
 
@@ -319,7 +313,7 @@ class BadgerRoutinePage(QWidget):
                 traceback.format_exc()
             )
 
-        self.env_box.edit.setPlainText(ystring(configs['params']))
+        self.env_box.edit.setPlainText(get_yaml_string(configs['params']))
 
         vars_env = configs['variables']
         vars_combine = [*vars_env]
@@ -595,7 +589,7 @@ class BadgerRoutinePage(QWidget):
     def save(self):
         try:
             routine = self._compose_routine()
-        except:
+        except ValidationError:
             return QMessageBox.critical(
                 self,
                 'Error!',
@@ -607,7 +601,8 @@ class BadgerRoutinePage(QWidget):
         except sqlite3.IntegrityError:
             return QMessageBox.critical(
                 self, 'Error!',
-                f'Routine {routine.name} already existed in the database! Please choose another name.')
+                f'Routine {routine.name} already existed in the database! Please '
+                f'choose another name.')
 
         return 0
 

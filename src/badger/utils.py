@@ -17,7 +17,7 @@ class Dumper(yaml.Dumper):
         return super(Dumper, self).increase_indent(flow, False)
 
 
-def ystring(content):
+def get_yaml_string(content):
     if content is None:
         return ""
 
@@ -26,7 +26,7 @@ def ystring(content):
 
 
 def yprint(content):
-    print(ystring(content), end="")
+    print(get_yaml_string(content), end="")
 
 
 def norm(x, lb, ub):

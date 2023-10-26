@@ -767,7 +767,7 @@ class BadgerOptMonitor(QWidget):
     def logbook(self):
         try:
             if self.routine_runner:
-                routine = self.routine_runner.routine_name
+                routine = self.routine_runner.name
                 data = self.routine_runner.data.to_dict('list')
             else:
                 routine = self.routine

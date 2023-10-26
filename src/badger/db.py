@@ -6,7 +6,7 @@ import yaml
 import sqlite3
 from .routine import Routine
 from .settings import read_value
-from .utils import ystring
+from .utils import get_yaml_string
 from .errors import BadgerConfigError, BadgerDBError
 
 
@@ -287,7 +287,7 @@ def import_routines(filename):
     con.close()
 
     if failed_list:
-        raise BadgerDBError(ystring(failed_list))
+        raise BadgerDBError(get_yaml_string(failed_list))
 
 
 def export_routines(filename, routine_name_list):

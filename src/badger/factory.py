@@ -1,3 +1,5 @@
+import xopt
+
 from .settings import read_value
 from .utils import get_value_or_none
 from .errors import (
@@ -11,13 +13,12 @@ import os
 import importlib
 import yaml
 import json
-from xopt.generators import generators
+from xopt.generators import generators, get_generator
 import logging
+
 logger = logging.getLogger(__name__)
 
-
 LOAD_LOCAL_ALGO = False
-
 
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = read_value('BADGER_PLUGIN_ROOT')
@@ -146,7 +147,8 @@ def load_docs(root, pname, ptype):
             readme = f.read()
         return readme
     except:
-        raise BadgerInvalidDocsError(f'Error loading docs for {ptype} {pname}: docs not found')
+        raise BadgerInvalidDocsError(
+            f'Error loading docs for {ptype} {pname}: docs not found')
 
 
 def get_plug(root, name, ptype):
@@ -170,58 +172,6 @@ def scan_extensions(root):
     return extensions
 
 
-def get_algo_params(cls):
-    params = {}
-    for k in cls.model_fields:
-        if k in ['vocs', 'data']:
-            continue
-
-        v = cls.model_fields[k]
-        try:
-            _ = v.default
-        except AttributeError:
-            params[k] = get_algo_params(v)
-            continue
-
-        try:
-            params[k] = json.loads(v.default.json())
-        except AttributeError:
-            params[k] = v.default
-
-    return params
-
-
-def get_algo(name):
-    from xopt import __version__
-
-    try:
-        from xopt.generators import generator_default_options
-
-        params = generator_default_options[name].dict()
-    except ImportError:  # Xopt v2.0+
-        from xopt.generators import get_generator
-
-        params = get_algo_params(get_generator(name))
-
-    try:  # remove custom GP kernel to avoid yaml parsing error for now
-        del params["model"]["function"]
-    except KeyError:
-        pass
-    except TypeError:
-        pass
-
-    try:
-        return [None, {
-            "name": name,
-            "version": __version__,
-            "dependencies": ["xopt"],
-            "params": params,
-        }]
-    except Exception as e:
-        raise e
-        # raise Exception(f'Algorithm {name} is not supported')
-
-
 def get_algo_docs(name):
     return generators[name].__doc__
 
@@ -234,10 +184,9 @@ def get_env(name):
     return get_plug(BADGER_PLUGIN_ROOT, name, 'environment')
 
 
-def list_algo():
-    algos = list(generators.keys())
-
-    return sorted(algos)
+def list_generators():
+    generator_names = list(generators.keys())
+    return sorted(generator_names)
 
 
 def list_intf():
