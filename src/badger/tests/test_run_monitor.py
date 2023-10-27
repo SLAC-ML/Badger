@@ -99,6 +99,10 @@ def test_relative_plotting(qtbot):
     raise NotImplementedError()
 
 
+def test_click_graph(qtbot):
+    raise NotImplementedError()
+
+
 def test_x_axis_specification(qtbot):
     raise NotImplementedError()
 

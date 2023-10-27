@@ -750,7 +750,6 @@ class BadgerOptMonitor(QWidget):
                     f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
 
         except Exception as e:
-            raise e
             self.sig_run_name.emit(None)
             if not self.testing:
                 QMessageBox.critical(self, 'Archive failed!',
@@ -824,7 +823,7 @@ class BadgerOptMonitor(QWidget):
         if self.plot_x_axis:  # x-axis is time
             value, idx = self.closest_ts(pos)
         else:
-            value = idx = np.clip(np.round(pos), 0, len(self.ts) - 1)
+            value = idx = np.clip(np.round(pos), 0, len(self.routine.data) - 1)
         self.inspector_objective.setValue(value)
         if self.vocs.constraint_names:
             self.inspector_constraint.setValue(value)
@@ -836,7 +835,7 @@ class BadgerOptMonitor(QWidget):
 
     def closest_ts(self, t):
         # Get the closest timestamp in self.ts regarding t
-        ts = np.array(self.ts)
+        ts = self.routine.data["timestamp"].to_numpy()
         ts -= ts[0]
         idx = np.argmin(np.abs(ts - t))
 
