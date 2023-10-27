@@ -626,12 +626,12 @@ class BadgerOptMonitor(QWidget):
         normalize_inputs = self.x_plot_y_axis == 1
 
         if use_time_axis:
-            ts = self.routine.data["timestamp"]
+            ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
             ts -= ts[0]
         else:
             ts = None
 
-        data_copy = deepcopy(self.routine.data)
+        data_copy = deepcopy(self.routine.sorted_data)
 
         variable_names = self.vocs.variable_names
 
@@ -839,7 +839,7 @@ class BadgerOptMonitor(QWidget):
 
     def closest_ts(self, t):
         # Get the closest timestamp regarding t
-        ts = self.routine.data["timestamp"].to_numpy()
+        ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
         ts -= ts[0]
         idx = np.argmin(np.abs(ts - t))
 
@@ -871,7 +871,7 @@ class BadgerOptMonitor(QWidget):
         self.sig_inspect.emit(best_idx)
 
     def jump_to_solution(self, idx):
-        ts = self.routine.data["timestamp"].to_numpy()
+        ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
         if self.plot_x_axis:  # x-axis is time
             value = ts[idx] - ts[0]
         else:
@@ -928,7 +928,7 @@ class BadgerOptMonitor(QWidget):
             #     self.plot_sta.setLabel('bottom', 'iterations')
 
         # Update inspector line position
-        ts = self.routine.data["timestamp"].to_numpy()
+        ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
         if i:
             value = ts[int(self.inspector_objective.value())] - ts[0]
         else:

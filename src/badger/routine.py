@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from typing import Optional, List, Any
 
 import pandas as pd
@@ -98,6 +99,14 @@ class Routine(Xopt):
                 v = pd.DataFrame(v, index=[0])
 
         return v
+
+    @property
+    def sorted_data(self):
+        data_copy = deepcopy(self.data)
+        data_copy.index = data_copy.index.astype(int)
+        data_copy.sort_index(inplace=True)
+
+        return data_copy
 
     def json(self, **kwargs) -> str:
         """Handle custom serialization of environment"""
