@@ -844,22 +844,19 @@ class BadgerOptMonitor(QWidget):
     def reset_env(self):
         reply = QMessageBox.question(self,
                                      'Reset Environment',
-                                     f'Are you sure you want to reset the env vars back to {self.init_vars}?',
+                                     f'Are you sure you want to reset the env vars '
+                                     f'back to {self.init_vars}?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
 
-        env = self.routine.environment
-        var_names = self.routine.vocs.variable_names
+        current_vars = self.routine.data.iloc[-1].to_dict(orient="records")
 
-        _var_dict = env._get_variables(var_names)
-        current_vars = [_var_dict[v] for v in var_names]
-        env._set_variables(
-            dict(zip(var_names, self.init_vars)))
-        _var_dict = env._get_variables(var_names)
-        after_vars = [_var_dict[v] for v in var_names]
+        # evaluate the initial variables -- do not store the result
+        self.routine.evaluate(self.init_vars)
+
         QMessageBox.information(self, 'Reset Environment',
-                                f'Env vars {current_vars} -> {after_vars}')
+                                f'Env vars {current_vars} -> {self.init_vars}')
 
     def jump_to_optimal(self):
         best_idx, _ = self.routine.vocs.select_best(

@@ -123,7 +123,7 @@ def test_reset_envrionment(qtbot):
     raise NotImplementedError()
 
 
-def test_dial_in_solutin(qtbot):
+def test_dial_in_solution(qtbot):
     raise NotImplementedError()
 
 
