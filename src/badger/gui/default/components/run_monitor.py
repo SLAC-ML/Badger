@@ -91,7 +91,7 @@ class BadgerOptMonitor(QWidget):
     sig_new_run = pyqtSignal()
     sig_run_name = pyqtSignal(str)  # filename of the new run
     sig_inspect = pyqtSignal(int)  # index of the inspector
-    sig_progress = pyqtSignal(list, list, list, list)  # new evaluated solution
+    sig_progress = pyqtSignal(pd.DataFrame)  # new evaluated solution
     sig_del = pyqtSignal()
 
     def __init__(self):
@@ -599,6 +599,9 @@ class BadgerOptMonitor(QWidget):
         self.active_extensions.remove(child_window)
         self.extensions_palette.update_palette()
 
+    def extract_timestamp(self):
+        return self.routine.data["timestamp"].to_numpy()
+
     def update(self):
         # update plots in main window as well as any active extensions and the
         # extensions palette
@@ -611,8 +614,7 @@ class BadgerOptMonitor(QWidget):
         if self.eval_count < 5:
             self.enable_auto_range()
 
-        # TODO: fix this as a part of CLI fixes
-        # self.sig_progress.emit(vars, objs, cons, stas)
+        self.sig_progress.emit(self.routine.data.tail(1))
 
         # Check critical condition
         self.check_critical()
@@ -622,7 +624,7 @@ class BadgerOptMonitor(QWidget):
         normalize_inputs = self.x_plot_y_axis == 1
 
         if use_time_axis:
-            ts = self.routine.data["timestamp"]
+            ts = self.extract_timestamp()
             ts -= ts[0]
         else:
             ts = None
@@ -750,7 +752,6 @@ class BadgerOptMonitor(QWidget):
                     f'Archive succeeded: Run data archived to {BADGER_ARCHIVE_ROOT}')
 
         except Exception as e:
-            raise e
             self.sig_run_name.emit(None)
             if not self.testing:
                 QMessageBox.critical(self, 'Archive failed!',
@@ -824,7 +825,8 @@ class BadgerOptMonitor(QWidget):
         if self.plot_x_axis:  # x-axis is time
             value, idx = self.closest_ts(pos)
         else:
-            value = idx = np.clip(np.round(pos), 0, len(self.ts) - 1)
+            ts = self.extract_timestamp()
+            value = idx = np.clip(np.round(pos), 0, len(ts) - 1)
         self.inspector_objective.setValue(value)
         if self.vocs.constraint_names:
             self.inspector_constraint.setValue(value)
@@ -835,8 +837,8 @@ class BadgerOptMonitor(QWidget):
         self.sig_inspect.emit(idx)
 
     def closest_ts(self, t):
-        # Get the closest timestamp in self.ts regarding t
-        ts = np.array(self.ts)
+        # Get the closest timestamp in data regarding t
+        ts = self.extract_timestamp()
         ts -= ts[0]
         idx = np.argmin(np.abs(ts - t))
 
@@ -872,7 +874,8 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_solution(self, idx):
         if self.plot_x_axis:  # x-axis is time
-            value = self.ts[idx] - self.ts[0]
+            ts = self.extract_timestamp()
+            value = ts[idx] - ts[0]
         else:
             value = idx
 
@@ -928,7 +931,8 @@ class BadgerOptMonitor(QWidget):
 
         # Update inspector line position
         if i:
-            value = self.ts[int(self.inspector_objective.value())] - self.ts[0]
+            ts = self.extract_timestamp()
+            value = ts[int(self.inspector_objective.value())] - ts[0]
         else:
             _, value = self.closest_ts(self.inspector_objective.value())
         self.inspector_objective.setValue(value)
@@ -1035,7 +1039,7 @@ def create_cursor_line():
 
 def set_data(names: list[str], curves: dict, data: pd.DataFrame, ts=None):
     for name in names:
-        if ts:
+        if ts is not None:
             curves[name].setData(ts, data[name].to_numpy(dtype=np.double))
         else:
             curves[name].setData(data[name].to_numpy(dtype=np.double))

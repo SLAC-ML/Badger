@@ -1,6 +1,6 @@
 import os
 from importlib import resources
-from typing import List
+from pandas import DataFrame
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox
 from PyQt5.QtWidgets import QPushButton, QSplitter, QTabWidget, QShortcut
@@ -413,7 +413,12 @@ class BadgerHomePage(QWidget):
             runs = get_runs()
         self.cb_history.updateItems(runs)
 
-    def progress(self, vars, objs, cons, stas):
+    def progress(self, solution: DataFrame):
+        vocs = self.current_routine.vocs
+        vars = list(solution[vocs.variable_names].to_numpy()[0])
+        objs = list(solution[vocs.objective_names].to_numpy()[0])
+        cons = list(solution[vocs.constraint_names].to_numpy()[0])
+        stas = list(solution[vocs.observable_names].to_numpy()[0])
         add_row(self.run_table, objs + cons + vars + stas)
 
     def delete_run(self):
