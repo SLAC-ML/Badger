@@ -21,6 +21,10 @@ from ....utils import norm
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ....archive import archive_run, BADGER_ARCHIVE_ROOT
 
+# disable chained assignment warning from pydantic
+pd.options.mode.chained_assignment = None  # default='warn'
+
+
 stylesheet_del = '''
 QPushButton:hover:pressed
 {
@@ -633,14 +637,16 @@ class BadgerOptMonitor(QWidget):
 
         # if normalize x, normalize using vocs
         if normalize_inputs:
-            data_copy = self.vocs.normalize_inputs(data_copy)
+            input_data = self.vocs.normalize_inputs(data_copy)
+        else:
+            input_data = data_copy[variable_names]
 
         # if plot relative, subtract the first value from the dict
         if self.x_plot_relative:
-            data_copy[variable_names] = data_copy[variable_names] - \
-                                        data_copy[variable_names].iloc[0]
+            input_data[variable_names] = input_data[variable_names] - \
+                                        input_data[variable_names].iloc[0]
 
-        set_data(variable_names, self.curves_variable, data_copy, ts)
+        set_data(variable_names, self.curves_variable, input_data, ts)
         set_data(self.vocs.objective_names, self.curves_objective, data_copy, ts)
         set_data(self.vocs.constraint_names, self.curves_constraint, data_copy, ts)
 
@@ -737,12 +743,10 @@ class BadgerOptMonitor(QWidget):
             run = archive_run(self.routine, states=None)
             self.routine_runner.run_filename = run['filename']
             env = self.routine.environment
-            try:
-                path = run['path']
-                filename = run['filename'][:-4] + 'pickle'
-                env.interface.stop_recording(os.path.join(path, filename))
-            except:
-                pass
+            path = run['path']
+            filename = run['filename'][:-4] + 'pickle'
+            env.interface.stop_recording(os.path.join(path, filename))
+
             self.sig_run_name.emit(run['filename'])
             if not self.testing:
                 QMessageBox.information(
@@ -834,7 +838,7 @@ class BadgerOptMonitor(QWidget):
         self.sig_inspect.emit(idx)
 
     def closest_ts(self, t):
-        # Get the closest timestamp in self.ts regarding t
+        # Get the closest timestamp regarding t
         ts = self.routine.data["timestamp"].to_numpy()
         ts -= ts[0]
         idx = np.argmin(np.abs(ts - t))
@@ -867,8 +871,9 @@ class BadgerOptMonitor(QWidget):
         self.sig_inspect.emit(best_idx)
 
     def jump_to_solution(self, idx):
+        ts = self.routine.data["timestamp"].to_numpy()
         if self.plot_x_axis:  # x-axis is time
-            value = self.ts[idx] - self.ts[0]
+            value = ts[idx] - ts[0]
         else:
             value = idx
 
@@ -923,8 +928,9 @@ class BadgerOptMonitor(QWidget):
             #     self.plot_sta.setLabel('bottom', 'iterations')
 
         # Update inspector line position
+        ts = self.routine.data["timestamp"].to_numpy()
         if i:
-            value = self.ts[int(self.inspector_objective.value())] - self.ts[0]
+            value = ts[int(self.inspector_objective.value())] - ts[0]
         else:
             _, value = self.closest_ts(self.inspector_objective.value())
         self.inspector_objective.setValue(value)
@@ -1030,8 +1036,11 @@ def create_cursor_line():
 
 
 def set_data(names: list[str], curves: dict, data: pd.DataFrame, ts=None):
+
     for name in names:
-        if ts:
+        assert len(data[name]) > 0
+
+        if ts is not None:
             curves[name].setData(ts, data[name].to_numpy(dtype=np.double))
         else:
             curves[name].setData(data[name].to_numpy(dtype=np.double))

@@ -20,6 +20,8 @@ def create_test_run_monitor():
     routine.random_evaluate(10)
     monitor.init_plots(routine)
 
+    assert len(routine.data) == 10
+
     return monitor
 
 
@@ -67,7 +69,6 @@ def test_run_monitor(qtbot):
     time.sleep(1)
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
-    print(len(spy))
 
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
@@ -94,9 +95,22 @@ def test_routine_identity(qtbot):
     assert monitor.routine_runner.routine == monitor.routine
 
 
-def test_relative_plotting(qtbot):
+def test_plotting(qtbot):
     monitor = create_test_run_monitor()
-    raise NotImplementedError()
+    monitor.update_curves()
+
+    monitor.plot_x_axis = 1
+    monitor.update_curves()
+
+    monitor.plot_x_axis = 0
+    monitor.x_plot_relative = 1
+    monitor.update_curves()
+
+    monitor.plot_x_axis = 1
+    monitor.x_plot_relative = 1
+    monitor.x_plot_y_axis = 1
+    monitor.update_curves()
+
 
 
 def test_click_graph(qtbot):
