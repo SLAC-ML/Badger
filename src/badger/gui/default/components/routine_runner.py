@@ -109,7 +109,7 @@ class BadgerRoutineRunner(QRunnable):
         #     except:
         #         pass
 
-        # Take a break to let the outside signal to change the status
+        # Take a break to let the outside signal change the status
         time.sleep(0.1)
 
     def check_run_status(self):
