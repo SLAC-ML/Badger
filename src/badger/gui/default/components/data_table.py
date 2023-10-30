@@ -39,18 +39,17 @@ def update_table(table, data=None):
     if data is None:
         return table
 
-    _data = data.copy()
-    m = len(_data['timestamp'])
-    del _data['timestamp']
-    n = len(_data)
+    _data = data.drop(columns=['timestamp', 'xopt_error', 'xopt_runtime'])
 
+    m, n = _data.shape
     table.setRowCount(m)
     table.setColumnCount(n)
-    for i, key in enumerate(_data.keys()):
-        for j, v in enumerate(_data[key]):
-            table.setItem(j, i, QTableWidgetItem(f'{v:g}'))
-    table.setHorizontalHeaderLabels(list(_data.keys()))
-    table.setVerticalHeaderLabels([str(i) for i in range(m)])  # row index starts from 0
+    for i in range(m):
+        for j in range(n):
+            v = _data.iloc[i, j]
+            table.setItem(i, j, QTableWidgetItem(f'{v:g}'))
+    table.setHorizontalHeaderLabels(list(_data.columns))
+    table.setVerticalHeaderLabels(list(_data.index))  # row index starts from 0
     table.horizontalHeader().setVisible(True)
 
     return table
