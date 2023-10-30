@@ -857,10 +857,14 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
-        current_vars = self.routine.data.iloc[-1].to_dict(orient="records")
+        # current_vars = self.routine.data.iloc[-1].to_dict(orient="records")
+        current_vars = self.routine.data[
+            self.vocs.variable_names].iloc[-1].to_numpy().tolist()
 
         # evaluate the initial variables -- do not store the result
-        self.routine.evaluate(self.init_vars)
+        # self.routine.evaluate(self.init_vars)
+        self.routine.environment._set_variables(
+            dict(zip(self.vocs.variable_names, self.init_vars)))
 
         QMessageBox.information(self, 'Reset Environment',
                                 f'Env vars {current_vars} -> {self.init_vars}')
@@ -894,7 +898,8 @@ class BadgerOptMonitor(QWidget):
             pos, idx = self.closest_ts(self.inspector_objective.value())
         else:
             pos = idx = int(self.inspector_objective.value())
-        solution = df[self.var_names].to_numpy()[idx]
+        variable_names = self.vocs.variable_names
+        solution = df[variable_names].to_numpy()[idx]
 
         reply = QMessageBox.question(self,
                                      'Apply Solution',
@@ -904,7 +909,7 @@ class BadgerOptMonitor(QWidget):
             return
 
         self.routine.environment._set_variables(
-            dict(zip(self.var_names, solution)))
+            dict(zip(variable_names, solution)))
         # center around the inspector
         x_range = self.plot_var.getViewBox().viewRange()[0]
         delta = (x_range[1] - x_range[0]) / 2
