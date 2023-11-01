@@ -604,7 +604,7 @@ class BadgerOptMonitor(QWidget):
         self.extensions_palette.update_palette()
 
     def extract_timestamp(self):
-        return self.routine.data["timestamp"].to_numpy()
+        return self.routine.data["timestamp"].to_numpy(copy=True)
 
     def update(self):
         # update plots in main window as well as any active extensions and the
