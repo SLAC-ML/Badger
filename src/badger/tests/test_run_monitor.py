@@ -112,36 +112,88 @@ def test_plotting(qtbot):
     monitor.update_curves()
 
 
-
 def test_click_graph(qtbot):
+    monitor = create_test_run_monitor()
+    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+
     raise NotImplementedError()
 
 
 def test_x_axis_specification(qtbot):
-    raise NotImplementedError()
+    # check iteration/time drop down menu  
+    monitor = create_test_run_monitor()    
+    monitor.cb_plot_x.setCurrentIndex(0)
+    # assert
+    monitor.cb_plot_x.setCurrentIndex(1)
+    # assert
 
 
 def test_y_axis_specification(qtbot):
-    raise NotImplementedError()
+    monitor = create_test_run_monitor()
+
+    # check raw - non relative 
+    monitor.cb_plot_y.setCurrentIndex(0)
+    # assert 
+
+    # relative
+    QTest.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    # assert 
+
+    # check if normalized relative
+    monitor.cb_plot_y.setCurrentIndex(1)
+    # assert
+
+    # check normalized non relative. 
+    QTest.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    # assert
 
 
 def test_pause_play(qtbot):
-    raise NotImplementedError()
+    monitor = create_test_run_monitor()
+    spy = QSignalSpy(monitor.sig_pause)
+    
+    # 'click' the pause button. 
+    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+    assert spy.count() == 1
+    # assert 
+    
+    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+    assert spy.count() == 2
+    # assert 
 
 
 def test_jump_to_optimum(qtbot):
-    raise NotImplementedError()
+    monitor = create_test_run_monitor()
+    spy = QSignalSpy(monitor.btn_opt.clicked)
+    QTest.mouseClick(monitor.btn_opt, Qt.MouseButton.LeftButton)
+    assert spy.count() == 1
+    # check if it is going to optimal solution
+    # assert
 
 
 def test_reset_envrionment(qtbot):
-    raise NotImplementedError()
+    # check if reset button click signal is trigged and if state is same as original state after click 
+    monitor = create_test_run_monitor()
+    spy = QSignalSpy(monitor.btn_reset.clicked)
+
+    QTest.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
+    assert spy.count() == 1
+    # assert 
 
 
 def test_dial_in_solution(qtbot):
-    raise NotImplementedError()
+    monitor = create_test_run_monitor()
+    spy = QSignalSpy(monitor.btn_set.clicked)
+
+    QTest.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    assert spy.count() == 1
+    # assert
 
 
 def test_run_until(qtbot):
+    monitor = create_test_run_monitor()
+    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+
     raise NotImplementedError()
 
 
