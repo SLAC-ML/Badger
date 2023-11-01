@@ -49,7 +49,7 @@ def update_table(table, data=None):
             v = _data.iloc[i, j]
             table.setItem(i, j, QTableWidgetItem(f'{v:g}'))
     table.setHorizontalHeaderLabels(list(_data.columns))
-    table.setVerticalHeaderLabels(list(_data.index))  # row index starts from 0
+    table.setVerticalHeaderLabels(list(map(str, _data.index)))  # row index starts from 0
     table.horizontalHeader().setVisible(True)
 
     return table

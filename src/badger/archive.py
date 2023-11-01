@@ -21,7 +21,7 @@ elif not os.path.exists(BADGER_ARCHIVE_ROOT):
 def archive_run(routine, states=None):
     # routine: Routine
 
-    data = routine.data
+    data = routine.sorted_data
     data_dict = data.to_dict('list')
     ts_float = data_dict['timestamp'][0]  # time of the first evaluated point
     suffix = ts_float_to_str(ts_float, "lcls-fname")

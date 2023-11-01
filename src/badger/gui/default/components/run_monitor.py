@@ -603,8 +603,11 @@ class BadgerOptMonitor(QWidget):
         self.active_extensions.remove(child_window)
         self.extensions_palette.update_palette()
 
-    def extract_timestamp(self):
-        return self.routine.data["timestamp"].to_numpy(copy=True)
+    def extract_timestamp(self, data=None):
+        if data is None:
+            data = self.routine.sorted_data
+
+        return data["timestamp"].to_numpy(copy=True)
 
     def update(self):
         # update plots in main window as well as any active extensions and the
@@ -627,13 +630,14 @@ class BadgerOptMonitor(QWidget):
         use_time_axis = self.plot_x_axis == 1
         normalize_inputs = self.x_plot_y_axis == 1
 
+        data_copy = self.routine.sorted_data
+
+        # Get timestamps
         if use_time_axis:
-            ts = self.extract_timestamp()
+            ts = self.extract_timestamp(data_copy)
             ts -= ts[0]
         else:
             ts = None
-
-        data_copy = deepcopy(self.routine.sorted_data)
 
         variable_names = self.vocs.variable_names
 
@@ -857,8 +861,10 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
+        # TODO: Should just get vars from env! Current values are not always
+        # ones in the latest solution
         # current_vars = self.routine.data.iloc[-1].to_dict(orient="records")
-        current_vars = self.routine.data[
+        current_vars = self.routine.sorted_data[
             self.vocs.variable_names].iloc[-1].to_numpy().tolist()
 
         # evaluate the initial variables -- do not store the result
@@ -871,7 +877,7 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_optimal(self):
         best_idx, _ = self.routine.vocs.select_best(
-            self.routine.data, n=1)
+            self.routine.sorted_data, n=1)
         best_idx = int(best_idx[0])
 
         self.jump_to_solution(best_idx)
@@ -893,7 +899,7 @@ class BadgerOptMonitor(QWidget):
         self.inspector_variable.setValue(value)
 
     def set_vars(self):
-        df = self.routine.data
+        df = self.routine.sorted_data
         if self.plot_x_axis:  # x-axis is time
             pos, idx = self.closest_ts(self.inspector_objective.value())
         else:

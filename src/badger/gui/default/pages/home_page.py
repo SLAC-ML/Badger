@@ -352,7 +352,7 @@ class BadgerHomePage(QWidget):
         except IndexError:
             return
         self.current_routine = routine  # update the current routine
-        update_table(self.run_table, routine.data)
+        update_table(self.run_table, routine.sorted_data)
         self.run_monitor.init_plots(routine, run_filename)
         self.routine_editor.set_routine(routine)
         self.status_bar.set_summary(f'current routine: {self.current_routine.name}')
