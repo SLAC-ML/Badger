@@ -15,6 +15,7 @@ from ..components.run_monitor import BadgerOptMonitor
 from ..components.routine_editor import BadgerRoutineEditor
 from ..components.status_bar import BadgerStatusBar
 from ..components.filter_cbox import BadgerFilterBox
+from ..utils import create_button
 from ....db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
 from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
@@ -150,16 +151,16 @@ class BadgerHomePage(QWidget):
 
         label_nav = QLabel('History Run')
         self.cb_history = cb_history = HistoryNavigator()
-        self.btn_prev = btn_prev = QPushButton('<')
-        self.btn_next = btn_next = QPushButton('>')
-        btn_prev.setFixedWidth(32)
-        btn_next.setFixedWidth(32)
+        self.btn_prev = btn_prev = create_button(
+            "next.png", "Go to the next run", size=(24, 24))
+        self.btn_next = btn_next = create_button(
+            "previous.png", "Go to the previous run", size=(24, 24))
         btn_prev.setDisabled(True)
         btn_next.setDisabled(True)
         hbox_nav.addWidget(label_nav)
         hbox_nav.addWidget(cb_history, 1)
-        hbox_nav.addWidget(btn_prev)
         hbox_nav.addWidget(btn_next)
+        hbox_nav.addWidget(btn_prev)
 
         self.tabs = tabs = QTabWidget()
         vbox_view.addWidget(tabs)
@@ -352,7 +353,7 @@ class BadgerHomePage(QWidget):
         except IndexError:
             return
         self.current_routine = routine  # update the current routine
-        update_table(self.run_table, routine.data)
+        update_table(self.run_table, routine.sorted_data)
         self.run_monitor.init_plots(routine, run_filename)
         self.routine_editor.set_routine(routine)
         self.status_bar.set_summary(f'current routine: {self.current_routine.name}')

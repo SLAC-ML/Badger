@@ -1,6 +1,5 @@
 import os
 import traceback
-from copy import deepcopy
 from importlib import resources
 import numpy as np
 import pandas as pd
@@ -14,10 +13,10 @@ from xopt import VOCS
 
 from .extensions_palette import ExtensionsPalette
 from .routine_runner import BadgerRoutineRunner
+from ..utils import create_button
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 from ....routine import Routine
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
-from ....utils import norm
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ....archive import archive_run, BADGER_ARCHIVE_ROOT
 
@@ -43,7 +42,7 @@ QPushButton
 stylesheet_log = '''
 QPushButton:hover:pressed
 {
-    background-color: #5C8899;
+    background-color: #88C0D0;
 }
 QPushButton:hover
 {
@@ -51,8 +50,23 @@ QPushButton:hover
 }
 QPushButton
 {
-    background-color: #88C0D0;
+    background-color: #5C8899;
     color: #000000;
+}
+'''
+
+stylesheet_ext = '''
+QPushButton:hover:pressed
+{
+    background-color: #4DB6AC;
+}
+QPushButton:hover
+{
+    background-color: #26A69A;
+}
+QPushButton
+{
+    background-color: #00897B;
 }
 '''
 
@@ -147,27 +161,6 @@ class BadgerOptMonitor(QWidget):
         icon_ref = resources.files(__package__) / '../images/stop.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_stop = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/undo.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_reset = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/set.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_set = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/book.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_log = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/trash.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_del = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/star.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_opt = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/tools.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_config = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/info.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_info = QIcon(str(icon_path))
 
         # self.main_panel = main_panel = QWidget(self)
         # main_panel.setStyleSheet('background-color: #19232D;')
@@ -245,6 +238,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_set = create_button("set.png", "Dial in solution")
         self.btn_ctrl = create_button("pause.png", "Pause")
         self.btn_ctrl._status = 'pause'
+        self.btn_ctrl.setDisabled(True)
 
         # self.btn_stop = btn_stop = QPushButton('Run')
         self.btn_stop = QToolButton()
@@ -254,7 +248,8 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setStyleSheet(stylesheet_run)
 
         # add button for extensions
-        self.btn_open_extensions_palette = btn_extensions = QPushButton("Extensions")
+        self.btn_open_extensions_palette = btn_extensions = create_button(
+            "extension.png", "Open extensions", stylesheet_ext)
 
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
@@ -273,24 +268,16 @@ class BadgerOptMonitor(QWidget):
         # btn_stop.setToolTip('')
 
         # Config button
-        self.btn_config = btn_config = QPushButton()
-        btn_config.setFixedSize(32, 32)
-        btn_config.setIcon(self.icon_config)
-        btn_config.setToolTip('Configure run')
-        # btn_config.setIconSize(QSize(24, 24))
-
+        self.btn_config = btn_config = create_button("tools.png", "Configure run")
         # Run info button
-        self.btn_info = btn_info = QPushButton()
-        btn_info.setFixedSize(32, 32)
-        btn_info.setIcon(self.icon_info)
-        btn_info.setToolTip('Run information')
+        self.btn_info = btn_info = create_button("info.png", "Run information")
 
         hbox_action.addWidget(self.btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(self.btn_log)
+        hbox_action.addWidget(btn_extensions)
         hbox_action.addStretch(1)
         hbox_action.addWidget(self.btn_opt)
-        hbox_action.addWidget(btn_extensions)
         hbox_action.addWidget(self.btn_reset)
         hbox_action.addWidget(self.btn_ctrl)
         hbox_action.addWidget(self.btn_stop)
@@ -420,115 +407,124 @@ class BadgerOptMonitor(QWidget):
                 pass
 
             # if statics exist clear that plot
-            # try:
-            #    self.plot_sta.clear()
-            #    self.plot_sta.addItem(self.inspector_state)
-            # except AttributeError:
-            #    pass
+            try:
+                self.plot_sta.clear()
+                self.plot_sta.addItem(self.inspector_state)
+            except AttributeError:
+                pass
 
             # if no routine is loaded set button to disabled
+            self.btn_del.setDisabled(True)
+            self.btn_log.setDisabled(True)
+            self.btn_reset.setDisabled(True)
+            self.btn_ctrl.setDisabled(True)
             self.btn_stop.setDisabled(True)
+            self.btn_opt.setDisabled(True)
+            self.btn_set.setDisabled(True)
+
             return
 
-        else:
-            self.routine = routine
+        self.routine = routine
 
-            # Retrieve data information
-            objective_names = self.vocs.objective_names
-            variable_names = self.vocs.variable_names
-            constraint_names = self.vocs.constraint_names
-            sta_names = self.vocs.constant_names
+        # Retrieve data information
+        objective_names = self.vocs.objective_names
+        variable_names = self.vocs.variable_names
+        constraint_names = self.vocs.constraint_names
+        sta_names = self.vocs.constant_names
 
-            # Configure variable plots
-            self.curves_variable = self._configure_plot(
-                self.plot_var, self.inspector_variable, variable_names
-            )
+        # Configure variable plots
+        self.curves_variable = self._configure_plot(
+            self.plot_var, self.inspector_variable, variable_names
+        )
+
+        # Configure objective plots
+        self.curves_objective = self._configure_plot(
+            self.plot_obj, self.inspector_objective, objective_names
+        )
+
+        # Configure constraint plots
+        if constraint_names:
+            try:
+                self.plot_con
+            except:
+                self.plot_con = plot_con = add_axes(
+                    self.monitor, "Constraints", 'Evaluation History (C)',
+                    self.inspector_constraint, row=1, col=0
+                )
+                plot_con.setXLink(self.plot_obj)
 
             # Configure objective plots
-            self.curves_objective = self._configure_plot(
-                self.plot_obj, self.inspector_objective, objective_names
+            self.curves_constraint = self._configure_plot(
+                self.plot_con, self.inspector_constraint, constraint_names
             )
 
-            # Configure constraint plots
-            if constraint_names:
-                try:
-                    self.plot_con
-                except:
-                    self.plot_con = plot_con = add_axes(
-                        self.monitor, "Constraints", 'Evaluation History (C)',
-                        self.inspector_constraint, row=1, col=0
-                    )
-                    plot_con.setXLink(self.plot_obj)
+        else:
+            try:
+                self.monitor.removeItem(self.plot_con)
+                self.plot_con.removeItem(self.inspector_constraint)
+                del self.plot_con
+            except:
+                pass
 
-                # Configure objective plots
-                self.curves_constraint = self._configure_plot(
-                    self.plot_con, self.inspector_constraint, constraint_names
+        # Configure state plots
+        if sta_names:
+            try:
+                self.plot_sta
+            except:
+                self.plot_sta = plot_sta = add_axes(
+                    self.monitor, "Constants", 'Evaluation History (S)',
+                    self.inspector_state, row=1, col=0
                 )
+                plot_sta.setXLink(self.plot_obj)
 
-            else:
-                try:
-                    self.monitor.removeItem(self.plot_con)
-                    self.plot_con.removeItem(self.inspector_constraint)
-                    del self.plot_con
-                except:
-                    pass
+            self.curves_sta = []
+            for i, sta_name in enumerate(sta_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_sta.plot(pen=pg.mkPen(color, width=3),
+                                            name=sta_name)
+                self.curves_sta.append(_curve)
+        else:
+            try:
+                self.monitor.removeItem(self.plot_sta)
+                self.plot_sta.removeItem(self.inspector_state)
+                del self.plot_sta
+            except:
+                pass
 
-            # Configure state plots
-            if sta_names:
-                try:
-                    self.plot_sta
-                except:
-                    self.plot_sta = plot_sta = add_axes(
-                        self.monitor, "Constants", 'Evaluation History (S)',
-                        self.inspector_state, row=1, col=0
-                    )
-                    plot_sta.setXLink(self.plot_obj)
+        # Reset inspectors
+        self.inspector_objective.setValue(0)
+        self.inspector_variable.setValue(0)
+        self.inspector_constraint.setValue(0)
+        self.inspector_state.setValue(0)
 
-                self.curves_sta = []
-                for i, sta_name in enumerate(sta_names):
-                    color = self.colors[i % len(self.colors)]
-                    symbol = self.symbols[i % len(self.colors)]
-                    _curve = self.plot_sta.plot(pen=pg.mkPen(color, width=3),
-                                                name=sta_name)
-                    self.curves_sta.append(_curve)
-            else:
-                try:
-                    self.monitor.removeItem(self.plot_sta)
-                    self.plot_sta.removeItem(self.inspector_state)
-                    del self.plot_sta
-                except:
-                    pass
+        # Switch run button state
+        self.btn_stop.setDisabled(False)
 
-            # Reset inspectors
-            self.inspector_objective.setValue(0)
-            self.inspector_variable.setValue(0)
-            self.inspector_constraint.setValue(0)
-            self.inspector_state.setValue(0)
+        self.eval_count = 0  # reset the evaluation count
+        self.enable_auto_range()
 
-            # Switch run button state
-            self.btn_stop.setDisabled(False)
+        # Reset button should only be available if it's the current run
+        if self.routine_runner and \
+                self.routine_runner.run_filename == run_filename:
+            self.btn_reset.setDisabled(False)
+        else:
+            self.btn_reset.setDisabled(True)
 
-            self.eval_count = 0  # reset the evaluation count
-            self.enable_auto_range()
+        if routine.data is None:
+            self.btn_del.setDisabled(True)
+            self.btn_log.setDisabled(True)
+            self.btn_opt.setDisabled(True)
+            self.btn_set.setDisabled(True)
 
-            if self.routine_runner and self.routine_runner.run_filename == run_filename:
-                self.btn_reset.setDisabled(False)
-                self.btn_set.setDisabled(False)
-            else:
-                self.btn_reset.setDisabled(True)
-                self.btn_set.setDisabled(True)
+            return
 
-            if routine.data is None:
-                self.btn_del.setDisabled(True)
-                self.btn_log.setDisabled(True)
-                self.btn_opt.setDisabled(True)
-                return
+        self.update_curves()
 
-            self.update_curves()
-
-            self.btn_del.setDisabled(False)
-            self.btn_log.setDisabled(False)
-            self.btn_opt.setDisabled(False)
+        self.btn_del.setDisabled(False)
+        self.btn_log.setDisabled(False)
+        self.btn_opt.setDisabled(False)
+        self.btn_set.setDisabled(False)
 
     def _configure_plot(self, plot_object, inspector, names):
         plot_object.clear()
@@ -581,6 +577,7 @@ class BadgerOptMonitor(QWidget):
         # self.btn_stop.setToolTip('')
 
         self.btn_ctrl.setDisabled(False)
+        self.btn_set.setDisabled(True)
         self.sig_lock.emit(True)
 
     def save_termination_condition(self, tc):
@@ -603,8 +600,11 @@ class BadgerOptMonitor(QWidget):
         self.active_extensions.remove(child_window)
         self.extensions_palette.update_palette()
 
-    def extract_timestamp(self):
-        return self.routine.data["timestamp"].to_numpy()
+    def extract_timestamp(self, data=None):
+        if data is None:
+            data = self.routine.sorted_data
+
+        return data["timestamp"].to_numpy(copy=True)
 
     def update(self):
         # update plots in main window as well as any active extensions and the
@@ -627,13 +627,14 @@ class BadgerOptMonitor(QWidget):
         use_time_axis = self.plot_x_axis == 1
         normalize_inputs = self.x_plot_y_axis == 1
 
+        data_copy = self.routine.sorted_data
+
+        # Get timestamps
         if use_time_axis:
-            ts = self.extract_timestamp()
+            ts = self.extract_timestamp(data_copy)
             ts -= ts[0]
         else:
             ts = None
-
-        data_copy = deepcopy(self.routine.sorted_data)
 
         variable_names = self.vocs.variable_names
 
@@ -857,8 +858,10 @@ class BadgerOptMonitor(QWidget):
         if reply != QMessageBox.Yes:
             return
 
+        # TODO: Should just get vars from env! Current values are not always
+        # ones in the latest solution
         # current_vars = self.routine.data.iloc[-1].to_dict(orient="records")
-        current_vars = self.routine.data[
+        current_vars = self.routine.sorted_data[
             self.vocs.variable_names].iloc[-1].to_numpy().tolist()
 
         # evaluate the initial variables -- do not store the result
@@ -871,7 +874,7 @@ class BadgerOptMonitor(QWidget):
 
     def jump_to_optimal(self):
         best_idx, _ = self.routine.vocs.select_best(
-            self.routine.data, n=1)
+            self.routine.sorted_data, n=1)
         best_idx = int(best_idx[0])
 
         self.jump_to_solution(best_idx)
@@ -893,7 +896,7 @@ class BadgerOptMonitor(QWidget):
         self.inspector_variable.setValue(value)
 
     def set_vars(self):
-        df = self.routine.data
+        df = self.routine.sorted_data
         if self.plot_x_axis:  # x-axis is time
             pos, idx = self.closest_ts(self.inspector_objective.value())
         else:
@@ -1052,19 +1055,3 @@ def set_data(names: list[str], curves: dict, data: pd.DataFrame, ts=None):
             curves[name].setData(ts, data[name].to_numpy(dtype=np.double))
         else:
             curves[name].setData(data[name].to_numpy(dtype=np.double))
-
-
-def create_button(icon_file, tooltip, stylesheet=None):
-    icon_ref = resources.files(__package__) / f'../images/{icon_file}'
-    with resources.as_file(icon_ref) as icon_path:
-        icon_info = QIcon(str(icon_path))
-
-    btn = QPushButton()
-    btn.setFixedSize(32, 32)
-    btn.setIcon(icon_info)
-    btn.setToolTip(tooltip)
-
-    if stylesheet is not None:
-        btn.setStyleSheet(stylesheet)
-
-    return btn

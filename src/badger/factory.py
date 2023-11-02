@@ -1,5 +1,3 @@
-import xopt
-
 from .settings import read_value
 from .utils import get_value_or_none
 from .errors import (
@@ -12,10 +10,9 @@ import sys
 import os
 import importlib
 import yaml
-import json
-from xopt.generators import generators, get_generator
-import logging
+from xopt.generators import generators, get_generator, try_load_all_generators
 
+import logging
 logger = logging.getLogger(__name__)
 
 LOAD_LOCAL_ALGO = False
@@ -185,8 +182,12 @@ def get_env(name):
 
 
 def list_generators():
+    try_load_all_generators()
     generator_names = list(generators.keys())
     return sorted(generator_names)
+
+
+get_generator = get_generator
 
 
 def list_intf():
