@@ -166,8 +166,11 @@ class BadgerRoutineRunner(QRunnable):
         objectives = {key: value for dictionary in routine['config']['objectives']
                       for key, value in dictionary.items()}
         # TODO: consider critical ones
-        constraints = {key: value[:2] for dictionary in routine['config']['constraints']
-                       for key, value in dictionary.items()}
+        if routine['config']['constraints'] is not None:
+            constraints = {key: value[:2] for dictionary in routine['config']['constraints']
+                           for key, value in dictionary.items()}
+        else:
+            constraints = {}
         states = routine['config']['states'] or []
         vocs = {
             'variables': variables,
