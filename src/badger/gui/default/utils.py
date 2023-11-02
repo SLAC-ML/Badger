@@ -29,7 +29,8 @@ def create_button(icon_file, tooltip,
         icon = QIcon(str(icon_path))
 
     btn = QPushButton()
-    btn.setFixedSize(*size)
+    if size:
+        btn.setFixedSize(*size)
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
     if icon_size:
