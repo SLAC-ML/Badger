@@ -1,6 +1,5 @@
 import os
 import traceback
-from copy import deepcopy
 from importlib import resources
 import numpy as np
 import pandas as pd
@@ -14,10 +13,10 @@ from xopt import VOCS
 
 from .extensions_palette import ExtensionsPalette
 from .routine_runner import BadgerRoutineRunner
+from ..utils import create_button
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 from ....routine import Routine
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
-from ....utils import norm
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ....archive import archive_run, BADGER_ARCHIVE_ROOT
 
@@ -1056,22 +1055,3 @@ def set_data(names: list[str], curves: dict, data: pd.DataFrame, ts=None):
             curves[name].setData(ts, data[name].to_numpy(dtype=np.double))
         else:
             curves[name].setData(data[name].to_numpy(dtype=np.double))
-
-
-def create_button(icon_file, tooltip,
-                  stylesheet=None, size=(32, 32), icon_size=None):
-    icon_ref = resources.files(__package__) / f'../images/{icon_file}'
-    with resources.as_file(icon_ref) as icon_path:
-        icon = QIcon(str(icon_path))
-
-    btn = QPushButton()
-    btn.setFixedSize(*size)
-    btn.setIcon(icon)
-    btn.setToolTip(tooltip)
-    if icon_size:
-        btn.setIconSize(QSize(*icon_size))
-
-    if stylesheet is not None:
-        btn.setStyleSheet(stylesheet)
-
-    return btn
