@@ -147,27 +147,6 @@ class BadgerOptMonitor(QWidget):
         icon_ref = resources.files(__package__) / '../images/stop.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_stop = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/undo.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_reset = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/set.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_set = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/book.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_log = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/trash.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_del = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/star.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_opt = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/tools.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_config = QIcon(str(icon_path))
-        icon_ref = resources.files(__package__) / '../images/info.png'
-        with resources.as_file(icon_ref) as icon_path:
-            self.icon_info = QIcon(str(icon_path))
 
         # self.main_panel = main_panel = QWidget(self)
         # main_panel.setStyleSheet('background-color: #19232D;')
@@ -254,7 +233,10 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setStyleSheet(stylesheet_run)
 
         # add button for extensions
-        self.btn_open_extensions_palette = btn_extensions = QPushButton("Extensions")
+        self.btn_open_extensions_palette = \
+            btn_extensions = create_button("extension.png",
+                                           "Open extensions",
+                                           icon_size=(21, 21))
 
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
@@ -273,24 +255,16 @@ class BadgerOptMonitor(QWidget):
         # btn_stop.setToolTip('')
 
         # Config button
-        self.btn_config = btn_config = QPushButton()
-        btn_config.setFixedSize(32, 32)
-        btn_config.setIcon(self.icon_config)
-        btn_config.setToolTip('Configure run')
-        # btn_config.setIconSize(QSize(24, 24))
-
+        self.btn_config = btn_config = create_button("tools.png", "Configure run")
         # Run info button
-        self.btn_info = btn_info = QPushButton()
-        btn_info.setFixedSize(32, 32)
-        btn_info.setIcon(self.icon_info)
-        btn_info.setToolTip('Run information')
+        self.btn_info = btn_info = create_button("info.png", "Run information")
 
         hbox_action.addWidget(self.btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(self.btn_log)
+        hbox_action.addWidget(btn_extensions)
         hbox_action.addStretch(1)
         hbox_action.addWidget(self.btn_opt)
-        hbox_action.addWidget(btn_extensions)
         hbox_action.addWidget(self.btn_reset)
         hbox_action.addWidget(self.btn_ctrl)
         hbox_action.addWidget(self.btn_stop)
@@ -1060,15 +1034,18 @@ def set_data(names: list[str], curves: dict, data: pd.DataFrame, ts=None):
             curves[name].setData(data[name].to_numpy(dtype=np.double))
 
 
-def create_button(icon_file, tooltip, stylesheet=None):
+def create_button(icon_file, tooltip,
+                  stylesheet=None, size=(32, 32), icon_size=None):
     icon_ref = resources.files(__package__) / f'../images/{icon_file}'
     with resources.as_file(icon_ref) as icon_path:
-        icon_info = QIcon(str(icon_path))
+        icon = QIcon(str(icon_path))
 
     btn = QPushButton()
-    btn.setFixedSize(32, 32)
-    btn.setIcon(icon_info)
+    btn.setFixedSize(*size)
+    btn.setIcon(icon)
     btn.setToolTip(tooltip)
+    if icon_size:
+        btn.setIconSize(QSize(*icon_size))
 
     if stylesheet is not None:
         btn.setStyleSheet(stylesheet)
