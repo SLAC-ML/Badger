@@ -239,6 +239,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_set = create_button("set.png", "Dial in solution")
         self.btn_ctrl = create_button("pause.png", "Pause")
         self.btn_ctrl._status = 'pause'
+        self.btn_ctrl.setDisabled(True)
 
         # self.btn_stop = btn_stop = QPushButton('Run')
         self.btn_stop = QToolButton()
@@ -407,115 +408,124 @@ class BadgerOptMonitor(QWidget):
                 pass
 
             # if statics exist clear that plot
-            # try:
-            #    self.plot_sta.clear()
-            #    self.plot_sta.addItem(self.inspector_state)
-            # except AttributeError:
-            #    pass
+            try:
+                self.plot_sta.clear()
+                self.plot_sta.addItem(self.inspector_state)
+            except AttributeError:
+                pass
 
             # if no routine is loaded set button to disabled
+            self.btn_del.setDisabled(True)
+            self.btn_log.setDisabled(True)
+            self.btn_reset.setDisabled(True)
+            self.btn_ctrl.setDisabled(True)
             self.btn_stop.setDisabled(True)
+            self.btn_opt.setDisabled(True)
+            self.btn_set.setDisabled(True)
+
             return
 
-        else:
-            self.routine = routine
+        self.routine = routine
 
-            # Retrieve data information
-            objective_names = self.vocs.objective_names
-            variable_names = self.vocs.variable_names
-            constraint_names = self.vocs.constraint_names
-            sta_names = self.vocs.constant_names
+        # Retrieve data information
+        objective_names = self.vocs.objective_names
+        variable_names = self.vocs.variable_names
+        constraint_names = self.vocs.constraint_names
+        sta_names = self.vocs.constant_names
 
-            # Configure variable plots
-            self.curves_variable = self._configure_plot(
-                self.plot_var, self.inspector_variable, variable_names
-            )
+        # Configure variable plots
+        self.curves_variable = self._configure_plot(
+            self.plot_var, self.inspector_variable, variable_names
+        )
+
+        # Configure objective plots
+        self.curves_objective = self._configure_plot(
+            self.plot_obj, self.inspector_objective, objective_names
+        )
+
+        # Configure constraint plots
+        if constraint_names:
+            try:
+                self.plot_con
+            except:
+                self.plot_con = plot_con = add_axes(
+                    self.monitor, "Constraints", 'Evaluation History (C)',
+                    self.inspector_constraint, row=1, col=0
+                )
+                plot_con.setXLink(self.plot_obj)
 
             # Configure objective plots
-            self.curves_objective = self._configure_plot(
-                self.plot_obj, self.inspector_objective, objective_names
+            self.curves_constraint = self._configure_plot(
+                self.plot_con, self.inspector_constraint, constraint_names
             )
 
-            # Configure constraint plots
-            if constraint_names:
-                try:
-                    self.plot_con
-                except:
-                    self.plot_con = plot_con = add_axes(
-                        self.monitor, "Constraints", 'Evaluation History (C)',
-                        self.inspector_constraint, row=1, col=0
-                    )
-                    plot_con.setXLink(self.plot_obj)
+        else:
+            try:
+                self.monitor.removeItem(self.plot_con)
+                self.plot_con.removeItem(self.inspector_constraint)
+                del self.plot_con
+            except:
+                pass
 
-                # Configure objective plots
-                self.curves_constraint = self._configure_plot(
-                    self.plot_con, self.inspector_constraint, constraint_names
+        # Configure state plots
+        if sta_names:
+            try:
+                self.plot_sta
+            except:
+                self.plot_sta = plot_sta = add_axes(
+                    self.monitor, "Constants", 'Evaluation History (S)',
+                    self.inspector_state, row=1, col=0
                 )
+                plot_sta.setXLink(self.plot_obj)
 
-            else:
-                try:
-                    self.monitor.removeItem(self.plot_con)
-                    self.plot_con.removeItem(self.inspector_constraint)
-                    del self.plot_con
-                except:
-                    pass
+            self.curves_sta = []
+            for i, sta_name in enumerate(sta_names):
+                color = self.colors[i % len(self.colors)]
+                symbol = self.symbols[i % len(self.colors)]
+                _curve = self.plot_sta.plot(pen=pg.mkPen(color, width=3),
+                                            name=sta_name)
+                self.curves_sta.append(_curve)
+        else:
+            try:
+                self.monitor.removeItem(self.plot_sta)
+                self.plot_sta.removeItem(self.inspector_state)
+                del self.plot_sta
+            except:
+                pass
 
-            # Configure state plots
-            if sta_names:
-                try:
-                    self.plot_sta
-                except:
-                    self.plot_sta = plot_sta = add_axes(
-                        self.monitor, "Constants", 'Evaluation History (S)',
-                        self.inspector_state, row=1, col=0
-                    )
-                    plot_sta.setXLink(self.plot_obj)
+        # Reset inspectors
+        self.inspector_objective.setValue(0)
+        self.inspector_variable.setValue(0)
+        self.inspector_constraint.setValue(0)
+        self.inspector_state.setValue(0)
 
-                self.curves_sta = []
-                for i, sta_name in enumerate(sta_names):
-                    color = self.colors[i % len(self.colors)]
-                    symbol = self.symbols[i % len(self.colors)]
-                    _curve = self.plot_sta.plot(pen=pg.mkPen(color, width=3),
-                                                name=sta_name)
-                    self.curves_sta.append(_curve)
-            else:
-                try:
-                    self.monitor.removeItem(self.plot_sta)
-                    self.plot_sta.removeItem(self.inspector_state)
-                    del self.plot_sta
-                except:
-                    pass
+        # Switch run button state
+        self.btn_stop.setDisabled(False)
 
-            # Reset inspectors
-            self.inspector_objective.setValue(0)
-            self.inspector_variable.setValue(0)
-            self.inspector_constraint.setValue(0)
-            self.inspector_state.setValue(0)
+        self.eval_count = 0  # reset the evaluation count
+        self.enable_auto_range()
 
-            # Switch run button state
-            self.btn_stop.setDisabled(False)
+        # Reset button should only be available if it's the current run
+        if self.routine_runner and \
+                self.routine_runner.run_filename == run_filename:
+            self.btn_reset.setDisabled(False)
+        else:
+            self.btn_reset.setDisabled(True)
 
-            self.eval_count = 0  # reset the evaluation count
-            self.enable_auto_range()
+        if routine.data is None:
+            self.btn_del.setDisabled(True)
+            self.btn_log.setDisabled(True)
+            self.btn_opt.setDisabled(True)
+            self.btn_set.setDisabled(True)
 
-            if self.routine_runner and self.routine_runner.run_filename == run_filename:
-                self.btn_reset.setDisabled(False)
-                self.btn_set.setDisabled(False)
-            else:
-                self.btn_reset.setDisabled(True)
-                self.btn_set.setDisabled(True)
+            return
 
-            if routine.data is None:
-                self.btn_del.setDisabled(True)
-                self.btn_log.setDisabled(True)
-                self.btn_opt.setDisabled(True)
-                return
+        self.update_curves()
 
-            self.update_curves()
-
-            self.btn_del.setDisabled(False)
-            self.btn_log.setDisabled(False)
-            self.btn_opt.setDisabled(False)
+        self.btn_del.setDisabled(False)
+        self.btn_log.setDisabled(False)
+        self.btn_opt.setDisabled(False)
+        self.btn_set.setDisabled(False)
 
     def _configure_plot(self, plot_object, inspector, names):
         plot_object.clear()
@@ -568,6 +578,7 @@ class BadgerOptMonitor(QWidget):
         # self.btn_stop.setToolTip('')
 
         self.btn_ctrl.setDisabled(False)
+        self.btn_set.setDisabled(True)
         self.sig_lock.emit(True)
 
     def save_termination_condition(self, tc):
