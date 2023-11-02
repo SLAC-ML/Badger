@@ -43,7 +43,7 @@ QPushButton
 stylesheet_log = '''
 QPushButton:hover:pressed
 {
-    background-color: #5C8899;
+    background-color: #88C0D0;
 }
 QPushButton:hover
 {
@@ -51,8 +51,23 @@ QPushButton:hover
 }
 QPushButton
 {
-    background-color: #88C0D0;
+    background-color: #5C8899;
     color: #000000;
+}
+'''
+
+stylesheet_ext = '''
+QPushButton:hover:pressed
+{
+    background-color: #4DB6AC;
+}
+QPushButton:hover
+{
+    background-color: #26A69A;
+}
+QPushButton
+{
+    background-color: #00897B;
 }
 '''
 
@@ -233,10 +248,8 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setStyleSheet(stylesheet_run)
 
         # add button for extensions
-        self.btn_open_extensions_palette = \
-            btn_extensions = create_button("extension.png",
-                                           "Open extensions",
-                                           icon_size=(21, 21))
+        self.btn_open_extensions_palette = btn_extensions = create_button(
+            "extension.png", "Open extensions", stylesheet_ext)
 
         # Create a menu and add options
         self.run_menu = menu = QMenu(self)
