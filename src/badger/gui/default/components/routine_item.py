@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QSizePolicy, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
+from .eliding_label import ElidingLabel
 from ..utils import create_button
 
 
@@ -90,9 +91,14 @@ class BadgerRoutineItem(QWidget):
         vbox = QVBoxLayout(info_panel)
         vbox.setContentsMargins(8, 8, 8, 8)
         vbox.setSpacing(0)
-        routine_name = QLabel(self.name)
+        name_panel = QWidget()
+        hbox_name = QHBoxLayout(name_panel)
+        hbox_name.setContentsMargins(4, 0, 0, 0)
+        routine_name = ElidingLabel(self.name)
+        routine_name.setMinimumWidth(180)
         routine_name.setFont(cool_font)
-        vbox.addWidget(routine_name)
+        hbox_name.addWidget(routine_name)
+        vbox.addWidget(name_panel)
         _timestamp = datetime.fromisoformat(self.timestamp)
         time_str = _timestamp.strftime('%m/%d/%Y, %H:%M:%S')
         time_created = QLabel(time_str)
@@ -103,14 +109,16 @@ class BadgerRoutineItem(QWidget):
             "star.png", "Favorite routine", stylesheet_fav, size=None)
         btn_fav.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         btn_fav.setFixedWidth(32)
-        btn_fav.hide()
+        # btn_fav.hide()
         self.btn_del = btn_del = create_button(
             "trash.png", "Delete routine", stylesheet_del, size=None)
         btn_del.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         btn_del.setFixedWidth(32)
-        btn_del.hide()
+        # btn_del.hide()
         hbox.addWidget(btn_fav)
         hbox.addWidget(btn_del)
+
+        self.setToolTip(f"name: {self.name}\ncreated at: {time_str}")
 
     def config_logic(self):
         self.btn_del.clicked.connect(self.delete_routine)
@@ -141,8 +149,8 @@ class BadgerRoutineItem(QWidget):
 
     def leaveEvent(self, event):
         self.hover = False
-        self.btn_fav.hide()
-        self.btn_del.hide()
+        # self.btn_fav.hide()
+        # self.btn_del.hide()
         if self.activated:
             self.setStyleSheet(stylesheet_activate)
         else:
