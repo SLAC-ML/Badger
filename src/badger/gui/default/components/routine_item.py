@@ -1,5 +1,6 @@
 from datetime import datetime
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QSizePolicy, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from ..utils import create_button
@@ -148,4 +149,11 @@ class BadgerRoutineItem(QWidget):
             self.setStyleSheet(stylesheet_normal)
 
     def delete_routine(self):
+        reply = QMessageBox.question(
+            self.parent(), 'Delete routine',
+            f'Are you sure you want to delete routine {self.name}?',
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         self.sig_del.emit(self.name)

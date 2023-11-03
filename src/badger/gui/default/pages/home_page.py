@@ -297,7 +297,7 @@ class BadgerHomePage(QWidget):
             selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
-            _item = BadgerRoutineItem(routine, timestamps[i])
+            _item = BadgerRoutineItem(routine, timestamps[i], self)
             _item.sig_del.connect(self.delete_routine)
             item = QListWidgetItem(self.routine_list)
             item.routine_name = routine  # dirty trick
