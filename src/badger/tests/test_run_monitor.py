@@ -1,13 +1,12 @@
 import os
 import sys
 import time
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu, QPoint
-from badger.db import BADGER_DB_ROOT
+from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu
 from badger.tests.utils import create_routine
+from badger.db import BADGER_DB_ROOT
 from badger.gui.default.components.run_monitor import BadgerOptMonitor
-
 
 def create_test_run_monitor():
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
@@ -120,7 +119,8 @@ def test_click_graph(qtbot):
     new_value = monitor.inspector_variable.value
     
     assert new_value != orginal_value
-    assert new_value == 1 #hmmm 
+    assert new_value == 1 #hmmm
+
 
 def test_x_axis_specification(qtbot):
     # check iteration/time drop down menu  
@@ -191,8 +191,6 @@ def test_pause_play(qtbot):
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert spy.count() == 2
     # assert 
-
-
 
 
 def test_jump_to_optimum(qtbot):
@@ -267,3 +265,4 @@ def test_add_extensions(qtbot):
     monitor.active_extensions[0].close()
     assert len(monitor.active_extensions) == 0
     assert monitor.extensions_palette.n_active_extensions == 0
+
