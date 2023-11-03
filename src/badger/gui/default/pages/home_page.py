@@ -424,6 +424,14 @@ class BadgerHomePage(QWidget):
 
     def delete_run(self):
         run_name = self.cb_history.currentText()
+
+        reply = QMessageBox.question(
+            self, 'Delete run',
+            f'Are you sure you want to delete run {run_name}?',
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         delete_run(run_name)
         # Reset current routine if no routine is selected
         if not self.prev_routine_item:
