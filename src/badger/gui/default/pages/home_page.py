@@ -297,7 +297,7 @@ class BadgerHomePage(QWidget):
             selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
-            _item = BadgerRoutineItem(routine, timestamps[i])
+            _item = BadgerRoutineItem(routine, timestamps[i], self)
             _item.sig_del.connect(self.delete_routine)
             item = QListWidgetItem(self.routine_list)
             item.routine_name = routine  # dirty trick
@@ -424,6 +424,14 @@ class BadgerHomePage(QWidget):
 
     def delete_run(self):
         run_name = self.cb_history.currentText()
+
+        reply = QMessageBox.question(
+            self, 'Delete run',
+            f'Are you sure you want to delete run {run_name}?',
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         delete_run(run_name)
         # Reset current routine if no routine is selected
         if not self.prev_routine_item:

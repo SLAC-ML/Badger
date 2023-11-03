@@ -1,7 +1,8 @@
 import pandas as pd
 from xopt import VOCS
-from xopt.generators import RandomGenerator
 from xopt.generators.bayesian import UpperConfidenceBoundGenerator
+from xopt.generators import RandomGenerator
+
 
 def create_routine():
     from badger.routine import Routine

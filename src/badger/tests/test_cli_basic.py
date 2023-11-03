@@ -30,7 +30,7 @@ def test_cli_main():
 
 
 def test_list_algo():
-    command = ['badger', 'algo']
+    command = ['badger', 'generator']
     out, err, exitcode = capture(command)
 
     assert exitcode == 0

@@ -4,11 +4,11 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import yaml
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QMessageBox, QSizePolicy
-from PyQt5.QtWidgets import QListWidgetItem, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QPushButton
+from PyQt5.QtWidgets import QListWidgetItem, QMessageBox, QWidget
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QTableWidgetItem, QPlainTextEdit, QSizePolicy
 from coolname import generate_slug
 from pydantic import ValidationError
 from xopt import VOCS
@@ -25,7 +25,7 @@ from ..windows.edit_script_dialog import BadgerEditScriptDialog
 from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
 from ..windows.review_dialog import BadgerReviewDialog
 from ..windows.var_dialog import BadgerVariableDialog
-from ....db import save_routine, remove_routine
+from ....db import save_routine, remove_routine, update_routine
 from ....environment import instantiate_env
 from ....errors import BadgerRoutineError
 from ....factory import list_generators, list_env, get_env
@@ -79,6 +79,36 @@ class BadgerRoutinePage(QWidget):
         hbox_name.addWidget(edit_save, 1)
         vbox_meta.addWidget(name, alignment=Qt.AlignTop)
 
+        # Description
+        descr = QWidget()
+        hbox_descr = QHBoxLayout(descr)
+        hbox_descr.setContentsMargins(0, 0, 0, 0)
+        lbl_descr_col = QWidget()
+        vbox_lbl_descr = QVBoxLayout(lbl_descr_col)
+        vbox_lbl_descr.setContentsMargins(0, 0, 0, 0)
+        lbl_descr = QLabel('Descr')
+        lbl_descr.setFixedWidth(64)
+        vbox_lbl_descr.addWidget(lbl_descr)
+        vbox_lbl_descr.addStretch(1)
+        hbox_descr.addWidget(lbl_descr_col)
+
+        edit_descr_col = QWidget()
+        vbox_descr_edit = QVBoxLayout(edit_descr_col)
+        vbox_descr_edit.setContentsMargins(0, 0, 0, 0)
+        self.edit_descr = edit_descr = QPlainTextEdit()
+        edit_descr.setMaximumHeight(80)
+        vbox_descr_edit.addWidget(edit_descr)
+        descr_bar = QWidget()
+        hbox_descr_bar = QHBoxLayout(descr_bar)
+        hbox_descr_bar.setContentsMargins(0, 0, 0, 0)
+        self.btn_descr_update = btn_update = QPushButton("Update")
+        btn_update.setFixedSize(128, 24)
+        hbox_descr_bar.addStretch(1)
+        hbox_descr_bar.addWidget(btn_update)
+        vbox_descr_edit.addWidget(descr_bar)
+        hbox_descr.addWidget(edit_descr_col)
+        vbox_meta.addWidget(descr)
+
         # Tags
         self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
         if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
@@ -101,6 +131,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addStretch()
 
     def config_logic(self):
+        self.btn_descr_update.clicked.connect(self.update_description)
         self.generator_box.cb.currentIndexChanged.connect(self.select_generator)
         self.generator_box.btn_docs.clicked.connect(self.open_generator_docs)
         self.generator_box.check_use_script.stateChanged.connect(self.toggle_use_script)
@@ -137,6 +168,7 @@ class BadgerRoutinePage(QWidget):
             name = generate_slug(2)
             self.edit_save.setText('')
             self.edit_save.setPlaceholderText(name)
+            self.edit_descr.setPlainText('')
 
             return
 
@@ -192,6 +224,7 @@ class BadgerRoutinePage(QWidget):
         # Config the metadata
         self.edit_save.setPlaceholderText(generate_slug(2))
         self.edit_save.setText(routine.name)
+        self.edit_descr.setPlainText(routine.description)
 
         self.generator_box.check_use_script.setChecked(not not self.script)
 
@@ -333,7 +366,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.list_con.clear()
         self.env_box.list_sta.clear()
         self.env_box.fit_content()
-        self.routine = None
+        # self.routine = None
 
     def get_init_table_header(self):
         table = self.env_box.init_table
@@ -528,6 +561,7 @@ class BadgerRoutinePage(QWidget):
     def _compose_routine(self) -> Routine:
         # Compose the routine
         name = self.edit_save.text() or self.edit_save.placeholderText()
+        description = self.edit_descr.toPlainText()
 
         if self.generator_box.cb.currentIndex() == -1:
             raise BadgerRoutineError("no generatorrithm selected")
@@ -566,6 +600,7 @@ class BadgerRoutinePage(QWidget):
             generator={"name": generator_name} | generator_params,
             # Badger part
             name=name,
+            description=description,
             environment={"name": env_name} | env_params,
             initial_points=init_points_df.astype("double"),
             critical_constraint_names=critical_constraints,
@@ -585,6 +620,11 @@ class BadgerRoutinePage(QWidget):
 
         dlg = BadgerReviewDialog(self, routine)
         dlg.exec()
+
+    def update_description(self):
+        routine = self.routine
+        routine.description = self.edit_descr.toPlainText()
+        update_routine(routine)
 
     def save(self):
         try:
