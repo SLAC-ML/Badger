@@ -17,6 +17,7 @@ from badger.utils import curr_ts
 class Routine(Xopt):
 
     name: str
+    description: Optional[str] = Field(None)
     environment: SerializeAsAny[Environment]
     initial_points: Optional[DataFrame] = Field(None)
     critical_constraint_names: Optional[List[str]] = Field([])

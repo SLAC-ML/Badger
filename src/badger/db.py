@@ -93,6 +93,26 @@ def save_routine(routine: Routine):
     con.close()
 
 
+# This function is not safe and might break database! Use with caution!
+@maybe_create_routines_db
+def update_routine(routine: Routine):
+    db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
+
+    con = sqlite3.connect(db_routine)
+    cur = con.cursor()
+
+    cur.execute('select * from routine where name=:name',
+                {'name': routine.name})
+    record = cur.fetchone()
+
+    if record:  # update the record
+        cur.execute('update routine set config = ?, savedAt = ? where name = ?',
+                    (routine.yaml(), datetime.now(), routine.name))
+
+    con.commit()
+    con.close()
+
+
 @maybe_create_routines_db
 @maybe_create_runs_db
 def remove_routine(name, remove_runs=False):
