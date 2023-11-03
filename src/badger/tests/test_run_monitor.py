@@ -3,14 +3,13 @@ import sys
 import time
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu, QPoint
+from badger.db import BADGER_DB_ROOT
+from badger.tests.utils import create_routine
+from badger.gui.default.components.run_monitor import BadgerOptMonitor
 
 
 def create_test_run_monitor():
-    from badger.db import BADGER_DB_ROOT
-    from badger.tests.utils import create_routine
-    from badger.gui.default.components.run_monitor import BadgerOptMonitor
-
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
 
     monitor = BadgerOptMonitor()
@@ -114,19 +113,51 @@ def test_plotting(qtbot):
 
 def test_click_graph(qtbot):
     monitor = create_test_run_monitor()
-    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
-
-    raise NotImplementedError()
-
+    
+    orginal_value = monitor.inspector_variable.value
+    click_point = monitor.plot_obj.mapToGlobal(monitor.plot_obj.pos()) + QPoint(1, 0)
+    qtbot.mouseClick(monitor.plot_obj, Qt.MouseButton.LeftButton, Qt.NoModifier, click_point)
+    new_value = monitor.inspector_variable.value
+    
+    assert new_value != orginal_value
+    assert new_value == 1 #hmmm 
 
 def test_x_axis_specification(qtbot):
     # check iteration/time drop down menu  
     monitor = create_test_run_monitor()    
-    monitor.cb_plot_x.setCurrentIndex(0)
-    # assert
-    monitor.cb_plot_x.setCurrentIndex(1)
-    # assert
+    
+    # read time stamp 
+    # set inspector line index 1 
 
+    # Iteration selected
+    monitor.cb_plot_x.setCurrentIndex(0)
+    
+    # Test label setting 
+    assert monitor.plot_var.label.textItem.text() == 'iterations'
+    assert monitor.plot_obj.label.textItem.text() == 'iterations'
+    if monitor.vocs.constraint_names:
+        assert monitor.plot_con.label.textItem.text() == 'iterations'
+
+    # Check if value is int 
+    assert isinstance(monitor.inspector_objective.value, float)
+    assert isinstance(monitor.inspector_variable.value, float)
+    if monitor.vocs.constraint_names:
+        assert isinstance(monitor.inspector_constraint.value, float)
+    
+    # Time selected 
+    monitor.cb_plot_x.setCurrentIndex(1)
+    
+    # Test label setting
+    assert monitor.plot_var.label.textItem.text() == 'time (s)'
+    assert monitor.plot_obj.label.textItem.text() == 'time (s)'
+    if monitor.vocs.constraint_names:
+        assert monitor.plot_con.label.textItem.text() == 'time (s)'
+    
+    # Check if value is int 
+    assert isinstance(monitor.inspector_objective.value, float)
+    assert isinstance(monitor.inspector_variable.value, float)
+    if monitor.vocs.constraint_names:
+        assert isinstance(monitor.inspector_constraint.value, float)
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
@@ -136,7 +167,7 @@ def test_y_axis_specification(qtbot):
     # assert 
 
     # relative
-    QTest.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
     # assert 
 
     # check if normalized relative
@@ -144,7 +175,7 @@ def test_y_axis_specification(qtbot):
     # assert
 
     # check normalized non relative. 
-    QTest.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
     # assert
 
 
@@ -153,19 +184,21 @@ def test_pause_play(qtbot):
     spy = QSignalSpy(monitor.sig_pause)
     
     # 'click' the pause button. 
-    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert spy.count() == 1
     # assert 
     
-    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert spy.count() == 2
     # assert 
+
+
 
 
 def test_jump_to_optimum(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_opt.clicked)
-    QTest.mouseClick(monitor.btn_opt, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.btn_opt, Qt.MouseButton.LeftButton)
     assert spy.count() == 1
     # check if it is going to optimal solution
     # assert
@@ -176,7 +209,7 @@ def test_reset_envrionment(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
-    QTest.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
     assert spy.count() == 1
     # assert 
 
@@ -185,16 +218,19 @@ def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_set.clicked)
 
-    QTest.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
     assert spy.count() == 1
     # assert
 
 
 def test_run_until(qtbot):
     monitor = create_test_run_monitor()
-    QTest.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
 
-    raise NotImplementedError()
+    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+    menu = monitor.btn_stop.findChild(QMenu)
+    qtbot.mouseClick(menu.actionGeometry(menu.actions()[1]).center(), Qt.LeftButton)
+    
+    # set max evaluation and then hit run in the pop up menu
 
 
 def test_add_extensions(qtbot):
