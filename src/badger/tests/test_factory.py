@@ -4,11 +4,10 @@ from copy import deepcopy
 from xopt.generators import get_generator, get_generator_defaults
 from xopt.resources.testing import TEST_VOCS_BASE
 
-from badger.factory import list_generators
-
 
 class TestFactory:
     def test_generator_generation(self):
+        from badger.factory import list_generators
 
         generator_names = list_generators()
 
