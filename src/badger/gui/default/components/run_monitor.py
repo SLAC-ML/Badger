@@ -881,7 +881,6 @@ class BadgerOptMonitor(QWidget):
         self.sig_inspect.emit(best_idx)
 
     def jump_to_solution(self, idx):
-        ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
         if self.plot_x_axis:  # x-axis is time
             ts = self.extract_timestamp()
             value = ts[idx] - ts[0]
@@ -940,7 +939,6 @@ class BadgerOptMonitor(QWidget):
             #     self.plot_sta.setLabel('bottom', 'iterations')
 
         # Update inspector line position
-        ts = self.routine.sorted_data["timestamp"].to_numpy(copy=True)
         if i:
             ts = self.extract_timestamp()
             value = ts[int(self.inspector_objective.value())] - ts[0]
