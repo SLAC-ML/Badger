@@ -1,10 +1,6 @@
 import os
-import copy
 import pytest
 import pandas as pd
-from typing import Type
-from xopt.generators import get_generator
-from badger.utils import merge_params
 from badger.errors import BadgerRunTerminatedError
 
 

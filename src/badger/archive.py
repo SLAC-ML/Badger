@@ -104,4 +104,15 @@ def delete_run(run_fname):
     # Remove record from the database
     remove_run_by_filename(run_fname)
 
-    return os.remove(os.path.join(BADGER_ARCHIVE_ROOT, first_level, second_level, third_level, run_fname))
+    prefix = os.path.join(BADGER_ARCHIVE_ROOT, first_level,
+                          second_level, third_level)
+
+    # Try remove the pickle file (could exist or not)
+    pickle_fname = os.path.splitext(run_fname)[0] + '.pickle'
+    try:
+        os.remove(os.path.join(prefix, pickle_fname))
+    except FileNotFoundError:
+        pass
+
+    # Remove the yaml data file
+    os.remove(os.path.join(prefix, run_fname))
