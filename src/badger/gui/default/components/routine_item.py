@@ -109,7 +109,7 @@ class BadgerRoutineItem(QWidget):
             "star.png", "Favorite routine", stylesheet_fav, size=None)
         btn_fav.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         btn_fav.setFixedWidth(32)
-        # btn_fav.hide()
+        btn_fav.hide()  # hide it for now
         self.btn_del = btn_del = create_button(
             "trash.png", "Delete routine", stylesheet_del, size=None)
         btn_del.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -140,8 +140,8 @@ class BadgerRoutineItem(QWidget):
 
     def enterEvent(self, event):
         self.hover = True
-        self.btn_fav.show()
-        self.btn_del.show()
+        # self.btn_fav.show()
+        # self.btn_del.show()
         if self.activated:
             self.setStyleSheet(stylesheet_activate_hover)
         else:
