@@ -69,6 +69,18 @@ def filter_routines(records, tags):
     return records_filtered
 
 
+def extract_descriptions(records):
+    descr_list = []
+    for record in records:
+        try:
+            descr = yaml.safe_load(record[1])['description']
+            descr_list.append(descr)
+        except Exception:
+            descr_list.append('')
+
+    return descr_list
+
+
 @maybe_create_routines_db
 def save_routine(routine: Routine):
     db_routine = os.path.join(BADGER_DB_ROOT, 'routines.db')
@@ -169,23 +181,16 @@ def list_routine(keyword='', tags={}):
     con = sqlite3.connect(db_routine)
     cur = con.cursor()
 
-    if not tags:
-        cur.execute(f'select name, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
-
-        records = cur.fetchall()
-        names = [record[0] for record in records]
-        timestamps = [record[1] for record in records]
-        con.close()
-    else:
-        cur.execute(f'select name, config, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
-
-        records = cur.fetchall()
+    cur.execute(f'select name, config, savedAt from routine where name like "%{keyword}%" order by savedAt desc')
+    records = cur.fetchall()
+    if tags:
         records = filter_routines(records, tags)
-        names = [record[0] for record in records]
-        timestamps = [record[2] for record in records]
-        con.close()
+    names = [record[0] for record in records]
+    timestamps = [record[2] for record in records]
+    descriptions = extract_descriptions(records)
+    con.close()
 
-    return names, timestamps
+    return names, timestamps, descriptions
 
 
 @maybe_create_runs_db
