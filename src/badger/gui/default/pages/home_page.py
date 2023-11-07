@@ -358,7 +358,7 @@ class BadgerHomePage(QWidget):
             _routine = load_run(run_filename)
             routine, _ = load_routine(_routine.name)  # get the initial routine
             routine.data = _routine.data
-        except IndexError:
+        except (IndexError, AttributeError):
             return
         self.current_routine = routine  # update the current routine
         update_table(self.run_table, routine.sorted_data)
