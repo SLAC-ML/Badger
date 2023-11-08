@@ -1,12 +1,11 @@
-import os
 from PyQt5.QtCore import Qt
 
 
 def test_gui_main(qtbot):
-    from badger.db import BADGER_DB_ROOT
     from badger.gui.default.windows.main_window import BadgerMainWindow
+    from badger.tests.utils import fix_db_path_issue
 
-    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+    fix_db_path_issue()
 
     window = BadgerMainWindow()
     qtbot.addWidget(window)
