@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from xopt import VOCS
 from xopt.generators.bayesian import UpperConfidenceBoundGenerator
@@ -116,3 +117,9 @@ def create_routine_turbo():
         environment={"name": "test"},
         initial_points=pd.DataFrame(test_routine["config"]["init_points"])
     )
+
+
+def fix_db_path_issue():
+    from badger.db import BADGER_DB_ROOT
+
+    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
