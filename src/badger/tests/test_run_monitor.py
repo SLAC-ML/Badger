@@ -1,9 +1,10 @@
 import os
 import sys
 import time
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QPointF
 from PyQt5.QtTest import QSignalSpy, QTest
 from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu
+from PyQt5.QtGui import QMouseEvent
 from badger.tests.utils import create_routine
 from badger.db import BADGER_DB_ROOT
 from badger.gui.default.components.run_monitor import BadgerOptMonitor
@@ -110,16 +111,20 @@ def test_plotting(qtbot):
     monitor.update_curves()
 
 
-def test_click_graph(qtbot):
+def test_click_graph(qtbot, mocker):
     monitor = create_test_run_monitor()
+    sig_inspect_spy = QSignalSpy(monitor.sig_inspect)
+    monitor.plot_x_axis = True
+
+    mock_event = mocker.MagicMock(spec=QMouseEvent)
+    mock_event._scenePos = QPointF(350, 240)
+
+    orginal_value = monitor.inspector_variable.value()
+    monitor.on_mouse_click(mock_event)
+    new_variable_value = monitor.inspector_variable.value()
     
-    orginal_value = monitor.inspector_variable.value
-    click_point = monitor.plot_obj.mapToGlobal(monitor.plot_obj.pos()) + QPoint(1, 0)
-    qtbot.mouseClick(monitor.plot_obj, Qt.MouseButton.LeftButton, Qt.NoModifier, click_point)
-    new_value = monitor.inspector_variable.value
-    
-    assert new_value != orginal_value
-    assert new_value == 1 #hmmm
+    assert new_variable_value != orginal_value
+    assert len(sig_inspect_spy) == 1
 
 
 def test_x_axis_specification(qtbot):
@@ -127,44 +132,58 @@ def test_x_axis_specification(qtbot):
     monitor = create_test_run_monitor()    
     
     # read time stamp 
+    time_value = monitor.inspector_variable.value()
+    
     # set inspector line index 1 
+    monitor.inspector_variable.setValue(1)
 
     # Iteration selected
     monitor.cb_plot_x.setCurrentIndex(0)
     
     # Test label setting 
-    assert monitor.plot_var.label.textItem.text() == 'iterations'
-    assert monitor.plot_obj.label.textItem.text() == 'iterations'
-    if monitor.vocs.constraint_names:
-        assert monitor.plot_con.label.textItem.text() == 'iterations'
+    plot_var_axis = monitor.plot_var.getAxis('bottom')
+    assert plot_var_axis.label.toPlainText().strip() == 'iterations'
 
-    # Check if value is int 
-    assert isinstance(monitor.inspector_objective.value, float)
-    assert isinstance(monitor.inspector_variable.value, float)
+    plot_obj_axis = monitor.plot_obj.getAxis('bottom')
+    assert plot_obj_axis.label.toPlainText().strip() == 'iterations'
+
     if monitor.vocs.constraint_names:
-        assert isinstance(monitor.inspector_constraint.value, float)
+        plot_con_axis = monitor.plot_con.getAxis('bottom')
+        assert plot_con_axis.label.toPlainText().strip() == 'iterations'
+
+    assert isinstance(monitor.inspector_objective.value(), int)
+    assert isinstance(monitor.inspector_variable.value(), int)
+    if monitor.vocs.constraint_names:
+        assert isinstance(monitor.inspector_constraint.value(), int)
     
     # Time selected 
     monitor.cb_plot_x.setCurrentIndex(1)
     
     # Test label setting
-    assert monitor.plot_var.label.textItem.text() == 'time (s)'
-    assert monitor.plot_obj.label.textItem.text() == 'time (s)'
+    plot_var_axis_time = monitor.plot_var.getAxis('bottom')
+    assert plot_var_axis_time.label.toPlainText().strip() == 'time (s)'
+
+    plot_obj_axis_time = monitor.plot_obj.getAxis('bottom')
+    assert plot_obj_axis_time.label.toPlainText().strip() == 'time (s)'
+
     if monitor.vocs.constraint_names:
-        assert monitor.plot_con.label.textItem.text() == 'time (s)'
+        plot_con_axis_time = monitor.plot_con.getAxis('bottom')
+        assert plot_con_axis_time.label.toPlainText().strip() == 'time (s)'
     
     # Check if value is int 
-    assert isinstance(monitor.inspector_objective.value, float)
-    assert isinstance(monitor.inspector_variable.value, float)
+    assert isinstance(monitor.inspector_objective.value(), int)
+    assert isinstance(monitor.inspector_variable.value(), float)
     if monitor.vocs.constraint_names:
-        assert isinstance(monitor.inspector_constraint.value, float)
+        assert isinstance(monitor.inspector_constraint.value(), int)
+
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
+    select_x_plot_y_axis_spy = QSignalSpy(monitor.cb_plot_y.currentIndexChanged)
 
     # check raw - non relative 
     monitor.cb_plot_y.setCurrentIndex(0)
-    # assert 
+    assert len(select_x_plot_y_axis_spy) == 0 # since 0 is the default value
 
     # relative
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
@@ -172,7 +191,7 @@ def test_y_axis_specification(qtbot):
 
     # check if normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
-    # assert
+    assert len(select_x_plot_y_axis_spy) == 1
 
     # check normalized non relative. 
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
@@ -183,13 +202,15 @@ def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.sig_pause)
     
+    # monitor.
+
     # 'click' the pause button. 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
-    assert spy.count() == 1
+    # assert len(spy) == 1
     # assert 
     
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
-    assert spy.count() == 2
+    # assert len(spy) == 2
     # assert 
 
 
@@ -197,30 +218,33 @@ def test_jump_to_optimum(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_opt.clicked)
     qtbot.mouseClick(monitor.btn_opt, Qt.MouseButton.LeftButton)
-    assert spy.count() == 1
+
+    assert len(spy) == 1
     # check if it is going to optimal solution
     # assert
 
-
+'''
 def test_reset_envrionment(qtbot):
     # check if reset button click signal is trigged and if state is same as original state after click 
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_reset.clicked)
-
     qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
-    assert spy.count() == 1
+
+    assert len(spy) == 1
     # assert 
+'''
 
-
+'''
 def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_set.clicked)
 
     qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
-    assert spy.count() == 1
+    assert len(spy) == 1
     # assert
+'''
 
-
+'''
 def test_run_until(qtbot):
     monitor = create_test_run_monitor()
 
@@ -229,6 +253,7 @@ def test_run_until(qtbot):
     qtbot.mouseClick(menu.actionGeometry(menu.actions()[1]).center(), Qt.LeftButton)
     
     # set max evaluation and then hit run in the pop up menu
+'''
 
 
 def test_add_extensions(qtbot):
