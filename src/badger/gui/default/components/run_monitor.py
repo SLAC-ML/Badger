@@ -873,12 +873,18 @@ class BadgerOptMonitor(QWidget):
                                 f'Env vars {current_vars} -> {self.init_vars}')
 
     def jump_to_optimal(self):
-        best_idx, _ = self.routine.vocs.select_best(
-            self.routine.sorted_data, n=1)
-        best_idx = int(best_idx[0])
+        try:
+            best_idx, _ = self.routine.vocs.select_best(
+                self.routine.sorted_data, n=1)
+            best_idx = int(best_idx[0])
 
-        self.jump_to_solution(best_idx)
-        self.sig_inspect.emit(best_idx)
+            self.jump_to_solution(best_idx)
+            self.sig_inspect.emit(best_idx)
+        except NotImplementedError:
+            QMessageBox.warning(
+                self, 'Jump to optimum',
+                'Jump to optimum is not supported for '
+                'multi-objective optimization yet')
 
     def jump_to_solution(self, idx):
         if self.plot_x_axis:  # x-axis is time
