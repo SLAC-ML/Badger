@@ -748,7 +748,10 @@ class BadgerOptMonitor(QWidget):
             env = self.routine.environment
             path = run['path']
             filename = run['filename'][:-4] + 'pickle'
-            env.interface.stop_recording(os.path.join(path, filename))
+            try:
+                env.interface.stop_recording(os.path.join(path, filename))
+            except AttributeError:  # recording was not enabled
+                pass
 
             self.sig_run_name.emit(run['filename'])
             if not self.testing:
