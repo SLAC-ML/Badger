@@ -24,7 +24,7 @@ def test_routine_generation(qtbot):
     with pytest.raises(BadgerRoutineError):
         window._compose_routine()
 
-    # add generatorrithm -- still should raise error for no environment
+    # add generator -- still should raise error for no environment
     qtbot.keyClicks(window.generator_box.cb, "upper_confidence_bound")
     with pytest.raises(BadgerRoutineError):
         window._compose_routine()

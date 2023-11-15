@@ -566,7 +566,7 @@ class BadgerRoutinePage(QWidget):
         description = self.edit_descr.toPlainText()
 
         if self.generator_box.cb.currentIndex() == -1:
-            raise BadgerRoutineError("no generatorrithm selected")
+            raise BadgerRoutineError("no generator selected")
         if self.env_box.cb.currentIndex() == -1:
             raise BadgerRoutineError("no environment selected")
 

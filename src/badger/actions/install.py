@@ -23,14 +23,14 @@ def plugin_install(args):
     from conda.cli.python_api import run_command, Commands
 
     hist = {
-        'generator': 'generatorrithms',
+        'generator': 'generators',
         'env': 'environments',
         'ext': 'extensions',
         'intf': 'interfaces'
     }
 
     identify = {
-        'optimize': 'generatorrithms',
+        'optimize': 'generators',
         'Environment': 'environments',
         'Extension': 'extensions',
         'Interface': 'interfaces'

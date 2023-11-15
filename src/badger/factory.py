@@ -16,6 +16,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 LOAD_LOCAL_ALGO = False
+ALGO_EXCLUDED = [
+    'bayesian_exploration',
+    'cnsga',
+    'mggpo',
+    'time_dependent_upper_confidence_bound',
+    'multi_fidelity'
+]
 
 # Check badger plugin root
 BADGER_PLUGIN_ROOT = read_value('BADGER_PLUGIN_ROOT')
@@ -35,12 +42,12 @@ sys.path.append(BADGER_PLUGIN_ROOT)
 def scan_plugins(root):
     factory = {}
 
-    # Do not scan local generatorrithms if option disabled
+    # Do not scan local generators if option disabled
     if LOAD_LOCAL_ALGO:
-        ptype_list = ['generatorrithm', 'interface', 'environment']
+        ptype_list = ['generator', 'interface', 'environment']
     else:
         ptype_list = ['interface', 'environment']
-        factory['generatorrithm'] = {}
+        factory['generator'] = {}
 
     for ptype in ptype_list:
         factory[ptype] = {}
@@ -62,7 +69,7 @@ def scan_plugins(root):
 
 
 def load_plugin(root, pname, ptype):
-    assert ptype in ['generatorrithm', 'interface',
+    assert ptype in ['generator', 'interface',
                      'environment'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
@@ -85,7 +92,7 @@ def load_plugin(root, pname, ptype):
         _e.configs = configs  # attach information to the exception
         raise _e
 
-    if ptype == 'generatorrithm':
+    if ptype == 'generator':
         plugin = [module.optimize, configs]
     elif ptype == 'interface':
         params = module.Interface.model_json_schema()['properties']
@@ -132,7 +139,7 @@ def load_plugin(root, pname, ptype):
 
 
 def load_docs(root, pname, ptype):
-    assert ptype in ['generatorrithm', 'interface',
+    assert ptype in ['generator', 'interface',
                      'environment'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
@@ -184,6 +191,8 @@ def get_env(name):
 def list_generators():
     try_load_all_generators()
     generator_names = list(generators.keys())
+    # Filter the names
+    generator_names = [n for n in generator_names if n not in ALGO_EXCLUDED]
     return sorted(generator_names)
 
 
