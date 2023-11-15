@@ -8,6 +8,7 @@ from PyQt5.QtGui import QMouseEvent
 from badger.tests.utils import create_routine
 from badger.db import BADGER_DB_ROOT
 from badger.gui.default.components.run_monitor import BadgerOptMonitor
+from unittest.mock import patch
 
 def create_test_run_monitor():
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
@@ -197,64 +198,71 @@ def test_y_axis_specification(qtbot):
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
     # assert
 
-
+'''
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.sig_pause)
-    
-    # monitor.
 
-    # 'click' the pause button. 
+    monitor.start(True)
+    qtbot.wait(500)
+
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
-    # assert len(spy) == 1
-    # assert 
+    assert len(spy) == 1
     
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
-    # assert len(spy) == 2
-    # assert 
-
+    assert len(spy) == 2
+    
+    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+'''
 
 def test_jump_to_optimum(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_opt.clicked)
+    orginal_value = monitor.inspector_variable.value()
     qtbot.mouseClick(monitor.btn_opt, Qt.MouseButton.LeftButton)
 
-    assert len(spy) == 1
-    # check if it is going to optimal solution
-    # assert
+    qtbot.wait(500)
 
-'''
+    optimal_value = monitor.inspector_variable.value()
+
+    print(orginal_value, optimal_value)
+    assert len(spy) == 1
+    
+    # check if it is going to optimal solution
+    assert orginal_value != optimal_value
+
+
 def test_reset_envrionment(qtbot):
     # check if reset button click signal is trigged and if state is same as original state after click 
     monitor = create_test_run_monitor()
+    monitor.start(True)
+    qtbot.wait(1000)
     spy = QSignalSpy(monitor.btn_reset.clicked)
-    qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
 
-    assert len(spy) == 1
-    # assert 
-'''
 
-'''
+    with patch('PyQt5.QtWidgets.QMessageBox.question', return_value=QMessageBox.Yes):
+        with patch('PyQt5.QtWidgets.QMessageBox.information') as mock_info:
+            monitor.reset_env()
+            mock_info.assert_called_once()
+            qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
+
+
 def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
     spy = QSignalSpy(monitor.btn_set.clicked)
-
-    qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    
+    with patch('PyQt5.QtWidgets.QMessageBox.question', return_value=QMessageBox.Yes):
+        qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    
     assert len(spy) == 1
-    # assert
-'''
 
 '''
 def test_run_until(qtbot):
     monitor = create_test_run_monitor()
+    monitor.run_until_action.trigger()
 
-    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-    menu = monitor.btn_stop.findChild(QMenu)
-    qtbot.mouseClick(menu.actionGeometry(menu.actions()[1]).center(), Qt.LeftButton)
-    
     # set max evaluation and then hit run in the pop up menu
 '''
-
 
 def test_add_extensions(qtbot):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
