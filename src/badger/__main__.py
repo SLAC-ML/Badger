@@ -50,7 +50,7 @@ def main():
     parser_routine.set_defaults(func=show_routine)
 
     # Parser for the 'generator' command
-    parser_generator = subparsers.add_parser('generator', help='Badger generatorrithms')
+    parser_generator = subparsers.add_parser('generator', help='Badger generators')
     parser_generator.add_argument('generator_name', nargs='?', type=str, default=None)
     parser_generator.set_defaults(func=show_generator)
 
@@ -64,25 +64,25 @@ def main():
     parser_env.add_argument('env_name', nargs='?', type=str, default=None)
     parser_env.set_defaults(func=show_env)
 
-    # Parser for the 'install' command     
+    # Parser for the 'install' command
     parser_inst = subparsers.add_parser('install', help='Badger install plugin')
     parser_inst.add_argument('plugin_type', nargs='?', type=str, default=None)
     parser_inst.add_argument('plugin_specific', nargs='?', type=str, default=None)
     parser_inst.set_defaults(func=plugin_install)
 
-    # Parser for the 'remove' command     
+    # Parser for the 'remove' command
     parser_remove = subparsers.add_parser('remove', help='Badger remove plugin')
     parser_remove.add_argument('plugin_type', nargs='?', type=str, default=None)
     parser_remove.add_argument('plugin_specific', nargs='?', type=str, default=None)
     parser_remove.set_defaults(func=plugin_remove)
 
-    
+
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='run routines')
     parser_run.add_argument('-a', '--generator', required=True,
-                            help='generatorrithm to use')
+                            help='generator to use')
     parser_run.add_argument('-ap', '--generator_params',
-                            help='parameters for the generatorrithm')
+                            help='parameters for the generator')
     parser_run.add_argument('-e', '--env', required=True,
                             help='environment to use')
     parser_run.add_argument('-ep', '--env_params',

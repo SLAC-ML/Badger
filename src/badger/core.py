@@ -29,11 +29,14 @@ def check_run_status(active_callback):
 
 def convert_to_solution(result: DataFrame, routine: Routine):
     vocs = routine.vocs
-    best_idx, _ = vocs.select_best(routine.sorted_data, n=1)
-    if best_idx != len(routine.data) - 1:
-        is_optimal = False
-    else:
-        is_optimal = True
+    try:
+        best_idx, _ = vocs.select_best(routine.sorted_data, n=1)
+        if best_idx != len(routine.data) - 1:
+            is_optimal = False
+        else:
+            is_optimal = True
+    except NotImplementedError:
+        is_optimal = False  # disable the optimal highlight for MO problems
 
     vars = list(result[vocs.variable_names].to_numpy()[0])
     objs = list(result[vocs.objective_names].to_numpy()[0])

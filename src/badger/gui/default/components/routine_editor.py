@@ -7,7 +7,6 @@ from .routine_page import BadgerRoutinePage
 from ....routine import Routine
 
 
-
 class BadgerRoutineEditor(QWidget):
     sig_saved = pyqtSignal()
     sig_canceled = pyqtSignal()

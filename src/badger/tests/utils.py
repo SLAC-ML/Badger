@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from xopt import VOCS
 from xopt.generators.bayesian import UpperConfidenceBoundGenerator
@@ -39,6 +40,40 @@ def create_routine():
     )
 
 
+def create_multiobjective_routine():
+    from badger.routine import Routine
+
+    test_routine = {
+        "name": "routine-for-core-test",
+        "generator": "random",
+        "generator_params": {},
+        "env_params": {},
+        "vocs": {
+            "variables": {
+                "x0": [-1, 1],
+                "x1": [-1, 1],
+                "x2": [-1, 1],
+                "x3": [-1, 1]
+            },
+            "objectives": {"f1": "MAXIMIZE", "f2": "MINIMIZE"},
+            "constraints": {}
+        },
+        "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
+    }
+
+    vocs = VOCS(**test_routine["vocs"])
+
+    generator = RandomGenerator(vocs=vocs)
+
+    return Routine(
+        name="test",
+        vocs=vocs,
+        generator=generator,
+        environment={"name": "multiobjective_test"},
+        initial_points=pd.DataFrame(test_routine["init_points"])
+    )
+
+
 def create_routine_turbo():
     from badger.routine import Routine
 
@@ -73,7 +108,7 @@ def create_routine_turbo():
     )
 
     generator = UpperConfidenceBoundGenerator(
-        vocs=vocs, ** test_routine["generator_params"])
+        vocs=vocs, **test_routine["generator_params"])
 
     return Routine(
         name="test-turbo",
@@ -82,3 +117,9 @@ def create_routine_turbo():
         environment={"name": "test"},
         initial_points=pd.DataFrame(test_routine["config"]["init_points"])
     )
+
+
+def fix_db_path_issue():
+    from badger.db import BADGER_DB_ROOT
+
+    os.makedirs(BADGER_DB_ROOT, exist_ok=True)

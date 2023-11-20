@@ -1,17 +1,15 @@
-import os
-import sys
 import time
-from PyQt5.QtCore import Qt, QPoint, QPointF
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QMouseEvent
-from badger.tests.utils import create_routine
-from badger.db import BADGER_DB_ROOT
-from badger.gui.default.components.run_monitor import BadgerOptMonitor
 from unittest.mock import patch
 
 def create_test_run_monitor():
-    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+    from badger.tests.utils import create_routine, fix_db_path_issue
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
+
+    fix_db_path_issue()
 
     monitor = BadgerOptMonitor()
     monitor.testing = True
@@ -26,11 +24,10 @@ def create_test_run_monitor():
 
 
 def test_run_monitor(qtbot):
-    from badger.db import BADGER_DB_ROOT
-    from badger.tests.utils import create_routine
+    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
 
-    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+    fix_db_path_issue()
 
     monitor = BadgerOptMonitor()
     monitor.testing = True
@@ -69,7 +66,6 @@ def test_run_monitor(qtbot):
     time.sleep(1)
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
-
     # time.sleep(3)
     # qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
@@ -77,11 +73,10 @@ def test_run_monitor(qtbot):
 
 
 def test_routine_identity(qtbot):
-    from badger.db import BADGER_DB_ROOT
-    from badger.tests.utils import create_routine
+    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
 
-    os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+    fix_db_path_issue()
 
     monitor = BadgerOptMonitor()
     qtbot.addWidget(monitor)

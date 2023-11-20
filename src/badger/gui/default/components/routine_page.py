@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QGroupBox, QLineEdit, QLabel, QPushButton
 from PyQt5.QtWidgets import QListWidgetItem, QMessageBox, QWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
@@ -41,6 +41,8 @@ CONS_RELATION_DICT = {
 
 
 class BadgerRoutinePage(QWidget):
+    sig_updated = pyqtSignal(str, str)  # routine name, routine description
+
     def __init__(self):
         super().__init__()
 
@@ -564,7 +566,7 @@ class BadgerRoutinePage(QWidget):
         description = self.edit_descr.toPlainText()
 
         if self.generator_box.cb.currentIndex() == -1:
-            raise BadgerRoutineError("no generatorrithm selected")
+            raise BadgerRoutineError("no generator selected")
         if self.env_box.cb.currentIndex() == -1:
             raise BadgerRoutineError("no environment selected")
 
@@ -614,7 +616,7 @@ class BadgerRoutinePage(QWidget):
         except:
             return QMessageBox.critical(
                 self,
-                'Error!',
+                'Invalid routine!',
                 traceback.format_exc()
             )
 
@@ -624,7 +626,21 @@ class BadgerRoutinePage(QWidget):
     def update_description(self):
         routine = self.routine
         routine.description = self.edit_descr.toPlainText()
-        update_routine(routine)
+        try:
+            update_routine(routine)
+            # Notify routine list to update
+            self.sig_updated.emit(routine.name, routine.description)
+            QMessageBox.information(
+                self,
+                'Update succeeded!',
+                f'Routine {self.routine.name} description was updated successfully!'
+            )
+        except Exception:
+            return QMessageBox.critical(
+                self,
+                'Update failed!',
+                traceback.format_exc()
+            )
 
     def save(self):
         try:

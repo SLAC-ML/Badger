@@ -13,12 +13,12 @@ class Extension(ABC):
     def __init__(self):
         pass
 
-    # List all available generatorrithms
+    # List all available generators
     @abstractmethod
     def list_generator(self) -> List[str]:
         pass
 
-    # Get config of an generatorrithm
+    # Get config of an generator
     @abstractmethod
     def get_generator_config(self, name: str):
         pass

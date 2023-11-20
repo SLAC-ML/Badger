@@ -15,7 +15,7 @@ class BadgerDocsWindow(QMainWindow):
         self.load_docs()
 
     def init_ui(self):
-        self.setWindowTitle(f'Docs for generatorrithm {self.generator}')
+        self.setWindowTitle(f'Docs for generator {self.generator}')
         self.resize(640, 640)
 
         doc_panel = QWidget(self)
@@ -53,7 +53,7 @@ class BadgerDocsWindow(QMainWindow):
 
     def update_docs(self, generator):
         self.generator = generator
-        self.setWindowTitle(f'Docs for generatorrithm {generator}')
+        self.setWindowTitle(f'Docs for generator {generator}')
         self.load_docs()
 
     def switch_render_mode(self):

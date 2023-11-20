@@ -3,11 +3,10 @@ import os
 
 class TestDB:
     def test_save_routine(self):
-        from badger.db import BADGER_DB_ROOT
         from badger.db import save_routine, remove_routine
-        from badger.tests.utils import create_routine
+        from badger.tests.utils import create_routine, fix_db_path_issue
 
-        os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+        fix_db_path_issue()
 
         routine = create_routine()
         save_routine(routine)
@@ -15,11 +14,10 @@ class TestDB:
         remove_routine("test")
 
     def test_load_routine(self):
-        from badger.db import BADGER_DB_ROOT
         from badger.db import save_routine, load_routine, remove_routine
-        from badger.tests.utils import create_routine
+        from badger.tests.utils import create_routine, fix_db_path_issue
 
-        os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+        fix_db_path_issue()
 
         routine = create_routine()
         save_routine(routine)

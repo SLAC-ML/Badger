@@ -232,6 +232,7 @@ class BadgerHomePage(QWidget):
         self.routine_editor.sig_saved.connect(self.routine_saved)
         self.routine_editor.sig_canceled.connect(self.done_create_routine)
         self.routine_editor.sig_deleted.connect(self.routine_deleted)
+        self.routine_editor.routine_page.sig_updated.connect(self.routine_description_updated)
 
         # Assign shortcuts
         self.shortcut_go_search = QShortcut(QKeySequence('Ctrl+L'), self)
@@ -290,14 +291,18 @@ class BadgerHomePage(QWidget):
 
         self.routine_list.itemWidget(routine_item).activate()
 
-    def build_routine_list(self, routines: list[str], timestamps: list[str]):
+    def build_routine_list(self,
+                           routines: list[str],
+                           timestamps: list[str],
+                           descriptions: list[str]):
         try:
             selected_routine = self.prev_routine_item.routine_name
-        except:
+        except Exception:
             selected_routine = None
         self.routine_list.clear()
         for i, routine in enumerate(routines):
-            _item = BadgerRoutineItem(routine, timestamps[i], self)
+            _item = BadgerRoutineItem(routine, timestamps[i],
+                                      descriptions[i], self)
             _item.sig_del.connect(self.delete_routine)
             item = QListWidgetItem(self.routine_list)
             item.routine_name = routine  # dirty trick
@@ -314,17 +319,20 @@ class BadgerHomePage(QWidget):
         tag_reg = self.filter_box.cb_reg.currentText()
         tag_gain = self.filter_box.cb_gain.currentText()
         tags = {}
-        if tag_obj: tags['objective'] = tag_obj
-        if tag_reg: tags['region'] = tag_reg
-        if tag_gain: tags['gain'] = tag_gain
-        routines, timestamps = list_routine(keyword, tags)
+        if tag_obj:
+            tags['objective'] = tag_obj
+        if tag_reg:
+            tags['region'] = tag_reg
+        if tag_gain:
+            tags['gain'] = tag_gain
+        routines, timestamps, descriptions = list_routine(keyword, tags)
 
-        return routines, timestamps
+        return routines, timestamps, descriptions
 
     def refresh_routine_list(self):
-        routines, timestamps = self.get_current_routines()
+        routines, timestamps, descriptions = self.get_current_routines()
 
-        self.build_routine_list(routines, timestamps)
+        self.build_routine_list(routines, timestamps, descriptions)
 
     def go_run(self, i: int):
         if self.cb_history.itemText(0) == 'Optimization in progress...':
@@ -350,7 +358,7 @@ class BadgerHomePage(QWidget):
             _routine = load_run(run_filename)
             routine, _ = load_routine(_routine.name)  # get the initial routine
             routine.data = _routine.data
-        except IndexError:
+        except (IndexError, AttributeError):
             return
         self.current_routine = routine  # update the current routine
         update_table(self.run_table, routine.sorted_data)
@@ -479,6 +487,15 @@ class BadgerHomePage(QWidget):
 
         self.refresh_routine_list()
 
+    def routine_description_updated(self, name, descr):
+        for i in range(self.routine_list.count()):
+            item = self.routine_list.item(i)
+            if item is not None:
+                routine_item = self.routine_list.itemWidget(item)
+                if routine_item.name == name:
+                    routine_item.update_description(descr)
+                    break
+
     def export_routines(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -492,7 +509,7 @@ class BadgerHomePage(QWidget):
             filename = filename + '.db'
 
         try:
-            routines, _ = self.get_current_routines()
+            routines, _, _ = self.get_current_routines()
             export_routines(filename, routines)
 
             QMessageBox.information(

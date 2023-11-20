@@ -64,13 +64,14 @@ QPushButton
 class BadgerRoutineItem(QWidget):
     sig_del = pyqtSignal(str)
 
-    def __init__(self, name, timestamp, parent=None):
+    def __init__(self, name, timestamp, description='', parent=None):
         super().__init__(parent)
 
         self.activated = False
         self.hover = False
         self.name = name
         self.timestamp = timestamp
+        self.description = description
 
         self.init_ui()
         self.config_logic()
@@ -109,7 +110,7 @@ class BadgerRoutineItem(QWidget):
             "star.png", "Favorite routine", stylesheet_fav, size=None)
         btn_fav.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         btn_fav.setFixedWidth(32)
-        # btn_fav.hide()
+        btn_fav.hide()  # hide it for now
         self.btn_del = btn_del = create_button(
             "trash.png", "Delete routine", stylesheet_del, size=None)
         btn_del.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -118,7 +119,7 @@ class BadgerRoutineItem(QWidget):
         hbox.addWidget(btn_fav)
         hbox.addWidget(btn_del)
 
-        self.setToolTip(f"name: {self.name}\ncreated at: {time_str}")
+        self.update_tooltip()
 
     def config_logic(self):
         self.btn_del.clicked.connect(self.delete_routine)
@@ -140,8 +141,8 @@ class BadgerRoutineItem(QWidget):
 
     def enterEvent(self, event):
         self.hover = True
-        self.btn_fav.show()
-        self.btn_del.show()
+        # self.btn_fav.show()
+        # self.btn_del.show()
         if self.activated:
             self.setStyleSheet(stylesheet_activate_hover)
         else:
@@ -165,3 +166,12 @@ class BadgerRoutineItem(QWidget):
             return
 
         self.sig_del.emit(self.name)
+
+    def update_tooltip(self):
+        _timestamp = datetime.fromisoformat(self.timestamp)
+        time_str = _timestamp.strftime('%m/%d/%Y, %H:%M:%S')
+        self.setToolTip(f"name: {self.name}\ncreated at: {time_str}\ndescription:\n{self.description}")
+
+    def update_description(self, descr):
+        self.description = descr
+        self.update_tooltip()

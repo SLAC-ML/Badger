@@ -1,3 +1,4 @@
+import os
 from importlib import metadata
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QDesktopWidget
 # from PyQt5.QtWidgets import QMenuBar, QMenu
@@ -15,7 +16,10 @@ class BadgerMainWindow(QMainWindow):
         version = metadata.version('badger-opt')
         version_xopt = metadata.version('xopt')
         self.setWindowTitle(f'Badger v{version} (Xopt v{version_xopt})')
-        self.resize(960, 720)
+        if os.getenv('DEMO'):
+            self.resize(1280, 720)
+        else:
+            self.resize(960, 720)
         self.center()
 
         # Add menu bar
