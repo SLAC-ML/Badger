@@ -248,7 +248,7 @@ def test_jump_to_optimum(qtbot):
 
 
 def test_reset_environment(qtbot):
-    from badger.tests.utils import get_current_vars, get_last_vars
+    from badger.tests.utils import get_current_vars, get_vars_in_row
 
     # check if reset button click signal is trigged and if state is same as original state after click
     monitor = create_test_run_monitor(add_data=False)
@@ -265,7 +265,7 @@ def test_reset_environment(qtbot):
     assert len(monitor.routine.data) == 10
 
     # Check if current env vars matches the last solution in data
-    last_vars = get_last_vars(monitor.routine)
+    last_vars = get_vars_in_row(monitor.routine, idx=-1)
     curr_vars = get_current_vars(monitor.routine)
     assert np.all(curr_vars == last_vars)
 
@@ -286,21 +286,37 @@ def test_reset_environment(qtbot):
 
 
 def test_dial_in_solution(qtbot):
+    from badger.tests.utils import get_current_vars, get_vars_in_row
+
     monitor = create_test_run_monitor()
-    spy = QSignalSpy(monitor.btn_set.clicked)
+
+    # Check if current env vars matches the last solution in data
+    last_vars = get_vars_in_row(monitor.routine, idx=-1)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == last_vars)
+
+    # Dial in the solution at the inspector line (should be the first solution)
     current_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+    spy = QSignalSpy(monitor.btn_set.clicked)
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    assert len(spy) == 1
 
     new_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
 
-    assert len(spy) == 1
     assert new_x_view_range != current_x_view_range
+
+    # Test if the solution has been dialed in
+    first_vars = get_vars_in_row(monitor.routine, idx=0)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == first_vars)
 
     monitor.plot_x_axis = False
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
 
     not_time_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]

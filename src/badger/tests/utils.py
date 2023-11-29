@@ -132,6 +132,6 @@ def get_current_vars(routine):
     return list(var_dict.values())
 
 
-def get_last_vars(routine):
+def get_vars_in_row(routine, idx=0):
     var_names = routine.vocs.variable_names
-    return routine.data.tail(1)[var_names].to_numpy()[0]
+    return routine.data.iloc[idx][var_names].to_numpy()
