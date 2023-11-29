@@ -1,14 +1,16 @@
 import time
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtGui import QMouseEvent
+import numpy as np
 from unittest.mock import patch
 
+from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtTest import QSignalSpy, QTest
+from PyQt5.QtWidgets import QMessageBox
 
-def create_test_run_monitor():
-    from badger.tests.utils import create_routine, fix_db_path_issue
+
+def create_test_run_monitor(add_data=True):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -16,17 +18,19 @@ def create_test_run_monitor():
     monitor.testing = True
 
     routine = create_routine()
-    routine.random_evaluate(10)
+    if add_data:
+        routine.random_evaluate(10)
     monitor.init_plots(routine)
 
-    assert len(routine.data) == 10
+    if add_data:
+        assert len(routine.data) == 10
 
     return monitor
 
 
 def test_run_monitor(qtbot):
-    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -65,8 +69,8 @@ def test_run_monitor(qtbot):
 
 
 def test_routine_identity(qtbot):
-    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -115,7 +119,7 @@ def test_click_graph(qtbot, mocker):
     assert len(sig_inspect_spy) == 1
 
     # TODO: make asserts for other changes when the graph is clicked on by the user.
-    
+
 
 def test_x_axis_specification(qtbot):
     # check iteration/time drop down menu
@@ -160,7 +164,7 @@ def test_x_axis_specification(qtbot):
         plot_con_axis_time = monitor.plot_con.getAxis("bottom")
         assert plot_con_axis_time.label.toPlainText().strip() == "time (s)"
 
-    # TODO: click on graph 
+    # TODO: click on graph
 
     # Check type of value
     assert isinstance(monitor.inspector_objective.value(), int)
@@ -168,8 +172,9 @@ def test_x_axis_specification(qtbot):
     if monitor.vocs.constraint_names:
         assert isinstance(monitor.inspector_constraint.value(), int)
 
-    # TODO: set monitor at certain point on graph 
+    # TODO: set monitor at certain point on graph
     # -- switch between x and time and see if index changes
+
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
@@ -183,9 +188,8 @@ def test_y_axis_specification(qtbot):
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
 
     # TODO: missing assert for the relative case
-    # check verticle values change 
+    # check verticle values change
     # assert
-    
 
     # check if normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
@@ -195,7 +199,7 @@ def test_y_axis_specification(qtbot):
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
 
     # TODO: missing assert for the normalized non-relative case
-    # check verticle values change 
+    # check verticle values change
     # assert
 
 
@@ -203,8 +207,8 @@ def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
 
     monitor.termination_condition = {
-            "tc_idx": 0,
-            "max_eval": 10,
+        "tc_idx": 0,
+        "max_eval": 10,
     }
     spy = QSignalSpy(monitor.sig_pause)
 
@@ -213,13 +217,13 @@ def test_pause_play(qtbot):
 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert len(spy) == 1
-    
+
     qtbot.wait(500)
 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert len(spy) == 2
 
-    while monitor.running: 
+    while monitor.running:
         qtbot.wait(100)
 
 
@@ -242,26 +246,44 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
-    
-def test_reset_envrionment(qtbot):
-    # check if reset button click signal is trigged and if state is same as original state after click 
-    monitor = create_test_run_monitor()
+
+def test_reset_environment(qtbot):
+    from badger.tests.utils import get_current_vars, get_last_vars
+
+    # check if reset button click signal is trigged and if state is same as original state after click
+    monitor = create_test_run_monitor(add_data=False)
+    init_vars = get_current_vars(monitor.routine)
     monitor.termination_condition = {
-            "tc_idx": 0,
-            "max_eval": 10,
+        "tc_idx": 0,
+        "max_eval": 10,
     }
     monitor.start(True)
-    while monitor.running: 
+    # Wait until the run is done
+    while monitor.running:
         qtbot.wait(100)
-    
+
+    assert len(monitor.routine.data) == 10
+
+    # Check if current env vars matches the last solution in data
+    last_vars = get_last_vars(monitor.routine)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == last_vars)
+
+    # Reset env and confirm
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
-    with patch('PyQt5.QtWidgets.QMessageBox.question', return_value=QMessageBox.Yes):
-        with patch('PyQt5.QtWidgets.QMessageBox.information') as mock_info:
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
+        with patch("PyQt5.QtWidgets.QMessageBox.information") as mock_info:
             qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
-            #mock_info.assert_called_once()
-    
+            mock_info.assert_called_once()
+
     assert len(spy) == 1
+
+    # Check if the env has been reset
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == init_vars)
+
 
 def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
@@ -295,8 +317,8 @@ def test_run_until(qtbot):
 
 
 def test_add_extensions(qtbot):
-    from badger.gui.default.components.run_monitor import BadgerOptMonitor
     from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
     from badger.tests.utils import create_routine
 
     routine = create_routine()
