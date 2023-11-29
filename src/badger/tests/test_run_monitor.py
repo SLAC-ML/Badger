@@ -204,7 +204,7 @@ def test_y_axis_specification(qtbot):
 
 
 def test_pause_play(qtbot):
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
 
     monitor.termination_condition = {
         "tc_idx": 0,
