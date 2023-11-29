@@ -1,14 +1,16 @@
 import time
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtGui import QMouseEvent
+import numpy as np
 from unittest.mock import patch
 
+from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtTest import QSignalSpy, QTest
+from PyQt5.QtWidgets import QMessageBox
 
-def create_test_run_monitor():
-    from badger.tests.utils import create_routine, fix_db_path_issue
+
+def create_test_run_monitor(add_data=True):
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -16,17 +18,19 @@ def create_test_run_monitor():
     monitor.testing = True
 
     routine = create_routine()
-    routine.random_evaluate(10)
+    if add_data:
+        routine.random_evaluate(10)
     monitor.init_plots(routine)
 
-    assert len(routine.data) == 10
+    if add_data:
+        assert len(routine.data) == 10
 
     return monitor
 
 
 def test_run_monitor(qtbot):
-    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -65,8 +69,8 @@ def test_run_monitor(qtbot):
 
 
 def test_routine_identity(qtbot):
-    from badger.tests.utils import create_routine, fix_db_path_issue
     from badger.gui.default.components.run_monitor import BadgerOptMonitor
+    from badger.tests.utils import create_routine, fix_db_path_issue
 
     fix_db_path_issue()
 
@@ -199,7 +203,7 @@ def test_y_axis_specification(qtbot):
 
     # check non normalized relative.
     relative_value = monitor.curves_variable["x0"].getData()[1][index]
-    assert relative_value == 0.0 
+    assert relative_value == 0.0
 
     # normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
@@ -215,7 +219,7 @@ def test_y_axis_specification(qtbot):
     assert normalized_raw_value == 0.75
 
 def test_pause_play(qtbot):
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
 
     monitor.termination_condition = {
         "tc_idx": 0,
@@ -257,44 +261,78 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
+def test_reset_environment(qtbot):
+    from badger.tests.utils import get_current_vars, get_vars_in_row
 
-def test_reset_envrionment(qtbot):
     # check if reset button click signal is trigged and if state is same as original state after click
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
+    init_vars = get_current_vars(monitor.routine)
 
     monitor.termination_condition = {
         "tc_idx": 0,
         "max_eval": 10,
     }
     monitor.start(True)
+
+    # Wait until the run is done
     while monitor.running:
         qtbot.wait(100)
 
+    assert len(monitor.routine.data) == 10
+
+    # Check if current env vars matches the last solution in data
+    last_vars = get_vars_in_row(monitor.routine, idx=-1)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == last_vars)
+
+    # Reset env and confirm
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
         with patch("PyQt5.QtWidgets.QMessageBox.information") as mock_info:
             qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
+            mock_info.assert_called_once()
 
     assert len(spy) == 1
+
+    # Check if the env has been reset
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == init_vars)
 
 
 def test_dial_in_solution(qtbot):
+    from badger.tests.utils import get_current_vars, get_vars_in_row
+
     monitor = create_test_run_monitor()
-    spy = QSignalSpy(monitor.btn_set.clicked)
+
+    # Check if current env vars matches the last solution in data
+    last_vars = get_vars_in_row(monitor.routine, idx=-1)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == last_vars)
+
+    # Dial in the solution at the inspector line (should be the first solution)
     current_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+    spy = QSignalSpy(monitor.btn_set.clicked)
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
+    assert len(spy) == 1
 
     new_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
 
-    assert len(spy) == 1
     assert new_x_view_range != current_x_view_range
+
+    # Test if the solution has been dialed in
+    first_vars = get_vars_in_row(monitor.routine, idx=0)
+    curr_vars = get_current_vars(monitor.routine)
+    assert np.all(curr_vars == first_vars)
 
     monitor.plot_x_axis = False
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question",
+               return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
 
     not_time_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
@@ -311,8 +349,8 @@ def test_run_until(qtbot):
 
 
 def test_add_extensions(qtbot):
-    from badger.gui.default.components.run_monitor import BadgerOptMonitor
     from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
+    from badger.gui.default.components.run_monitor import BadgerOptMonitor
     from badger.tests.utils import create_routine
 
     routine = create_routine()
