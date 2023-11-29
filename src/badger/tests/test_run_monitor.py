@@ -115,7 +115,7 @@ def test_click_graph(qtbot, mocker):
     assert len(sig_inspect_spy) == 1
 
     # TODO: make asserts for other changes when the graph is clicked on by the user.
-
+    
 
 def test_x_axis_specification(qtbot):
     # check iteration/time drop down menu
@@ -160,12 +160,16 @@ def test_x_axis_specification(qtbot):
         plot_con_axis_time = monitor.plot_con.getAxis("bottom")
         assert plot_con_axis_time.label.toPlainText().strip() == "time (s)"
 
-    # Check if value is int
+    # TODO: click on graph 
+
+    # Check type of value
     assert isinstance(monitor.inspector_objective.value(), int)
     assert isinstance(monitor.inspector_variable.value(), float)
     if monitor.vocs.constraint_names:
         assert isinstance(monitor.inspector_constraint.value(), int)
 
+    # TODO: set monitor at certain point on graph 
+    # -- switch between x and time and see if index changes
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
@@ -179,7 +183,9 @@ def test_y_axis_specification(qtbot):
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
 
     # TODO: missing assert for the relative case
+    # check verticle values change 
     # assert
+    
 
     # check if normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
@@ -189,15 +195,17 @@ def test_y_axis_specification(qtbot):
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
 
     # TODO: missing assert for the normalized non-relative case
+    # check verticle values change 
     # assert
 
 
-"""
-# TODO: Create a working test for the pause button, currently hangs 
-# when the stop button is called 
-
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
+
+    monitor.termination_condition = {
+            "tc_idx": 0,
+            "max_eval": 10,
+    }
     spy = QSignalSpy(monitor.sig_pause)
 
     monitor.start(True)
@@ -210,11 +218,9 @@ def test_pause_play(qtbot):
 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert len(spy) == 2
-    
-    qtbot.wait(500)
 
-    qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-"""
+    while monitor.running: 
+        qtbot.wait(100)
 
 
 def test_jump_to_optimum(qtbot):
@@ -236,26 +242,26 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
-
-""""
-# TODO: Create a working test for the reset envrionment button, sometimes hangs 
-# when the stop button is called 
     
 def test_reset_envrionment(qtbot):
     # check if reset button click signal is trigged and if state is same as original state after click 
     monitor = create_test_run_monitor()
+    monitor.termination_condition = {
+            "tc_idx": 0,
+            "max_eval": 10,
+    }
     monitor.start(True)
-    qtbot.wait(1000)
+    while monitor.running: 
+        qtbot.wait(100)
+    
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
     with patch('PyQt5.QtWidgets.QMessageBox.question', return_value=QMessageBox.Yes):
         with patch('PyQt5.QtWidgets.QMessageBox.information') as mock_info:
-            monitor.reset_env()
-            mock_info.assert_called_once()
-            qtbot.wait(1000)
-            qtbot.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-"""
-
+            qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
+            #mock_info.assert_called_once()
+    
+    assert len(spy) == 1
 
 def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
