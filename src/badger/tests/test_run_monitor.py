@@ -121,7 +121,7 @@ def test_click_graph(qtbot, mocker):
     # TODO: make asserts for other changes when the graph is clicked on by the user.
 
 
-def test_x_axis_specification(qtbot):
+def test_x_axis_specification(qtbot, mocker):
     # check iteration/time drop down menu
     monitor = create_test_run_monitor()
 
@@ -164,44 +164,59 @@ def test_x_axis_specification(qtbot):
         plot_con_axis_time = monitor.plot_con.getAxis("bottom")
         assert plot_con_axis_time.label.toPlainText().strip() == "time (s)"
 
-    # TODO: click on graph
+    mock_event = mocker.MagicMock(spec=QMouseEvent)
+    mock_event._scenePos = QPointF(350, 240)
+
+    monitor.on_mouse_click(mock_event)
 
     # Check type of value
-    assert isinstance(monitor.inspector_objective.value(), int)
+    assert isinstance(monitor.inspector_objective.value(), float)
     assert isinstance(monitor.inspector_variable.value(), float)
     if monitor.vocs.constraint_names:
-        assert isinstance(monitor.inspector_constraint.value(), int)
+        assert isinstance(monitor.inspector_constraint.value(), float)
 
-    # TODO: set monitor at certain point on graph
-    # -- switch between x and time and see if index changes
+    # Switch between time and iterations and see if index changes
+    current_index = monitor.inspector_variable.value()
+
+    monitor.cb_plot_x.setCurrentIndex(0)
+    assert current_index != monitor.inspector_variable.value()
+
+    monitor.cb_plot_x.setCurrentIndex(1)
+    assert current_index == monitor.inspector_variable.value()
 
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
     select_x_plot_y_axis_spy = QSignalSpy(monitor.cb_plot_y.currentIndexChanged)
+    index = monitor.inspector_variable.value()
+    
+    monitor.check_relative.setChecked(False)
 
     # check raw - non relative
     monitor.cb_plot_y.setCurrentIndex(0)
     assert len(select_x_plot_y_axis_spy) == 0  # since 0 is the default value
-
+    raw_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert raw_value == 0.5 
+    
     # relative
-    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    monitor.check_relative.setChecked(True)
 
-    # TODO: missing assert for the relative case
-    # check verticle values change
-    # assert
+    # check non normalized relative.
+    relative_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert relative_value == 0.0
 
-    # check if normalized relative
+    # normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
     assert len(select_x_plot_y_axis_spy) == 1
 
-    # check normalized non relative.
-    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
+    normalized_relative_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert normalized_relative_value == 0.0 
 
-    # TODO: missing assert for the normalized non-relative case
-    # check verticle values change
-    # assert
+    # raw normalized 
+    monitor.check_relative.setChecked(False)
 
+    normalized_raw_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert normalized_raw_value == 0.75
 
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor(add_data=False)
@@ -246,18 +261,19 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
-
 def test_reset_environment(qtbot):
     from badger.tests.utils import get_current_vars, get_vars_in_row
 
     # check if reset button click signal is trigged and if state is same as original state after click
     monitor = create_test_run_monitor(add_data=False)
     init_vars = get_current_vars(monitor.routine)
+
     monitor.termination_condition = {
         "tc_idx": 0,
         "max_eval": 10,
     }
     monitor.start(True)
+
     # Wait until the run is done
     while monitor.running:
         qtbot.wait(100)
