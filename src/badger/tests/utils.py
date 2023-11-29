@@ -123,3 +123,15 @@ def fix_db_path_issue():
     from badger.db import BADGER_DB_ROOT
 
     os.makedirs(BADGER_DB_ROOT, exist_ok=True)
+
+
+def get_current_vars(routine):
+    var_names = routine.vocs.variable_names
+    var_dict = routine.environment._get_variables(var_names)
+
+    return list(var_dict.values())
+
+
+def get_last_vars(routine):
+    var_names = routine.vocs.variable_names
+    return routine.data.tail(1)[var_names].to_numpy()[0]
