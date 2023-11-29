@@ -115,9 +115,9 @@ def test_click_graph(qtbot, mocker):
     assert len(sig_inspect_spy) == 1
 
     # TODO: make asserts for other changes when the graph is clicked on by the user.
-    
 
-def test_x_axis_specification(qtbot):
+
+def test_x_axis_specification(qtbot, mocker):
     # check iteration/time drop down menu
     monitor = create_test_run_monitor()
 
@@ -160,16 +160,26 @@ def test_x_axis_specification(qtbot):
         plot_con_axis_time = monitor.plot_con.getAxis("bottom")
         assert plot_con_axis_time.label.toPlainText().strip() == "time (s)"
 
-    # TODO: click on graph 
+    mock_event = mocker.MagicMock(spec=QMouseEvent)
+    mock_event._scenePos = QPointF(350, 240)
+
+    monitor.on_mouse_click(mock_event)
 
     # Check type of value
-    assert isinstance(monitor.inspector_objective.value(), int)
+    assert isinstance(monitor.inspector_objective.value(), float)
     assert isinstance(monitor.inspector_variable.value(), float)
     if monitor.vocs.constraint_names:
-        assert isinstance(monitor.inspector_constraint.value(), int)
+        assert isinstance(monitor.inspector_constraint.value(), float)
 
-    # TODO: set monitor at certain point on graph 
-    # -- switch between x and time and see if index changes
+    # Switch between time and iterations and see if index changes
+    current_index = monitor.inspector_variable.value()
+
+    monitor.cb_plot_x.setCurrentIndex(0)
+    assert current_index != monitor.inspector_variable.value()
+
+    monitor.cb_plot_x.setCurrentIndex(1)
+    assert current_index == monitor.inspector_variable.value()
+
 
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
@@ -181,11 +191,7 @@ def test_y_axis_specification(qtbot):
 
     # relative
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
-
-    # TODO: missing assert for the relative case
-    # check verticle values change 
-    # assert
-    
+    # TODO: assert 
 
     # check if normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
@@ -193,18 +199,15 @@ def test_y_axis_specification(qtbot):
 
     # check normalized non relative.
     qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
-
-    # TODO: missing assert for the normalized non-relative case
-    # check verticle values change 
-    # assert
+    # TODO: assert
 
 
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
 
     monitor.termination_condition = {
-            "tc_idx": 0,
-            "max_eval": 10,
+        "tc_idx": 0,
+        "max_eval": 10,
     }
     spy = QSignalSpy(monitor.sig_pause)
 
@@ -213,13 +216,13 @@ def test_pause_play(qtbot):
 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert len(spy) == 1
-    
+
     qtbot.wait(500)
 
     qtbot.mouseClick(monitor.btn_ctrl, Qt.MouseButton.LeftButton)
     assert len(spy) == 2
 
-    while monitor.running: 
+    while monitor.running:
         qtbot.wait(100)
 
 
@@ -242,26 +245,27 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
-    
+
 def test_reset_envrionment(qtbot):
-    # check if reset button click signal is trigged and if state is same as original state after click 
+    # check if reset button click signal is trigged and if state is same as original state after click
     monitor = create_test_run_monitor()
+
     monitor.termination_condition = {
-            "tc_idx": 0,
-            "max_eval": 10,
+        "tc_idx": 0,
+        "max_eval": 10,
     }
     monitor.start(True)
-    while monitor.running: 
+    while monitor.running:
         qtbot.wait(100)
-    
+
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
-    with patch('PyQt5.QtWidgets.QMessageBox.question', return_value=QMessageBox.Yes):
-        with patch('PyQt5.QtWidgets.QMessageBox.information') as mock_info:
+    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+        with patch("PyQt5.QtWidgets.QMessageBox.information") as mock_info:
             qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
-            #mock_info.assert_called_once()
-    
+
     assert len(spy) == 1
+
 
 def test_dial_in_solution(qtbot):
     monitor = create_test_run_monitor()
