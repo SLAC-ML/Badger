@@ -184,23 +184,35 @@ def test_x_axis_specification(qtbot, mocker):
 def test_y_axis_specification(qtbot):
     monitor = create_test_run_monitor()
     select_x_plot_y_axis_spy = QSignalSpy(monitor.cb_plot_y.currentIndexChanged)
+    index = monitor.inspector_variable.value()
+    
+    monitor.check_relative.setChecked(False)
 
     # check raw - non relative
     monitor.cb_plot_y.setCurrentIndex(0)
     assert len(select_x_plot_y_axis_spy) == 0  # since 0 is the default value
-
+    raw_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert raw_value == 0.5 
+    
     # relative
-    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
-    # TODO: assert 
+    monitor.check_relative.setChecked(True)
 
-    # check if normalized relative
+    # check non normalized relative.
+    relative_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert relative_value == 0.0 
+
+    # normalized relative
     monitor.cb_plot_y.setCurrentIndex(1)
     assert len(select_x_plot_y_axis_spy) == 1
 
-    # check normalized non relative.
-    qtbot.mouseClick(monitor.check_relative, Qt.MouseButton.LeftButton)
-    # TODO: assert
+    normalized_relative_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert normalized_relative_value == 0.0 
 
+    # raw normalized 
+    monitor.check_relative.setChecked(False)
+
+    normalized_raw_value = monitor.curves_variable["x0"].getData()[1][index]
+    assert normalized_raw_value == 0.75
 
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor()
