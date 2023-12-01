@@ -2,7 +2,6 @@
   <h1 align="center">
     Badger: The Missing Optimizer in ACR
     <br />
-    <br />
     <a href="https://slac-ml.github.io/Badger">
       <img src="pics/badger.png" alt="Badger" height=128>
     </a>
@@ -52,22 +51,22 @@ in Proc. IPAC'22, Bangkok. doi:10.18429/JACoW-IPAC2022-TUPOST058
 BibTex entry:
 ```bibtex
 @inproceedings{Badger,
-  author       = {Z. Zhang and M. Böse and A.L. Edelen and J.R. Garrahan and Y. Hidaka and C.E. Mayes and S.A. Miskovich and D.F. Ratner and R.J. Roussel and J. Shtalenkova and S. Tomin and G.M. Wang},
-  title        = {{Badger: The Missing Optimizer in ACR}},
-  booktitle    = {Proc. IPAC'22},
-  pages        = {999--1002},
-  eid          = {TUPOST058},
-  language     = {english},
-  keywords     = {interface, controls, GUI, operation, framework},
-  venue        = {Bangkok, Thailand},
-  series       = {International Particle Accelerator Conference},
-  number       = {13},
-  publisher    = {JACoW Publishing, Geneva, Switzerland},
-  month        = {07},
-  year         = {2022},
-  issn         = {2673-5490},
-  isbn         = {978-3-95450-227-1},
-  doi          = {10.18429/JACoW-IPAC2022-TUPOST058},
-  url          = {https://jacow.org/ipac2022/papers/tupost058.pdf},
+    author       = {Z. Zhang and M. Böse and A.L. Edelen and J.R. Garrahan and Y. Hidaka and C.E. Mayes and S.A. Miskovich and D.F. Ratner and R.J. Roussel and J. Shtalenkova and S. Tomin and G.M. Wang},
+    title        = {{Badger: The Missing Optimizer in ACR}},
+    booktitle    = {Proc. IPAC'22},
+    pages        = {999--1002},
+    eid          = {TUPOST058},
+    language     = {english},
+    keywords     = {interface, controls, GUI, operation, framework},
+    venue        = {Bangkok, Thailand},
+    series       = {International Particle Accelerator Conference},
+    number       = {13},
+    publisher    = {JACoW Publishing, Geneva, Switzerland},
+    month        = {07},
+    year         = {2022},
+    issn         = {2673-5490},
+    isbn         = {978-3-95450-227-1},
+    doi          = {10.18429/JACoW-IPAC2022-TUPOST058},
+    url          = {https://jacow.org/ipac2022/papers/tupost058.pdf},
 }
 ```
