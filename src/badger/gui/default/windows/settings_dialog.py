@@ -70,24 +70,24 @@ class BadgerSettingsDialog(QDialog):
         grid.addWidget(archive_root_path, 4, 1)
 
         # Check Variable Interval
-        self.var_int = var_int = QLabel('Check Variable Interval')
-        self.var_int_val = var_int_val = QLineEdit(str(read_value('BADGER_CHECK_VAR_INTERVAL')))
-        self.var_int_val.setValidator(validator)
-        grid.addWidget(var_int, 5, 0)
-        grid.addWidget(var_int_val, 5, 1)
+        # self.var_int = var_int = QLabel('Check Variable Interval')
+        # self.var_int_val = var_int_val = QLineEdit(str(read_value('BADGER_CHECK_VAR_INTERVAL')))
+        # self.var_int_val.setValidator(validator)
+        # grid.addWidget(var_int, 5, 0)
+        # grid.addWidget(var_int_val, 5, 1)
 
         # Check Variable Timeout
-        self.var_time = var_time = QLabel('Check Variable Timeout')
-        self.var_time_val = var_time_val = QLineEdit(str(read_value('BADGER_CHECK_VAR_TIMEOUT')))
-        self.var_time_val.setValidator(validator)
-        grid.addWidget(var_time, 6, 0)
-        grid.addWidget(var_time_val, 6, 1)
+        # self.var_time = var_time = QLabel('Check Variable Timeout')
+        # self.var_time_val = var_time_val = QLineEdit(str(read_value('BADGER_CHECK_VAR_TIMEOUT')))
+        # self.var_time_val.setValidator(validator)
+        # grid.addWidget(var_time, 6, 0)
+        # grid.addWidget(var_time_val, 6, 1)
 
         # Plugin URL
-        self.plugin_url = plugin_url = QLabel('Plugin Server URL')
-        self.plugin_url_name = plugin_url_name = QLineEdit(read_value('BADGER_PLUGINS_URL'))
-        grid.addWidget(plugin_url, 7, 0)
-        grid.addWidget(plugin_url_name, 7, 1)
+        # self.plugin_url = plugin_url = QLabel('Plugin Server URL')
+        # self.plugin_url_name = plugin_url_name = QLineEdit(read_value('BADGER_PLUGINS_URL'))
+        # grid.addWidget(plugin_url, 7, 0)
+        # grid.addWidget(plugin_url_name, 7, 1)
 
         # Advanced settings
         self.adv_features = adv_features = QLabel('Enable Advanced Features')
