@@ -142,6 +142,7 @@ class BadgerOptMonitor(QWidget):
         self.active_extensions = []
 
         self.testing = False
+        self.tc_dialog = None
 
         self.init_ui()
         self.config_logic()
@@ -1012,7 +1013,11 @@ class BadgerOptMonitor(QWidget):
                 self, self.start,
                 self.save_termination_condition, self.termination_condition,
             )
-            dlg.exec()
+            self.tc_dialog = dlg
+            try:
+                dlg.exec()
+            finally:
+                self.tc_dialog = None
         else:
             self.btn_stop.setDisabled(True)
             self.sig_stop.emit()
