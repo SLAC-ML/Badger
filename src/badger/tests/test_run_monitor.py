@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import numpy as np
 
-from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtCore import QPointF, Qt, QTimer
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QApplication
 
 
 def create_test_run_monitor(add_data=True):
@@ -350,12 +350,25 @@ def test_dial_in_solution(qtbot):
     assert new_x_view_range != not_time_x_view_range
 
 
-"""
-TODO: this testing is waiting for the change to run_until button
 def test_run_until(qtbot):
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
+
+    def handle_dialog():
+        while monitor.tc_dialog is None:
+            QApplication.processEvents()
+
+        # Set max evaluation to 5, then run the optimization
+        monitor.tc_dialog.sb_max_eval.setValue(5)
+        qtbot.mouseClick(monitor.tc_dialog.btn_run, Qt.MouseButton.LeftButton)
+
+    QTimer.singleShot(0, handle_dialog)
     monitor.run_until_action.trigger()
-"""
+
+    # Wait until the run is done
+    while monitor.running:
+        qtbot.wait(100)
+
+    assert len(monitor.routine.data) == 5
 
 
 def test_add_extensions(qtbot):
