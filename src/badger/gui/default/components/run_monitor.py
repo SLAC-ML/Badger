@@ -270,13 +270,14 @@ class BadgerOptMonitor(QWidget):
 
         # Config button
         self.btn_config = btn_config = create_button("tools.png", "Configure run")
+        btn_config.hide()
         # Run info button
         self.btn_info = btn_info = create_button("info.png", "Run information")
+        btn_info.hide()
 
         hbox_action.addWidget(self.btn_del)
         # hbox_action.addWidget(btn_edit)
         hbox_action.addWidget(self.btn_log)
-        hbox_action.addWidget(btn_extensions)
         hbox_action.addStretch(1)
         hbox_action.addWidget(self.btn_opt)
         hbox_action.addWidget(self.btn_reset)
@@ -285,6 +286,7 @@ class BadgerOptMonitor(QWidget):
         hbox_action.addWidget(self.btn_opt)
         hbox_action.addWidget(self.btn_set)
         hbox_action.addStretch(1)
+        hbox_action.addWidget(btn_extensions)
         hbox_action.addWidget(btn_config)
         hbox_action.addWidget(btn_info)
 
