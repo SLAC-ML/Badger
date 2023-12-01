@@ -89,12 +89,19 @@ class BadgerSettingsDialog(QDialog):
         # grid.addWidget(plugin_url, 7, 0)
         # grid.addWidget(plugin_url_name, 7, 1)
 
+        # Badger data dump period
+        self.dump_period = dump_period = QLabel('Data dump period')
+        self.dump_period_val = dump_period_val = QLineEdit(str(read_value('BADGER_DATA_DUMP_PERIOD')))
+        self.dump_period_val.setValidator(validator)
+        grid.addWidget(dump_period, 8, 0)
+        grid.addWidget(dump_period_val, 8, 1)
+
         # Advanced settings
         self.adv_features = adv_features = QLabel('Enable Advanced Features')
         self.enable_adv_features = enable_adv_features = QCheckBox()
         enable_adv_features.setChecked(strtobool(read_value('BADGER_ENABLE_ADVANCED')))
-        grid.addWidget(adv_features, 8, 0)
-        grid.addWidget(enable_adv_features, 8, 1)
+        grid.addWidget(adv_features, 9, 0)
+        grid.addWidget(enable_adv_features, 9, 1)
 
         grid.setColumnStretch(1, 1)
 
@@ -132,10 +139,13 @@ class BadgerSettingsDialog(QDialog):
         write_value('BADGER_DB_ROOT', self.db_root_path.text())
         write_value('BADGER_LOGBOOK_ROOT', self.logbook_root_path.text())
         write_value('BADGER_ARCHIVE_ROOT', self.archive_root_path.text())
-        write_value('BADGER_CHECK_VAR_INTERVAL', self.var_int_val.text())
-        write_value('BADGER_CHECK_VAR_TIMEOUT', self.var_time_val.text())
-        write_value('BADGER_PLUGINS_URL', self.plugin_url_name.text())
-        write_value('BADGER_ENABLE_ADVANCED', self.enable_adv_features.isChecked())
+        # write_value('BADGER_CHECK_VAR_INTERVAL', self.var_int_val.text())
+        # write_value('BADGER_CHECK_VAR_TIMEOUT', self.var_time_val.text())
+        # write_value('BADGER_PLUGINS_URL', self.plugin_url_name.text())
+        write_value('BADGER_DATA_DUMP_PERIOD',
+                    float(self.dump_period_val.text()))
+        write_value('BADGER_ENABLE_ADVANCED',
+                    self.enable_adv_features.isChecked())
 
     def restore_settings(self):
         # Reset theme if needed
