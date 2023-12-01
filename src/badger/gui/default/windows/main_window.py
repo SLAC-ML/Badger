@@ -52,6 +52,7 @@ class BadgerMainWindow(QMainWindow):
     def closeEvent(self, event):
         monitor = self.home_page.run_monitor
         if not monitor.running:
+            monitor.destroy_unused_env()
             return
 
         reply = QMessageBox.question(
@@ -62,7 +63,9 @@ class BadgerMainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             def close_window():
+                monitor.destroy_unused_env()
                 self.close()
+
             monitor.register_post_run_action(close_window)
             monitor.testing = True  # suppress the archive pop-ups
             monitor.btn_stop.click()
