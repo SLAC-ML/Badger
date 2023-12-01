@@ -1,6 +1,7 @@
 import time
-import numpy as np
 from unittest.mock import patch
+
+import numpy as np
 
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QMouseEvent
@@ -186,18 +187,28 @@ def test_x_axis_specification(qtbot, mocker):
 
 
 def test_y_axis_specification(qtbot):
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
+    monitor.termination_condition = {
+        "tc_idx": 0,
+        "max_eval": 10,
+    }
+    monitor.start(True)
+
+    # Wait until the run is done
+    while monitor.running:
+        qtbot.wait(100)
+
     select_x_plot_y_axis_spy = QSignalSpy(monitor.cb_plot_y.currentIndexChanged)
     index = monitor.inspector_variable.value()
-    
+
     monitor.check_relative.setChecked(False)
 
     # check raw - non relative
     monitor.cb_plot_y.setCurrentIndex(0)
     assert len(select_x_plot_y_axis_spy) == 0  # since 0 is the default value
     raw_value = monitor.curves_variable["x0"].getData()[1][index]
-    assert raw_value == 0.5 
-    
+    assert raw_value == 0.5
+
     # relative
     monitor.check_relative.setChecked(True)
 
@@ -210,13 +221,14 @@ def test_y_axis_specification(qtbot):
     assert len(select_x_plot_y_axis_spy) == 1
 
     normalized_relative_value = monitor.curves_variable["x0"].getData()[1][index]
-    assert normalized_relative_value == 0.0 
+    assert normalized_relative_value == 0.0
 
-    # raw normalized 
+    # raw normalized
     monitor.check_relative.setChecked(False)
 
     normalized_raw_value = monitor.curves_variable["x0"].getData()[1][index]
     assert normalized_raw_value == 0.75
+
 
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor(add_data=False)
@@ -261,6 +273,7 @@ def test_jump_to_optimum(qtbot):
     # Check if it is going to be the optimal solution
     assert max_value == optimal_value
 
+
 def test_reset_environment(qtbot):
     from badger.tests.utils import get_current_vars, get_vars_in_row
 
@@ -288,8 +301,7 @@ def test_reset_environment(qtbot):
     # Reset env and confirm
     spy = QSignalSpy(monitor.btn_reset.clicked)
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question",
-               return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
         with patch("PyQt5.QtWidgets.QMessageBox.information") as mock_info:
             qtbot.mouseClick(monitor.btn_reset, Qt.MouseButton.LeftButton)
             mock_info.assert_called_once()
@@ -315,8 +327,7 @@ def test_dial_in_solution(qtbot):
     current_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
 
     spy = QSignalSpy(monitor.btn_set.clicked)
-    with patch("PyQt5.QtWidgets.QMessageBox.question",
-               return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
     assert len(spy) == 1
 
@@ -331,8 +342,7 @@ def test_dial_in_solution(qtbot):
 
     monitor.plot_x_axis = False
 
-    with patch("PyQt5.QtWidgets.QMessageBox.question",
-               return_value=QMessageBox.Yes):
+    with patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
         qtbot.mouseClick(monitor.btn_set, Qt.MouseButton.LeftButton)
 
     not_time_x_view_range = monitor.plot_var.getViewBox().viewRange()[0]
