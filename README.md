@@ -1,6 +1,13 @@
-<img align="left" height="36" src="pics/badger.png" alt="Badger icon" style="margin-right: 8">
-
-# Badger: The Missing Optimizer in ACR
+<div align="center">
+  <h1 align="center">
+    Badger: The Missing Optimizer in ACR
+    <br />
+    <br />
+    <a href="https://slac-ml.github.io/Badger">
+      <img src="pics/badger.png" alt="Badger" height=128>
+    </a>
+  </h1>
+</div>
 
 ![Badger main GUI](pics/main.png)
 
