@@ -103,7 +103,8 @@ class BadgerRoutinePage(QWidget):
         descr_bar = QWidget()
         hbox_descr_bar = QHBoxLayout(descr_bar)
         hbox_descr_bar.setContentsMargins(0, 0, 0, 0)
-        self.btn_descr_update = btn_update = QPushButton("Update")
+        self.btn_descr_update = btn_update = QPushButton("Update Description")
+        btn_update.setDisabled(True)
         btn_update.setFixedSize(128, 24)
         hbox_descr_bar.addStretch(1)
         hbox_descr_bar.addWidget(btn_update)
@@ -171,9 +172,12 @@ class BadgerRoutinePage(QWidget):
             self.edit_save.setText('')
             self.edit_save.setPlaceholderText(name)
             self.edit_descr.setPlainText('')
+            self.btn_descr_update.setDisabled(True)
 
             return
 
+        # Enable description edition
+        self.btn_descr_update.setDisabled(False)
         # Fill in the generator and env configs
         name_generator = routine.generator.name
         idx_generator = self.generators.index(name_generator)
