@@ -144,6 +144,8 @@ class BadgerOptMonitor(QWidget):
         self.testing = False
         self.tc_dialog = None
 
+        self.post_run_actions = []
+
         self.init_ui()
         self.config_logic()
 
@@ -767,6 +769,9 @@ class BadgerOptMonitor(QWidget):
             if not self.testing:
                 QMessageBox.critical(self, 'Archive failed!',
                                      f'Archive failed: {str(e)}')
+        finally:
+            for action in self.post_run_actions:
+                action()
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
@@ -1024,20 +1029,8 @@ class BadgerOptMonitor(QWidget):
             self.btn_stop.setDisabled(True)
             self.sig_stop.emit()
 
-    # def closeEvent(self, event):
-    #     if not self.running:
-    #         return
-
-    #     reply = QMessageBox.question(self,
-    #                                  'Window Close',
-    #                                  'Closing this window will terminate the run, and the run data would NOT be archived! Proceed?',
-    #                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-    #     if reply == QMessageBox.Yes:
-    #         self.sig_stop.emit()
-    #         event.accept()
-    #     else:
-    #         event.ignore()
+    def register_post_run_action(self, action):
+        self.post_run_actions.append(action)
 
 
 def add_axes(monitor, ylabel, title, cursor_line, **kwargs):
