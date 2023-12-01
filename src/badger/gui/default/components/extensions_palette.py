@@ -1,7 +1,8 @@
 import traceback
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, \
-    QWidget, QLabel
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, \
+    QWidget, QLabel, QMessageBox, QSizePolicy
+from PyQt5.QtCore import Qt
 from badger.gui.default.components.analysis_extensions import AnalysisExtension, \
     ParetoFrontViewer
 
@@ -46,12 +47,12 @@ class ExtensionsPalette(QMainWindow):
             The run monitor associated with the palette.
 
         """
-        super(ExtensionsPalette, self).__init__()
+        super().__init__(parent=run_monitor)
 
         self.run_monitor = run_monitor
 
         self.setWindowTitle('Badger Extensions Palette')
-        self.setGeometry(100, 100, 200, 200)
+        self.resize(320, 240)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -60,11 +61,17 @@ class ExtensionsPalette(QMainWindow):
 
         self.base_text = "Number of active exensions: "
         self.text_box = QLabel(self.base_text + "0", self)
+        self.text_box.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Preferred
+        )
+        self.text_box.setAlignment(Qt.AlignCenter)
 
         self.btn_data_viewer = QPushButton('ParetoFrontViewer')
 
-        layout.addWidget(self.text_box)
         layout.addWidget(self.btn_data_viewer)
+        layout.addStretch()
+        layout.addWidget(self.text_box)
 
         central_widget.setLayout(layout)
 
@@ -92,7 +99,7 @@ class ExtensionsPalette(QMainWindow):
         Open the ParetoFrontViewer extension.
 
         """
-        self.add_child_window_to_monitor(ParetoFrontViewer())
+        self.add_child_window_to_monitor(ParetoFrontViewer(self))
 
     def add_child_window_to_monitor(self, child_window: AnalysisExtension):
         """
@@ -104,18 +111,19 @@ class ExtensionsPalette(QMainWindow):
             The child window (extension) to add to the run monitor.
 
         """
-        child_window.show()
         child_window.window_closed.connect(self.run_monitor.extension_window_closed)
-        self.run_monitor.active_extensions.append(child_window)
 
         if self.run_monitor.routine is not None:
             try:
-                self.run_monitor.active_extensions[-1].update_window(
+                child_window.update_window(
                     self.run_monitor.routine
                 )
+                self.run_monitor.active_extensions.append(child_window)
+                child_window.show()
             except ValueError:
-                traceback.print_exc()
+                QMessageBox.warning(
+                    self, 'Extension is not applicable!',
+                    traceback.format_exc()
+                )
 
         self.update_palette()
-
-

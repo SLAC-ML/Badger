@@ -10,8 +10,8 @@ from badger.core import Routine
 class AnalysisExtension(QDialog):
     window_closed = pyqtSignal(object)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
 
     @abstractmethod
     def update_window(self, routine: Routine):
@@ -23,8 +23,8 @@ class AnalysisExtension(QDialog):
 
 
 class ParetoFrontViewer(AnalysisExtension):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
 
         self.setWindowTitle("Pareto Front Viewer")
 
