@@ -22,9 +22,14 @@ def create_routine():
                 "x3": [-1, 1]
             },
             "objectives": {"f": "MAXIMIZE"},
-            "constraints": {"c": ["GREATER_THAN",0]}
+            "constraints": {"c": ["GREATER_THAN", 0]}
         },
-        "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
+        "init_points": {
+            "x0": [0.5],
+            "x1": [0.5],
+            "x2": [0.5],
+            "x3": [0.5]
+        },
     }
 
     vocs = VOCS(**test_routine["vocs"])
@@ -98,7 +103,12 @@ def create_routine_turbo():
                 "x3": [-1, 1]
             },
             "objectives": {"f": "MAXIMIZE"},
-            "init_points": {"x0": [0.5], "x1": [0.5], "x2": [0.5], "x3": [0.5]},
+            "init_points": {
+                "x0": [0.5],
+                "x1": [0.5],
+                "x2": [0.5],
+                "x3": [0.5]
+            },
         },
     }
 
