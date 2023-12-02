@@ -55,7 +55,7 @@ or `pip`
 pip install badger-opt
 ```
 
-### Run an optimization
+## Run an optimization
 
 Once Badger is installed, launch the GUI by running the following command in the terminal:
 
@@ -65,7 +65,7 @@ badger -g
 
 Then following [this simple GUI tutorial](https://slac-ml.github.io/Badger/docs/next/getting-started/tutorial_0) to run your first optimizaion in Badger within a couple of minutes!
 
-### Citation
+## Citation
 
 If you use Badger for your research, please consider adding the following citation to your publications.
 
@@ -97,6 +97,6 @@ BibTex entry:
 }
 ```
 
-### Issues or questions?
+## Issues or questions?
 
 Please check out current Badger issues [here](https://github.com/slaclab/Badger/issues) before [opening a new one](https://github.com/slaclab/Badger/issues/new/). Alternatively, you are welcome to [shoot us an email](mailto:zhezhang@slac.stanford.edu), or join our [Slack channel](https://join.slack.com/share/enQtNjI3NjY0NDk0MzUxMC0zNThjYTdmNmZlOTA3MzM2NjFjZTVmNDY5MDk4NmQ2NmQxMjE1NjBjN2VhNzYxNjBjYjgxYzMwY2ExZTIxYzkw).
