@@ -10,13 +10,13 @@
 
 ![Badger main GUI](pics/main.png)
 
-<center>
+<div align="center">
 
 | Documentation | Package | Downloads | Version | Platforms |
 | --- | --- | --- | --- | --- |
 | [![Documentation](https://img.shields.io/badge/Badger-documentation-blue.svg)](https://slac-ml.github.io/Badger/) | [![Conda Recipe](https://img.shields.io/badge/recipe-badger-opt.svg)](https://anaconda.org/conda-forge/badger-opt) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/badger-opt.svg)](https://anaconda.org/conda-forge/badger-opt) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/badger-opt.svg)](https://anaconda.org/conda-forge/badger-opt) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/badger-opt.svg)](https://anaconda.org/conda-forge/badger-opt) |
 
-</center>
+</div>
 
 
 ## Installation
