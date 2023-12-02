@@ -19,6 +19,27 @@
 
 </div>
 
+## Introduction
+
+Badger is an optimization interface tailored for the Accelerator Control Room (ACR), drawing inspiration from [Ocelot the optimizer](https://github.com/ocelot-collab/optimizer). It places a strong emphasis on extensibility, easily expandable through the plugin system, and flexibility, offering complete GUI, CLI, and API support.
+
+The primary goal of Badger is to establish a user-friendly interface (GUI, CLI, and API) bridging the gap between users and the machines undergoing optimization. Users only need to define an environment for each machine or simulation, allowing Badger to take charge of tasks such as connecting the problem and optimization algorithm, implementing control logic, visualizing progress, and archiving data.
+
+Internally, Badger leverages the [Xopt](https://github.com/ChristopherMayes/Xopt/tree/main) optimization library to drive the optimization process. This grants users the advantage of utilizing a variety of optimization algorithms available through [Xopt](https://christophermayes.github.io/Xopt/index.html).
+
+Badger boasts a range of features designed to enhance your optimization experience:
+
+- **Plugin System:** Easily add your optimization problem in just a few minutes.
+- **Versatile Modes:** Enjoy full support for three modes: GUI, CLI, and API, allowing you to use Badger according to your preferences.
+- **Efficient Rerun:** With a single click or command, rerun optimization tasks swiftly—ideal for daily machine operation routines.
+- **History Exploration:** Browse through past runs effortlessly.
+- **Optimal Solution Navigation:** Jump to or set optimal solutions.
+- **State Recovery:** Easily recover machine states after an optimization run.
+- **Constraint Support:** Accommodate both soft and hard constraints.
+- **Data Preservation:** Preserve all raw data for comprehensive analysis.
+- **Advanced Extensions:** Benefit from extensions for sophisticated optimization data analysis and visualization.
+
+For additional details about Badger and its capabilities, please refer to [Badger's online documentation](https://slac-ml.github.io/Badger/).
 
 ## Installation
 
@@ -75,3 +96,7 @@ BibTex entry:
     url          = {https://jacow.org/ipac2022/papers/tupost058.pdf},
 }
 ```
+
+### Issues or questions?
+
+Please check out current Badger issues [here](https://github.com/slaclab/Badger/issues) before [opening a new one](https://github.com/slaclab/Badger/issues/new/). Alternatively, you are welcome to [shoot us an email](mailto:zhezhang@slac.stanford.edu), or join our [Slack channel](https://join.slack.com/share/enQtNjI3NjY0NDk0MzUxMC0zNThjYTdmNmZlOTA3MzM2NjFjZTVmNDY5MDk4NmQ2NmQxMjE1NjBjN2VhNzYxNjBjYjgxYzMwY2ExZTIxYzkw).
