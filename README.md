@@ -25,13 +25,13 @@ Badger is an optimization interface tailored for the Accelerator Control Room (A
 
 The primary goal of Badger is to establish a user-friendly interface (GUI, CLI, and API) bridging the gap between users and the machines undergoing optimization. Users only need to define an environment for each machine or simulation, allowing Badger to take charge of tasks such as connecting the problem and optimization algorithm, implementing control logic, visualizing progress, and archiving data.
 
-Internally, Badger leverages the [Xopt](https://github.com/ChristopherMayes/Xopt/tree/main) optimization library to drive the optimization process. This grants users the advantage of utilizing a variety of optimization algorithms available through [Xopt](https://christophermayes.github.io/Xopt/index.html).
+Internally, Badger leverages the [Xopt](https://github.com/ChristopherMayes/Xopt/tree/main) optimization library to drive the optimization process. This grants users the advantage of utilizing [a variety of optimization algorithms](https://christophermayes.github.io/Xopt/index.html) available through Xopt.
 
 Badger boasts a range of features designed to enhance your optimization experience:
 
 - **Plugin System:** Easily add your optimization problem in just a few minutes.
 - **Versatile Modes:** Enjoy full support for three modes: GUI, CLI, and API, allowing you to use Badger according to your preferences.
-- **Efficient Rerun:** With a single click or command, rerun optimization tasks swiftly—ideal for daily machine operation routines.
+- **Efficient Rerun:** With a single click or command, rerun optimization tasks swiftly -- ideal for daily machine operation routines.
 - **History Exploration:** Browse through past runs effortlessly.
 - **Optimal Solution Navigation:** Jump to or set optimal solutions.
 - **State Recovery:** Easily recover machine states after an optimization run.
