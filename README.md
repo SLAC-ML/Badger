@@ -2,6 +2,7 @@
   <h1 align="center">
     Badger: The Missing Optimizer in ACR
     <br />
+    <br />
     <a href="https://slac-ml.github.io/Badger">
       <img src="pics/badger.png" alt="Badger" height=128>
     </a>
