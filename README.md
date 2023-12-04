@@ -21,7 +21,7 @@
 
 ## Introduction
 
-Badger is an optimization interface tailored for the Accelerator Control Room (ACR), drawing inspiration from [Ocelot the optimizer](https://github.com/ocelot-collab/optimizer). It places a strong emphasis on extensibility, easily expandable through the plugin system, and flexibility, offering complete GUI, CLI, and API support.
+Badger is an optimization interface tailored for the Accelerator Control Room (ACR)[^1]. It places a strong emphasis on extensibility, easily expandable through the plugin system, and flexibility, offering complete GUI, CLI, and API support.
 
 The primary goal of Badger is to establish a user-friendly interface (GUI, CLI, and API) bridging the gap between users and the machines undergoing optimization. Users only need to define an environment for each machine or simulation, allowing Badger to take charge of tasks such as connecting the problem and optimization algorithm, implementing control logic, visualizing progress, and archiving data.
 
@@ -100,3 +100,5 @@ BibTex entry:
 ## Issues or questions?
 
 Please check out current Badger issues [here](https://github.com/slaclab/Badger/issues) before [opening a new one](https://github.com/slaclab/Badger/issues/new/). Alternatively, you are welcome to [shoot us an email](mailto:zhezhang@slac.stanford.edu), or join our [Slack channel](https://join.slack.com/share/enQtNjI3NjY0NDk0MzUxMC0zNThjYTdmNmZlOTA3MzM2NjFjZTVmNDY5MDk4NmQ2NmQxMjE1NjBjN2VhNzYxNjBjYjgxYzMwY2ExZTIxYzkw).
+
+[^1]: Draws limited inspiration from [Ocelot the optimizer](https://github.com/ocelot-collab/optimizer)
