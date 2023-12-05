@@ -4,15 +4,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.9
   - coolname
-  - pyqt5
-  - pyqtgraph
-  - qdarkstyle
   - pillow
   - requests
   - xopt>=2.0
 # Dev
   - pytest
-  - pytest-qt
-  - pytest-mock
