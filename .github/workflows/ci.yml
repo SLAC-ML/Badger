@@ -16,7 +16,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.11"]
     env:
       DISPLAY: ':99.0'
@@ -51,11 +51,7 @@ jobs:
       - name: Install python packages
         shell: bash -el {0}
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            mamba install --file env/requirements.txt --file env/windows-dev-requirements.txt
-          else
-            mamba install --file env/requirements.txt
-          fi
+          mamba install --file env/requirements.txt
 
       - name: Install libs for testing a pyqt app on linux
         shell: bash -el {0}
