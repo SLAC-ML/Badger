@@ -7,6 +7,5 @@ dependencies:
   - coolname
   - pillow
   - requests
-  - xopt>=2.0
 # Dev
   - pytest

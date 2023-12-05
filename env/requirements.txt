@@ -4,9 +4,5 @@ zipp
 # Qt related packages after pyqt5 is installed
 pyqtgraph
 qdarkstyle
-# Rest of dependencies
-xopt>=2.0
-# Tests
-pytest
 pytest-qt
 pytest-mock
