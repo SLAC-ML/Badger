@@ -1,0 +1,5 @@
+name: badger-env
+channels:
+  - conda-forge
+  - defaults
+  - pytorch
