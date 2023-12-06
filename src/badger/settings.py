@@ -109,3 +109,13 @@ def write_value(key, value):
     settings = QSettings('SLAC-ML', 'Badger')
 
     settings.setValue(key, value)
+
+
+def reset_settings():
+    settings = QSettings('SLAC-ML', 'Badger')
+    for key in BADGER_PATH_DICT.keys():
+        settings.setValue(key, BADGER_PATH_DICT[key]['default value'])
+    for key in BADGER_CORE_DICT.keys():
+        settings.setValue(key, BADGER_CORE_DICT[key]['default value'])
+    for key in BADGER_GUI_DICT.keys():
+        settings.setValue(key, BADGER_GUI_DICT[key]['default value'])
