@@ -8,10 +8,8 @@ from pydantic import ConfigDict, Field, model_validator, field_validator, \
     ValidationInfo, SerializeAsAny
 from xopt import Xopt, VOCS, Evaluator
 from xopt.generators import get_generator
-
-from badger.environment import Environment, instantiate_env
-from badger.factory import get_env
 from badger.utils import curr_ts
+from badger.environment import Environment, instantiate_env
 
 
 class Routine(Xopt):
@@ -29,6 +27,8 @@ class Routine(Xopt):
     @model_validator(mode="before")
     @classmethod
     def validate_model(cls, data: Any):
+        from badger.factory import get_env
+
         if isinstance(data, dict):
             # validate vocs
             if isinstance(data["vocs"], dict):

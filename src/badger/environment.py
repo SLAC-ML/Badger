@@ -11,7 +11,6 @@ from badger.errors import (
     BadgerNoInterfaceError,
 )
 from badger.interface import Interface
-from badger.factory import get_intf
 
 
 def validate_variable_names(func):
@@ -241,6 +240,8 @@ def instantiate_env(env_class, configs, manager=None):
     # TODO: figure out the correct logic
     # It seems that the interface should be given rather than
     # initialized here
+    from badger.factory import get_intf
+
     try:
         intf_name = configs["interface"][0]
     except KeyError:

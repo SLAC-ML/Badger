@@ -34,6 +34,8 @@ def main():
     # Parser for the 'doctor' command
     parser_doctor = subparsers.add_parser(
         'doctor', help='Badger status self-check')
+    parser_doctor.add_argument('-r', '--reset', action='store_true',
+                               help='reset Badger to factory settings')
     parser_doctor.set_defaults(func=self_check)
 
     # Parser for the 'routine' command
@@ -75,7 +77,6 @@ def main():
     parser_remove.add_argument('plugin_type', nargs='?', type=str, default=None)
     parser_remove.add_argument('plugin_specific', nargs='?', type=str, default=None)
     parser_remove.set_defaults(func=plugin_remove)
-
 
     # Parser for the 'run' command
     parser_run = subparsers.add_parser('run', help='run routines')
