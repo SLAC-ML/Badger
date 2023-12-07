@@ -2,6 +2,9 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLabel
 from .collapsible_box import CollapsibleBox
 
+#TODO: verify import structur. Should get_tag function be called from routine_page.py/home_page.py?
+from ....factory import get_tag
+
 
 class BadgerFilterBox(CollapsibleBox):
 
@@ -72,3 +75,27 @@ class BadgerFilterBox(CollapsibleBox):
         vbox.addWidget(gain)
 
         self.setContentLayout(vbox)
+        
+    def select_machine(self, machine: str):
+        if machine == "":
+            self.reset_tags()
+            self.cb_obj.setCurrentIndex(-1)
+            self.cb_reg.setCurrentIndex(-1)
+            self.cb_gain.setCurrentIndex(-1)
+        else:
+            tag_dict = get_tag(machine)
+            self.reset_tags()
+            
+            self.cb_obj.addItems(tag_dict['objective'])
+            self.cb_reg.addItems(tag_dict['region'])
+            self.cb_gain.addItems(tag_dict['gain'])
+            
+            
+    def reset_tags(self):     
+            self.cb_obj.clear()
+            self.cb_reg.clear()
+            self.cb_gain.clear()
+            
+            self.cb_obj.addItem('')
+            self.cb_reg.addItem('')
+            self.cb_gain.addItem('')
