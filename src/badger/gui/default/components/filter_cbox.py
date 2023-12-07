@@ -5,13 +5,29 @@ from .collapsible_box import CollapsibleBox
 
 class BadgerFilterBox(CollapsibleBox):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent=None, title="", tags = []):
+        super().__init__(parent, title)
+        
+        self.tags = tags
 
         self.init_ui()
 
     def init_ui(self):
         vbox = QVBoxLayout()
+        
+        # Machine filter
+        mach = QWidget()
+        hbox_mach = QHBoxLayout(mach)
+        hbox_mach.setContentsMargins(0, 0, 0, 0)
+        lbl = QLabel('Machine')
+        lbl.setFixedWidth(64)
+        self.cb_mach = cb_mach = QComboBox()
+        cb_mach.setItemDelegate(QStyledItemDelegate())
+        cb_mach.addItems(['']+self.tags)
+        cb_mach.setCurrentIndex(-1)
+        hbox_mach.addWidget(lbl)
+        hbox_mach.addWidget(cb_mach, 1)
+        vbox.addWidget(mach)
 
         # Obj filter
         obj = QWidget()
@@ -21,7 +37,7 @@ class BadgerFilterBox(CollapsibleBox):
         lbl.setFixedWidth(64)
         self.cb_obj = cb_obj = QComboBox()
         cb_obj.setItemDelegate(QStyledItemDelegate())
-        cb_obj.addItems(['', 'HXR', 'SXR'])
+        cb_obj.addItems([''])
         cb_obj.setCurrentIndex(-1)
         hbox_obj.addWidget(lbl)
         hbox_obj.addWidget(cb_obj, 1)
@@ -35,15 +51,7 @@ class BadgerFilterBox(CollapsibleBox):
         lbl.setFixedWidth(64)
         self.cb_reg = cb_reg = QComboBox()
         cb_reg.setItemDelegate(QStyledItemDelegate())
-        cb_reg.addItems([
-            '',
-            'LI21:201, 211, 271, 278',
-            'LI26:201, 301, 401, 501',
-            'LI26:601, 701, 801, 901',
-            'IN20:361, 371, 425, 441, 511, 525',
-            'LTUH:620, 640, 660, 680',
-            'LTUS:620, 640, 660, 680',
-        ])
+        cb_reg.addItems([''])
         cb_reg.setCurrentIndex(-1)
         hbox_reg.addWidget(lbl)
         hbox_reg.addWidget(cb_reg, 1)
@@ -57,13 +65,7 @@ class BadgerFilterBox(CollapsibleBox):
         lbl.setFixedWidth(64)
         self.cb_gain = cb_gain = QComboBox()
         cb_gain.setItemDelegate(QStyledItemDelegate())
-        cb_gain.addItems([
-            '',
-            '1',
-            '2',
-            '4',
-            '8',
-        ])
+        cb_gain.addItems([''])
         cb_gain.setCurrentIndex(-1)
         hbox_gain.addWidget(lbl)
         hbox_gain.addWidget(cb_gain, 1)
