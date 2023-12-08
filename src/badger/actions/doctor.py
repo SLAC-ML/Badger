@@ -46,7 +46,7 @@ def check_n_config_paths():
     if not good:
         # Initial setup
         init = True
-        while True:
+        while False:
             _res = input(
                 'If this is your first time launching Badger, you should initialize it now.\n'
                 'Proceed ([y]/n)? ')
