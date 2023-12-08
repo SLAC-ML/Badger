@@ -245,7 +245,6 @@ class BadgerOptMonitor(QWidget):
 
         # self.btn_stop = btn_stop = QPushButton('Run')
         self.btn_stop = QToolButton()
-        self.btn_stop.setDisabled(True)
         self.btn_stop.setFixedSize(96, 32)
         self.btn_stop.setFont(cool_font)
         self.btn_stop.setStyleSheet(stylesheet_run)
@@ -268,6 +267,7 @@ class BadgerOptMonitor(QWidget):
         self.btn_stop.setMenu(menu)
         self.btn_stop.setDefaultAction(run_action)
         self.btn_stop.setPopupMode(QToolButton.MenuButtonPopup)
+        self.btn_stop.setDisabled(True)
         # btn_stop.setToolTip('')
 
         # Config button
