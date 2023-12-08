@@ -775,7 +775,10 @@ class BadgerOptMonitor(QWidget):
 
     def destroy_unused_env(self):
         if not self.running:
-            del self.routine.environment
+            try:
+                del self.routine.environment
+            except AttributeError:  # env already destroyed
+                pass
 
     def on_error(self, error):
         QMessageBox.critical(self, 'Error!', str(error))
