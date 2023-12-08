@@ -55,6 +55,8 @@ or `pip`
 pip install badger-opt
 ```
 
+Currently Badger only officially support Linux. Badger on MacOS and Windows could be potentially unstable.
+
 ## Run an optimization
 
 Once Badger is installed, launch the GUI by running the following command in the terminal:
@@ -101,4 +103,4 @@ BibTex entry:
 
 Please check out current Badger issues [here](https://github.com/slaclab/Badger/issues) before [opening a new one](https://github.com/slaclab/Badger/issues/new/). Alternatively, you are welcome to [shoot us an email](mailto:zhezhang@slac.stanford.edu), or join our [Slack channel](https://join.slack.com/share/enQtNjI3NjY0NDk0MzUxMC0zNThjYTdmNmZlOTA3MzM2NjFjZTVmNDY5MDk4NmQ2NmQxMjE1NjBjN2VhNzYxNjBjYjgxYzMwY2ExZTIxYzkw).
 
-[^1]: Draws limited inspiration from [Ocelot the optimizer](https://github.com/ocelot-collab/optimizer)
+[^1]: Draws limited inspiration from [Ocelot the optimizer](https://github.com/ocelot-collab/optimizer).
