@@ -6,6 +6,6 @@ __pycache__
 /local
 /requirements*.txt
 .idea/
-*.yaml
+/examples/*.yaml
 *.pickle
 *.db
