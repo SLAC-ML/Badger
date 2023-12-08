@@ -74,7 +74,7 @@ class BadgerRoutinePage(QWidget):
         vbox_meta.addWidget(name, alignment=Qt.AlignTop)
 
         # Tags
-        self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
+        self.cbox_tags = cbox_tags = BadgerFilterBox(parent=None, title=" Tags", tags = self.machine_tags)
         if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             cbox_tags.hide()
         vbox_meta.addWidget(cbox_tags, alignment=Qt.AlignTop)
