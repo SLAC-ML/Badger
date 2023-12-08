@@ -18,6 +18,7 @@ from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
 from ....utils import get_header, strtobool
 from ....settings import read_value
+from ....factory import get_tag, list_tag
 
 
 stylesheet = '''
@@ -44,6 +45,8 @@ class BadgerHomePage(QWidget):
         self.mode = 'regular'  # home page mode
         self.splitter_state = None  # store the run splitter state
         self.tab_state = None  # store the tabs state before creating new routine
+        
+        self.machine_tags = list_tag()
 
         self.init_ui()
         self.config_logic()
@@ -100,7 +103,7 @@ class BadgerHomePage(QWidget):
         vbox_routine.addWidget(panel_search)
 
         # Filters
-        self.filter_box = filter_box = BadgerFilterBox(self, title=' Filters')
+        self.filter_box = filter_box = BadgerFilterBox(self, parent=None, title=" Filters", tags = self.machine_tags)
         if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             filter_box.hide()
         vbox_routine.addWidget(filter_box)
@@ -211,6 +214,8 @@ class BadgerHomePage(QWidget):
         self.run_table.cellClicked.connect(self.solution_selected)
         self.run_table.itemSelectionChanged.connect(self.table_selection_changed)
 
+        self.filter_box.cb_mach.currentIndexChanged.connect(self.select_machine_tag)
+        self.filter_box.cb_mach.currentIndexChanged.connect(self.refresh_routine_list)
         self.filter_box.cb_obj.currentIndexChanged.connect(self.refresh_routine_list)
         self.filter_box.cb_reg.currentIndexChanged.connect(self.refresh_routine_list)
         self.filter_box.cb_gain.currentIndexChanged.connect(self.refresh_routine_list)
@@ -304,12 +309,21 @@ class BadgerHomePage(QWidget):
                 _item.activate()
                 self.prev_routine = item
 
+    def select_machine_tag(self, i):
+        if i <= 0:
+            machine_tag = ""
+        else:
+            machine_tag = self.machine_tags[i-1] # empty string from Combobox not in machine_tags
+        self.filter_box.select_machine(machine_tag)  
+        
     def get_current_routines(self):
         keyword = self.sbar.text()
+        tag_mach = self.filter_box.cb_mach.currentText()
         tag_obj = self.filter_box.cb_obj.currentText()
         tag_reg = self.filter_box.cb_reg.currentText()
         tag_gain = self.filter_box.cb_gain.currentText()
         tags = {}
+        if tag_mach: tags['machine'] = tag_mach
         if tag_obj: tags['objective'] = tag_obj
         if tag_reg: tags['region'] = tag_reg
         if tag_gain: tags['gain'] = tag_gain
