@@ -1,4 +1,5 @@
-from ..settings import read_value, BADGER_PATH_DICT, reset_settings
+from ..settings import read_value, BADGER_PATH_DICT, \
+    reset_settings, mock_settings
 from .config import _config_path_var
 
 
@@ -37,12 +38,33 @@ def check_n_config_paths():
     for pname in BADGER_PATH_DICT.keys():
         if not read_value(pname):
             good = False
-            dname = BADGER_PATH_DICT[pname]['display name']
-            print(f'\n{dname} needs to be configured!')
+            # dname = BADGER_PATH_DICT[pname]['display name']
+            # print(f'\n{dname} needs to be configured!')
 
             issue_list.append(pname)
 
     if not good:
+        # Initial setup
+        init = True
+        while True:
+            _res = input(
+                'If this is your first time launching Badger, you should initialize it now.\n'
+                'Proceed ([y]/n)? ')
+            if (not _res) or (_res == 'y'):
+                init = True
+                break
+            elif _res == 'n':
+                init = False
+                break
+            else:
+                print(f'Invalid choice: {_res}')
+
+        if init:  # fill in the mock up settings so user can go immediately
+            mock_settings()
+
+            return True
+
+        # Let the users deal with the issues
         while True:
             _res = input(
                 f'\nFound {len(issue_list)} issue(s).\n'
