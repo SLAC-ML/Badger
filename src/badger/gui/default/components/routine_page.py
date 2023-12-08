@@ -6,7 +6,7 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from coolname import generate_slug
-from ....factory import list_algo, list_env, get_algo, get_env
+from ....factory import list_algo, list_env, list_tag, get_algo, get_env, get_tag
 from ....utils import ystring, load_config, config_list_to_dict, strtobool
 from ....core import normalize_routine, instantiate_env, list_scaling_func, get_scaling_default_params
 from ....db import save_routine, remove_routine
@@ -38,6 +38,7 @@ class BadgerRoutinePage(QWidget):
 
         self.algos = list_algo()
         self.envs = list_env()
+        self.machine_tags = list_tag()
         self.env = None
         self.routine = None
         self.script = ''
@@ -73,7 +74,7 @@ class BadgerRoutinePage(QWidget):
         vbox_meta.addWidget(name, alignment=Qt.AlignTop)
 
         # Tags
-        self.cbox_tags = cbox_tags = BadgerFilterBox(title=' Tags')
+        self.cbox_tags = cbox_tags = BadgerFilterBox(parent=None, title=" Tags", tags = self.machine_tags)
         if not strtobool(read_value('BADGER_ENABLE_ADVANCED')):
             cbox_tags.hide()
         vbox_meta.addWidget(cbox_tags, alignment=Qt.AlignTop)
@@ -108,6 +109,8 @@ class BadgerRoutinePage(QWidget):
         self.env_box.btn_add_curr.clicked.connect(self.fill_curr_in_init_table)
         self.env_box.btn_clear.clicked.connect(self.clear_init_table)
         self.env_box.btn_add_row.clicked.connect(self.add_row_to_init_table)
+        self.cbox_tags.cb_mach.currentIndexChanged.connect(self.select_machine_tag)
+
 
     def refresh_ui(self, routine):
         self.routine = routine  # save routine for future reference
@@ -210,6 +213,11 @@ class BadgerRoutinePage(QWidget):
             tags = routine['config']['tags']
         except:
             tags = {}
+        try:
+            self.cbox_tags.cb_mach.setCurrentIndex(tags['machine'])
+            self.select_machine_tag(self.machine_tags.index(tags['machine']))
+        except:
+            self.cbox_tags.cb_mach.setCurrentIndex(0)
         try:
             self.cbox_tags.cb_obj.setCurrentText(tags['objective'])
         except:
@@ -431,6 +439,13 @@ class BadgerRoutinePage(QWidget):
         for col in range(table.columnCount()):
             item = QTableWidgetItem('')
             table.setItem(row_position, col, item)
+            
+    def select_machine_tag(self, i):
+        if i <= 0:
+            machine_tag = ""
+        else:
+            machine_tag = self.machine_tags[i-1] # empty string from Combobox not in machine_tags
+        self.cbox_tags.select_machine(machine_tag)   
 
     def open_playground(self):
         pass

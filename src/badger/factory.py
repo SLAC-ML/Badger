@@ -39,9 +39,9 @@ def scan_plugins(root):
 
     # Do not scan local algorithms if option disabled
     if LOAD_LOCAL_ALGO:
-        ptype_list = ['algorithm', 'interface', 'environment']
+        ptype_list = ['algorithm', 'interface', 'environment', 'tag']
     else:
-        ptype_list = ['interface', 'environment']
+        ptype_list = ['interface', 'environment', 'tag']
         factory['algorithm'] = {}
 
     for ptype in ptype_list:
@@ -65,7 +65,7 @@ def scan_plugins(root):
 
 def load_plugin(root, pname, ptype):
     assert ptype in ['algorithm', 'interface',
-                     'environment'], f'Invalid plugin type {ptype}'
+                     'environment', 'tag'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
 
@@ -89,6 +89,8 @@ def load_plugin(root, pname, ptype):
 
     if ptype == 'algorithm':
         plugin = [module.optimize, configs]
+    if ptype == 'tag':
+        plugin = [module.machine_tags, configs]
     elif ptype == 'interface':
         params = module.Interface.model_json_schema()['properties']
         params = {name: get_value_or_none(info, 'default')
@@ -135,7 +137,7 @@ def load_plugin(root, pname, ptype):
 
 def load_docs(root, pname, ptype):
     assert ptype in ['algorithm', 'interface',
-                     'environment'], f'Invalid plugin type {ptype}'
+                     'environment', 'tag'], f'Invalid plugin type {ptype}'
 
     proot = os.path.join(root, f'{ptype}s')
 
@@ -237,10 +239,12 @@ def get_intf(name):
 def get_env(name):
     return get_plug(BADGER_PLUGIN_ROOT, name, 'environment')
 
+def get_tag(name):
+    return get_plug(BADGER_PLUGIN_ROOT, name, 'tag')
+
 
 def list_algo():
     algos = list(generators.keys())
-
     return sorted(algos)
 
 
@@ -250,6 +254,9 @@ def list_intf():
 
 def list_env():
     return sorted(BADGER_FACTORY['environment'])
+
+def list_tag():
+    return sorted(BADGER_FACTORY['tag'])
 
 
 BADGER_FACTORY = scan_plugins(BADGER_PLUGIN_ROOT)
