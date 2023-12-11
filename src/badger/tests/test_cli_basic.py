@@ -18,7 +18,7 @@ def test_cli_main():
     assert exitcode == 0
 
     # Check output lines
-    outlines = out.split('\n')
+    outlines = out.splitlines()
     assert len(outlines) == 7
 
     # Check name
@@ -36,7 +36,7 @@ def test_list_algo():
     assert exitcode == 0
 
     # Check output lines
-    outlines = out.split('\n')
+    outlines = out.splitlines()
     assert '- upper_confidence_bound' in outlines
 
 
@@ -49,7 +49,7 @@ def test_list_algo():
 #     assert exitcode == 0
 
 #     # Check output lines
-#     outlines = out.split('\n')
+#     outlines = out.splitlines()
 #     assert len(outlines) == 15
 
 #     # Check table header
