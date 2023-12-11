@@ -38,6 +38,7 @@ class BadgerRoutinePage(QWidget):
 
         self.algos = list_algo()
         self.envs = list_env()
+        self.envs_readable = self.get_envs_human_readable()
         self.env = None
         self.routine = None
         self.script = ''
@@ -87,7 +88,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(self.algo_box)
 
         # Env box
-        self.env_box = BadgerEnvBox(None, self.envs)
+        self.env_box = BadgerEnvBox(None, self.envs_readable)
         self.env_box.expand()  # expand the box initially
         vbox.addWidget(self.env_box)
 
@@ -315,6 +316,16 @@ class BadgerRoutinePage(QWidget):
         except Exception as e:
             self.algo_box.cb.setCurrentIndex(-1)
             return QMessageBox.critical(self, 'Error!', str(e))
+        
+    def get_envs_human_readable(self):
+        result = []
+        for env in self.envs:
+            env_obj = get_env(env)
+            try:
+                result.append(env_obj.name)
+            except AttributeError:
+                result.append(env)
+        return result
 
     def select_env(self, i):
         if i == -1:
