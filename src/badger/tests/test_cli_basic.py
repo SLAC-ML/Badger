@@ -26,7 +26,11 @@ def test_cli_main():
 
     # Check version
     version = metadata.version('badger-opt')
-    assert outlines[1] == f'version: {version}'
+    try:  # yaml encoding number-like string differently
+        _ = float(version)
+        assert outlines[1] == f"version: '{version}'"
+    except ValueError:
+        assert outlines[1] == f'version: {version}'
 
 
 def test_list_algo():
