@@ -22,7 +22,7 @@ from ..windows.docs_window import BadgerDocsWindow
 from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
 from .data_table import get_table_content_as_dict, set_init_data_table
 from ....settings import read_value
-from ....errors import BadgerRoutineError
+from ....errors import BadgerRoutineError, BadgerPluginNotFoundError
 
 
 CONS_RELATION_DICT = {
@@ -320,11 +320,12 @@ class BadgerRoutinePage(QWidget):
     def get_envs_human_readable(self):
         result = []
         for env in self.envs:
-            env_obj = get_env(env)
             try:
+                env_obj = get_env(env)
                 result.append(env_obj.name)
-            except AttributeError:
+            except (AttributeError, BadgerPluginNotFoundError) as e:
                 result.append(env)
+                
         return result
 
     def select_env(self, i):
