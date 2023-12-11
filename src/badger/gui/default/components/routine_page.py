@@ -22,7 +22,7 @@ from ..windows.docs_window import BadgerDocsWindow
 from ..windows.lim_vrange_dialog import BadgerLimitVariableRangeDialog
 from .data_table import get_table_content_as_dict, set_init_data_table
 from ....settings import read_value
-from ....errors import BadgerRoutineError
+from ....errors import BadgerRoutineError, BadgerPluginNotFoundError
 
 
 CONS_RELATION_DICT = {
@@ -38,6 +38,7 @@ class BadgerRoutinePage(QWidget):
 
         self.algos = list_algo()
         self.envs = list_env()
+        self.envs_readable = self.get_envs_human_readable()
         self.env = None
         self.routine = None
         self.script = ''
@@ -87,7 +88,7 @@ class BadgerRoutinePage(QWidget):
         vbox.addWidget(self.algo_box)
 
         # Env box
-        self.env_box = BadgerEnvBox(None, self.envs)
+        self.env_box = BadgerEnvBox(None, self.envs_readable)
         self.env_box.expand()  # expand the box initially
         vbox.addWidget(self.env_box)
 
@@ -315,6 +316,17 @@ class BadgerRoutinePage(QWidget):
         except Exception as e:
             self.algo_box.cb.setCurrentIndex(-1)
             return QMessageBox.critical(self, 'Error!', str(e))
+        
+    def get_envs_human_readable(self):
+        result = []
+        for env in self.envs:
+            try:
+                env_obj = get_env(env)
+                result.append(env_obj.name)
+            except (AttributeError, BadgerPluginNotFoundError) as e:
+                result.append(env)
+                
+        return result
 
     def select_env(self, i):
         if i == -1:
