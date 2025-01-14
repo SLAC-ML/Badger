@@ -1,3 +1,6 @@
+> [!NOTE]  
+> This repo has been replaced by the [new Badger repo](https://github.com/xopt-org/Badger), please visit the new repo for the latest code/issues/PRs/releases. This repo is archived for future reference.
+
 # Badger: The Ocelot Optimizer Rebirth
 
 ## Installation
